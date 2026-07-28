@@ -36,7 +36,7 @@ jobs:
           corepack prepare pnpm@11.9.0 --activate
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Run deterministic release build
         run: pnpm release:build "$RELEASE_TAG"
