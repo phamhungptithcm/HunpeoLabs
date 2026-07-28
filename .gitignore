@@ -1,0 +1,24 @@
+<!-- BEGIN @hunpeolabs/ai-agent-kit managed -->
+.codegraph/
+.cocoindex_code/
+.ai-agent-kit/backups/
+.ai-agent-kit/transactions/
+.ai-agent-kit/runtime/
+/.ai-agent-kit/
+<!-- END @hunpeolabs/ai-agent-kit managed -->
+# CocoIndex Code (ccc)
+/.cocoindex_code/
+
+# Website dependencies and build output
+/node_modules/
+/.next/
+/coverage/
+/playwright-report/
+/test-results/
+/.lighthouseci/
+/.playwright-cli/
+/.ai/local/
+/.mcp.json
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
