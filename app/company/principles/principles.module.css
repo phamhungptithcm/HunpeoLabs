@@ -1,0 +1,964 @@
+.page {
+  overflow: clip;
+  background: var(--color-bg);
+}
+
+.hero,
+.journey {
+  position: relative;
+}
+
+.hero {
+  min-height: 44rem;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.heroInner,
+.journeyInner {
+  width: min(100%, var(--max-width));
+  margin: 0 auto;
+  padding-right: var(--page-gutter);
+  padding-left: var(--page-gutter);
+}
+
+.heroInner {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(3rem, 4vw, 4.5rem);
+  align-items: center;
+  min-height: 44rem;
+  padding-top: 4.5rem;
+  padding-bottom: 4.5rem;
+}
+
+.heroCopy {
+  max-width: 40rem;
+}
+
+.eyebrow,
+.journeyLabel,
+.details dt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eyebrow,
+.journeyLabel,
+.details dt {
+  color: var(--color-accent);
+}
+
+.eyebrow {
+  margin: 0 0 clamp(2.75rem, 5vw, 4.75rem);
+}
+
+.hero h1 {
+  max-width: none;
+  margin: 0;
+  font-size: clamp(4.5rem, 6.1vw, 6.15rem);
+  font-weight: 700;
+  letter-spacing: -0.075em;
+  line-height: 0.9;
+}
+
+.intro {
+  max-width: 31rem;
+  margin: 2.5rem 0 0;
+  color: var(--color-muted);
+  font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+  line-height: 1.55;
+}
+
+.flow {
+  min-width: 0;
+  margin: 0;
+}
+
+.flowDesktop {
+  position: relative;
+  min-height: 20rem;
+}
+
+.flowMobile {
+  display: none;
+}
+
+.flowDiagram,
+.flowDiagramMobile {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.flowStage text {
+  fill: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-anchor: middle;
+  text-transform: uppercase;
+}
+
+.flowBox,
+.flowBoxMobile,
+.flowBoxActive {
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.flowBox {
+  fill: var(--color-bg);
+  stroke: var(--color-accent);
+}
+
+.flowBoxMobile {
+  fill: var(--color-bg);
+  stroke: var(--color-text);
+}
+
+.flowBoxActive {
+  fill: var(--color-accent);
+  stroke: var(--color-accent);
+}
+
+.flowBoxActive + text {
+  fill: #fff;
+}
+
+.flowConnector path,
+.returnPath,
+.returnArrow,
+.mobileTrack {
+  fill: none;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+}
+
+.flowConnector path,
+.returnArrow {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+
+.returnPath {
+  stroke: var(--color-accent);
+  stroke-dasharray: 9 8;
+  stroke-width: 2;
+}
+
+.mobileTrack {
+  stroke: var(--color-text);
+  stroke-width: 2;
+}
+
+.flowRingOuter {
+  fill: var(--color-bg);
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.flowTraveler,
+.flowTravelerMobile {
+  fill: var(--color-accent);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.flowRingOuter {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.flowSignal,
+.flowSignalMobile {
+  fill: var(--color-accent);
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+
+.returnMask {
+  fill: none;
+  stroke: #fff;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: 8;
+}
+
+.flowTravelerMobile {
+  opacity: 0;
+}
+
+.journey {
+  padding: clamp(5.5rem, 9vw, 9rem) 0 clamp(6rem, 10vw, 10rem);
+}
+
+.journeyInner {
+  position: relative;
+}
+
+.journeyLabel {
+  margin: 0 0 clamp(4.5rem, 8vw, 8rem);
+}
+
+.journeyTrack {
+  position: relative;
+  padding-bottom: 6rem;
+}
+
+.rail {
+  position: absolute;
+  z-index: 0;
+  top: 0.2rem;
+  bottom: 6rem;
+  left: calc(34% + 3rem);
+  width: 1px;
+  background: var(--color-line);
+}
+
+.rail::after {
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent);
+  content: "";
+  transform-origin: top;
+}
+
+.railReturn {
+  position: absolute;
+  right: calc(66% - 3rem);
+  bottom: 0;
+  width: 12rem;
+  height: 6rem;
+  border-right: 2px dashed var(--color-accent);
+  border-bottom: 2px dashed var(--color-accent);
+  border-left: 2px dashed var(--color-accent);
+  border-radius: 0 0 1rem 1rem;
+}
+
+.railReturn::after {
+  position: absolute;
+  top: -0.05rem;
+  left: -0.48rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-top: 2px solid var(--color-accent);
+  border-left: 2px solid var(--color-accent);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.principleList {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: clamp(7rem, 11vw, 11rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.principle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34% 2rem 24% minmax(0, 1fr);
+  column-gap: 2rem;
+  align-items: start;
+}
+
+.principleLead {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(1.5rem, 2.5vw, 2.75rem);
+  align-items: start;
+}
+
+.number {
+  color: var(--color-accent);
+  font-size: clamp(4.5rem, 6vw, 6.5rem);
+  font-weight: 400;
+  letter-spacing: -0.08em;
+  line-height: 0.78;
+}
+
+.node {
+  position: relative;
+  z-index: 2;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: 0.1rem;
+  border: 2px solid var(--color-accent);
+  background: var(--color-accent);
+}
+
+.principleCopy {
+  min-width: 0;
+}
+
+.principleCopy h3 {
+  max-width: 12ch;
+  margin: 0;
+  font-size: clamp(1.85rem, 2.7vw, 3.1rem);
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.principleCopy p {
+  max-width: 24rem;
+  margin: 1.2rem 0 0;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.details {
+  grid-column: 3 / 5;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 2.25rem;
+  margin: 0;
+}
+
+.details div {
+  padding-top: 0.8rem;
+  border-top: 2px solid var(--color-accent);
+}
+
+.details div + div {
+  padding-left: 2.25rem;
+  border-left: 1px solid var(--color-line);
+}
+
+.details dt,
+.details dd {
+  margin: 0;
+}
+
+.details dd {
+  max-width: 22rem;
+  margin-top: 1rem;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.principleList > li:nth-child(even) .principleLead {
+  grid-column: 3;
+}
+
+.principleList > li:nth-child(even) .details {
+  grid-column: 4;
+  gap: 1.5rem;
+}
+
+.principleList > li:nth-child(even) .details div + div {
+  padding-left: 1.5rem;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) .heroCopy > * {
+  animation: principle-copy-enter 540ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) .heroCopy > :nth-child(2) {
+  animation-delay: 60ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) .heroCopy > :nth-child(3) {
+  animation-delay: 120ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-path] {
+  animation: principle-path-draw 260ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-arrow] {
+  animation: principle-arrow-resolve 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) .flowSignal {
+  animation: principle-signal-x 250ms cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) .flowSignalMobile {
+  animation: principle-signal-y 250ms cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="0"]
+  [data-flow-path] {
+  animation-delay: 280ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="1"]
+  [data-flow-path] {
+  animation-delay: 520ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="2"]
+  [data-flow-path] {
+  animation-delay: 760ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="3"]
+  [data-flow-path] {
+  animation-delay: 1000ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="0"]
+  [data-flow-arrow] {
+  animation-delay: 430ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="1"]
+  [data-flow-arrow] {
+  animation-delay: 670ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="2"]
+  [data-flow-arrow] {
+  animation-delay: 910ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="3"]
+  [data-flow-arrow] {
+  animation-delay: 1150ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="0"]
+  [data-flow-signal] {
+  animation-delay: 300ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="1"]
+  [data-flow-signal] {
+  animation-delay: 540ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="2"]
+  [data-flow-signal] {
+  animation-delay: 780ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible)
+  [data-flow-segment][data-step="3"]
+  [data-flow-signal] {
+  animation-delay: 1020ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-stage] {
+  animation: principle-stage-resolve 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-stage][data-step="0"] {
+  animation-delay: 140ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-stage][data-step="1"] {
+  animation-delay: 480ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-stage][data-step="2"] {
+  animation-delay: 720ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-stage][data-step="3"] {
+  animation-delay: 960ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-stage][data-step="4"] {
+  animation-delay: 1200ms;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-return-mask] {
+  animation: principle-path-draw 480ms 1280ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-return-arrow] {
+  animation: principle-arrow-resolve 240ms 1660ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-origin-ring] {
+  animation: principle-ring-resolve 460ms 1680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+:global(.motion-ready) .hero:global(.is-visible) [data-flow-origin] {
+  animation: principle-origin-resolve 420ms 1720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+:global(.motion-ready) .journey:global(.is-visible) .rail::after {
+  animation: principle-rail-draw 900ms 80ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+:global(.motion-ready) .journey:global(.is-visible) .railReturn {
+  animation: principle-loop-resolve 520ms 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.page[data-motion-enhanced="true"]
+  .journey:global(.is-visible)
+  .principle:not([data-visible="true"])
+  .principleLead,
+.page[data-motion-enhanced="true"]
+  .journey:global(.is-visible)
+  .principle:not([data-visible="true"])
+  .details,
+.page[data-motion-enhanced="true"]
+  .journey:global(.is-visible)
+  .principle:not([data-visible="true"])
+  .node {
+  opacity: 0;
+}
+
+.page[data-motion-enhanced="true"]
+  .journey:global(.is-visible)
+  .principle[data-visible="true"]
+  .principleLead {
+  animation: principle-row-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.page[data-motion-enhanced="true"]
+  .journey:global(.is-visible)
+  .principle[data-visible="true"]
+  .node {
+  animation: principle-journey-node-resolve 380ms 50ms cubic-bezier(0.16, 1, 0.3, 1)
+    both;
+}
+
+.page[data-motion-enhanced="true"]
+  .journey:global(.is-visible)
+  .principle[data-visible="true"]
+  .details {
+  animation: principle-row-enter 500ms 90ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes principle-copy-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes principle-path-draw {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes principle-arrow-resolve {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes principle-signal-x {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+
+  18%,
+  78% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(99px);
+  }
+}
+
+@keyframes principle-signal-y {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+
+  18%,
+  78% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(70px);
+  }
+}
+
+@keyframes principle-stage-resolve {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes principle-ring-resolve {
+  from {
+    opacity: 0;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transform: scale(0.82);
+  }
+
+  to {
+    opacity: 1;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes principle-origin-resolve {
+  0% {
+    opacity: 0;
+    transform: scale(0.38);
+  }
+
+  68% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes principle-rail-draw {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes principle-row-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes principle-journey-node-resolve {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  72% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes principle-loop-resolve {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 72rem) {
+  .heroInner {
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(4.5rem, 7vw, 5.5rem);
+  }
+
+  .principle {
+    grid-template-columns: 32% 1.5rem 25% minmax(0, 1fr);
+    column-gap: 1.5rem;
+  }
+
+  .rail {
+    left: calc(32% + 2.25rem);
+  }
+
+  .railReturn {
+    right: calc(68% - 2.25rem);
+  }
+
+  .principleLead {
+    gap: 1.25rem;
+  }
+
+  .number {
+    font-size: 4.5rem;
+  }
+
+  .details {
+    gap: 1.5rem;
+  }
+
+  .details div + div {
+    padding-left: 1.5rem;
+  }
+}
+
+@media (max-width: 52rem) {
+  .page {
+    overflow: hidden;
+  }
+
+  .hero,
+  .heroInner {
+    min-height: auto;
+  }
+
+  .heroInner {
+    display: block;
+    padding-top: 4.5rem;
+    padding-bottom: 3.5rem;
+  }
+
+  .eyebrow {
+    margin-bottom: 2.75rem;
+  }
+
+  .hero h1 {
+    max-width: none;
+    font-size: clamp(4rem, 20vw, 6rem);
+  }
+
+  .intro {
+    margin-top: 1.75rem;
+    font-size: 1.05rem;
+  }
+
+  .flow {
+    margin-top: 3.25rem;
+  }
+
+  .flowDesktop {
+    display: none;
+  }
+
+  .flowMobile {
+    position: relative;
+    display: block;
+    width: min(100%, 21.25rem);
+    min-height: 35rem;
+  }
+
+  .flowStage text {
+    fill: var(--color-text);
+    font-size: 1.15rem;
+    text-anchor: start;
+  }
+
+  .flowBoxActive + text {
+    fill: var(--color-text);
+  }
+
+  .journey {
+    padding-top: 5rem;
+    padding-bottom: 6rem;
+  }
+
+  .journeyLabel {
+    margin-bottom: 4.75rem;
+  }
+
+  .journeyTrack {
+    padding-bottom: 0;
+  }
+
+  .rail {
+    top: 0.15rem;
+    bottom: 0;
+    left: 1.25rem;
+  }
+
+  .railReturn {
+    display: none;
+  }
+
+  .principleList {
+    gap: 5.75rem;
+  }
+
+  .principle {
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    column-gap: 1.25rem;
+  }
+
+  .principleLead,
+  .principleList > li:nth-child(even) .principleLead {
+    grid-column: 2;
+    display: block;
+  }
+
+  .number {
+    display: block;
+    font-size: 4.5rem;
+  }
+
+  .node {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.1rem;
+  }
+
+  .principleList > li:not(:first-child) .node {
+    border-color: var(--color-text);
+    background: var(--color-bg);
+  }
+
+  .principleCopy {
+    margin-top: 1.75rem;
+  }
+
+  .principleCopy h3 {
+    max-width: 14ch;
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
+
+  .principleCopy p {
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  .details,
+  .principleList > li:nth-child(even) .details {
+    grid-column: 2;
+    grid-row: 2;
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+    margin-top: 2rem;
+  }
+
+  .details div {
+    padding-top: 0.85rem;
+    border-top-color: var(--color-line-strong);
+    border-top-width: 1px;
+  }
+
+  .details div + div,
+  .principleList > li:nth-child(even) .details div + div {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(.motion-ready) .hero:global(.is-visible) .heroCopy > *,
+  :global(.motion-ready) .hero:global(.is-visible) [data-flow-path],
+  :global(.motion-ready) .hero:global(.is-visible) [data-flow-arrow],
+  :global(.motion-ready) .hero:global(.is-visible) [data-flow-signal],
+  :global(.motion-ready) .hero:global(.is-visible) [data-flow-stage],
+  :global(.motion-ready) .hero:global(.is-visible) [data-flow-return-mask],
+  :global(.motion-ready) .hero:global(.is-visible) [data-flow-return-arrow],
+  :global(.motion-ready) .hero:global(.is-visible) [data-flow-origin-ring],
+  :global(.motion-ready) .hero:global(.is-visible) [data-flow-origin],
+  :global(.motion-ready) .journey:global(.is-visible) .rail::after,
+  :global(.motion-ready) .journey:global(.is-visible) .railReturn,
+  .page[data-motion-enhanced="true"]
+    .journey:global(.is-visible)
+    .principle[data-visible="true"]
+    .principleLead,
+  .page[data-motion-enhanced="true"]
+    .journey:global(.is-visible)
+    .principle[data-visible="true"]
+    .details,
+  .page[data-motion-enhanced="true"]
+    .journey:global(.is-visible)
+    .principle[data-visible="true"]
+    .node {
+    animation: none;
+  }
+
+  .flowSignal,
+  .flowSignalMobile,
+  .flowRingOuter,
+  .flowTraveler,
+  .flowTravelerMobile {
+    display: none;
+  }
+}

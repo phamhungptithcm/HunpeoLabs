@@ -223,6 +223,28 @@ export const products: Product[] = [
       "Policy and approval",
     ],
   },
+  {
+    slug: "gig",
+    name: "Gig",
+    summary:
+      "Evidence-first release intelligence for tracing source change to production truth.",
+    maturity: "Open-source engineering project",
+    audience:
+      "Engineering and release teams that need one reviewable trail across source changes, delivery evidence, and production state.",
+    purpose:
+      "Connect a ticket, release path, evidence, production state, and review in one release truth graph.",
+    boundary:
+      "Gig is an open-source engineering project. Its public profile describes inspectable release workflows, not an unverified production outcome.",
+    capabilities: [
+      "Ticket-aware source tracing",
+      "Release path inspection",
+      "Evidence collection",
+      "Production-state review",
+      "Human and JSON output",
+    ],
+    flow: ["Source change", "Release path", "Evidence", "Production state", "Review"],
+    repositoryUrl: "https://github.com/phamhungptithcm/gig",
+  },
 ];
 
 export const work: WorkItem[] = [
@@ -266,6 +288,7 @@ export const work: WorkItem[] = [
       "Evidence-first release intelligence focused on tracing the path from source change to production truth.",
     focus: ["Release evidence", "Source control", "Traceability", "Developer workflow"],
     status: "Open-source engineering project",
+    productSlug: "gig",
     context:
       "A release becomes difficult to review when source control, delivery steps, and production evidence are considered separately.",
     decision:
@@ -278,44 +301,34 @@ export const work: WorkItem[] = [
 
 export const principles = [
   {
-    title: "Observe the real system",
-    body: "Start with source, constraints, people, and operating reality.",
-    practice:
-      "Inspect the current implementation, workflow, users, and operational boundaries before proposing a change.",
-    avoid:
-      "Starting from an assumed architecture or a solution that has not been grounded in the system.",
+    title: "See the real system",
+    body: "Start with what exists, not assumptions.",
+    practice: "Read the code, workflow, users, and constraints.",
+    avoid: "Designing for an imagined system.",
   },
   {
-    title: "Map decisions and risk",
-    body: "Make dependencies, uncertainty, and ownership visible.",
-    practice:
-      "Name the decision, affected boundaries, responsible people, evidence needed, and conditions that would change the plan.",
-    avoid:
-      "Treating technical direction, delivery risk, and ownership as separate conversations.",
+    title: "Make risk visible",
+    body: "Show what changes, who owns it, and what can go wrong.",
+    practice: "Map decisions, dependencies, and evidence.",
+    avoid: "Hiding uncertainty.",
   },
   {
-    title: "Build the smallest credible slice",
-    body: "Ship a narrow, testable change with a clear learning goal.",
-    practice:
-      "Choose the smallest scope that can be implemented, reviewed, and evaluated without hiding the real production constraints.",
-    avoid:
-      "Calling an isolated demo complete when the critical integration, control, or verification path remains unknown.",
+    title: "Start small",
+    body: "Build the smallest useful, testable change.",
+    practice: "Choose one real outcome.",
+    avoid: "Calling a demo done.",
   },
   {
-    title: "Produce evidence",
-    body: "Verify behavior and preserve the reasoning needed to review it.",
-    practice:
-      "Connect tests, observations, decisions, and remaining uncertainty so another person can inspect the result.",
-    avoid:
-      "Using activity, presentation, or unsupported confidence as a substitute for verification.",
+    title: "Prove it works",
+    body: "Test, observe, and keep the evidence.",
+    practice: "Connect behavior to proof.",
+    avoid: "Replacing proof with confidence.",
   },
   {
-    title: "Scale after validation",
-    body: "Expand with guardrails only after the system proves its value.",
-    practice:
-      "Increase scope when the current slice has evidence, understood failure modes, accountable ownership, and a rollback path.",
-    avoid:
-      "Scaling automation, infrastructure, or organizational commitment ahead of validated need.",
+    title: "Scale with care",
+    body: "Expand only when value and failure modes are clear.",
+    practice: "Add guardrails, an owner, and a rollback path.",
+    avoid: "Scaling too early.",
   },
 ];
 

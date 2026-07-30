@@ -1,4 +1,4 @@
-import { createPageMetadata } from "@/app/seo";
+import { createPageMetadata, SITE_CONTACT_EMAIL } from "@/app/seo";
 import { ProjectBriefForm } from "@/components/project-brief-form";
 import { contactDeliveryIsConfigured } from "@/lib/contact";
 
@@ -37,6 +37,14 @@ export default function ContactPage() {
             Tell us what you are building, where it is stuck, and what a credible next
             step needs to accomplish.
           </p>
+          <div className="contact-direct">
+            <p className="mono">Prefer email?</p>
+            <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>
+            <p>
+              Write to us directly for a project inquiry. The project brief form remains
+              available only when its verified delivery channel is configured.
+            </p>
+          </div>
         </div>
         <ProjectBriefForm deliveryAvailable={deliveryAvailable} />
       </section>

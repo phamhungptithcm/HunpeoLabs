@@ -1,6 +1,6 @@
 {
   "name": "@hunpeolabs/website",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "engines": {
@@ -16,10 +16,13 @@
     "test:e2e": "playwright test",
     "test:e2e:core": "playwright test --project=chromium --project=mobile",
     "test:e2e:cross-browser": "playwright test tests/e2e/smoke.spec.ts --project=firefox --project=webkit",
+    "test:e2e:production": "PLAYWRIGHT_USE_PRODUCTION_SERVER=true playwright test --project=chromium --project=mobile",
+    "test:e2e:production:cross-browser": "PLAYWRIGHT_USE_PRODUCTION_SERVER=true playwright test tests/e2e/smoke.spec.ts --project=firefox --project=webkit",
     "lighthouse:ci": "pnpm dlx @lhci/cli@0.15.1 autorun",
     "release:build": "bash scripts/build-release.sh",
     "release:verify-version": "node scripts/verify-release-version.mjs",
     "validate:production-env": "node scripts/validate-production-env.mjs",
+    "firebase:preflight": "node scripts/validate-firebase-production.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {

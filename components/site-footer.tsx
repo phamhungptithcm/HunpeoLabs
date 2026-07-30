@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SITE_CONTACT_EMAIL } from "@/app/seo";
 import { BrandMark } from "@/components/brand-mark";
 
 const footerLinks = [
@@ -26,6 +27,7 @@ export function SiteFooter() {
       <div className="site-footer__meta">
         <span>Digital products. AI systems. Enterprise engineering.</span>
         <div>
+          <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>
           <Link href="/privacy">Privacy</Link>
           <span>© {new Date().getFullYear()} Hunpeo Labs</span>
         </div>

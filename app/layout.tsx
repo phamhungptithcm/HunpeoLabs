@@ -7,6 +7,7 @@ import {
   createPageMetadata,
   DEFAULT_TITLE,
   getSiteUrl,
+  SITE_CONTACT_EMAIL,
   SITE_DESCRIPTION,
   SITE_NAME,
 } from "@/app/seo";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         "@id": new URL("/#organization", siteUrl).toString(),
         name: SITE_NAME,
         description: SITE_DESCRIPTION,
+        email: `mailto:${SITE_CONTACT_EMAIL}`,
         url: siteUrl.toString(),
       },
       {

@@ -2,6 +2,47 @@
 
 This document describes the source-backed launch contract. It does not authorize or perform a production deployment.
 
+## Firebase production target
+
+The approved runtime is Firebase App Hosting, not static Firebase Hosting.
+App Hosting preserves the Next.js server routes used by `/api/contact`,
+`/api/health`, `/llms.txt`, RSS, runtime privacy disclosure, and security
+headers.
+
+- Firebase project: `hunpeolabs-prod`
+- App Hosting backend: `hunpeolabs`
+- Region: `us-central1`
+- Canonical production origin: `https://hunpeolabs.com`
+- Runtime policy: scale to zero, maximum 10 instances, 80-request concurrency,
+  1 CPU, and 512 MiB memory per instance
+
+Run the provider preflight before creating a backend or rollout:
+
+```bash
+pnpm firebase:preflight
+```
+
+Firebase App Hosting requires the Blaze plan. Upgrading billing is an
+owner-controlled action and is not performed by repository automation. The
+current backend was created for local source deployment with:
+
+```bash
+firebase apphosting:backends:create \
+  --project hunpeolabs-prod \
+  --backend hunpeolabs \
+  --primary-region us-central1 \
+  --root-dir . \
+  --non-interactive
+```
+
+Do not run this command again while the backend exists. Confirm the generated
+backend URL before a first rollout. If a replacement backend has a different
+origin, update `NEXT_PUBLIC_SITE_URL` in `apphosting.yaml`, rebuild, and review
+the canonical, robots, sitemap, and social metadata before deployment.
+
+Do not redirect or overwrite another Firebase Hosting site as part of this
+deployment.
+
 ## Required launch configuration
 
 Run this before building a production release:
@@ -57,6 +98,10 @@ No analytics or error-monitoring provider is currently selected. Do not add a cl
 
 Application error monitoring remains pending provider selection. Hosting logs must be checked for `5xx`, contact `429`, contact `502`, and latency before launch.
 
+App Hosting logs and rollout health are the initial operational evidence.
+Configure an uptime provider only after its owner, retention, and alert
+destination are reviewed.
+
 ## CI and browser support
 
 GitHub Actions runs:
@@ -102,6 +147,34 @@ A preview environment must:
 
 Creating a preview deployment is an external write and requires separate authorization.
 
+## Production rollout
+
+Before rollout:
+
+1. run `pnpm check`;
+2. run `pnpm test:e2e:production`;
+3. run `pnpm test:e2e:production:cross-browser`;
+4. run `pnpm lighthouse:ci`;
+5. run `pnpm firebase:preflight`;
+6. confirm the rollout commit and backend URL;
+7. confirm contact delivery is either fully configured or visibly unavailable;
+8. inspect the production origin, `/api/health`, `/robots.txt`, `/sitemap.xml`,
+   `/llms.txt`, Contact, Privacy, and one canonical detail page.
+
+This backend currently accepts reviewed local source deployments:
+
+```bash
+firebase deploy \
+  --only apphosting:hunpeolabs \
+  --project hunpeolabs-prod \
+  --non-interactive
+```
+
+Run it only from a reviewed, cleanly understood working tree. If the backend is
+later linked to GitHub, use `firebase apphosting:rollouts:create` with an exact
+reviewed commit instead. Record the rollout ID, source revision or source
+archive, production URL, checks, and rollback target.
+
 ## Rollback
 
 No database migration or persisted website state is introduced by this foundation.
@@ -114,5 +187,8 @@ For a failed release:
 4. confirm `/api/health`, Home, Contact, `robots.txt`, and `sitemap.xml`;
 5. verify that `NEXT_PUBLIC_SITE_URL` still points to the intended production origin;
 6. document the failed commit, observed symptom, rollback target, and validation evidence.
+
+For App Hosting, prefer its immutable instant rollback to the last verified
+rollout. Do not delete the backend as a rollback mechanism.
 
 Never roll back by weakening validation, CSP, rate limiting, privacy disclosure, or indexing safeguards.

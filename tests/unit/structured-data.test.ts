@@ -49,6 +49,7 @@ describe("source-verified structured data", () => {
 
     const openSourceProduct = createProductStructuredData(products[0]);
     const validationProduct = createProductStructuredData(products[1]);
+    const releaseProduct = createProductStructuredData(products[2]);
     const openWork = createWorkStructuredData(work.find((item) => item.slug === "gig")!);
 
     expect(openSourceProduct["@graph"][0]).toMatchObject({
@@ -60,6 +61,11 @@ describe("source-verified structured data", () => {
       name: "IncOv",
     });
     expect(validationProduct["@graph"][0]).not.toHaveProperty("codeRepository");
+    expect(releaseProduct["@graph"][0]).toMatchObject({
+      "@type": "SoftwareSourceCode",
+      name: "Gig",
+      codeRepository: "https://github.com/phamhungptithcm/gig",
+    });
     expect(openWork["@graph"][0]).toMatchObject({
       "@type": "SoftwareSourceCode",
       codeRepository: "https://github.com/phamhungptithcm/gig",

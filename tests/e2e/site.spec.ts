@@ -46,8 +46,10 @@ test("primary index content lives on separate routes", async ({ page }) => {
     }),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "AI Agent Kit" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Gig" })).toBeVisible();
   await expect(page.locator(".product-architecture")).toHaveCount(1);
   await expect(page.locator(".incov-architecture")).toHaveCount(1);
+  await expect(page.locator(".gig-architecture")).toHaveCount(1);
 
   await page.goto("/resources");
   await expect(
@@ -204,15 +206,30 @@ test("dynamic product and work routes render maturity without invented metrics",
   page,
 }) => {
   await page.goto("/products/incov");
-  await expect(page.getByText("Applied AI product under validation")).toBeVisible();
-  await expect(page.getByText("Bounded AI assessment")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Who this product is for" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Current boundary" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Turn every incident into better judgment.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Applied AI / Under validation")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI recommends. People decide." })).toBeVisible();
+  await expect(page.getByText("Under validation. Built to be reviewed.")).toBeVisible();
 
   await page.goto("/work/gig");
+  await expect(page).toHaveURL(/\/products\/gig$/);
   await expect(page.getByText("Open-source engineering project")).toBeVisible();
-  await expect(page.getByText("Release evidence", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Decision lens" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Know what changed. Know what shipped.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "See the whole trail. Then inspect any step.",
+    }),
+  ).toBeVisible();
 });
 
 test("overlapping product work URLs consolidate into the canonical product profile", async ({
@@ -220,10 +237,76 @@ test("overlapping product work URLs consolidate into the canonical product profi
 }) => {
   await page.goto("/work/ai-agent-kit");
   await expect(page).toHaveURL(/\/products\/ai-agent-kit$/);
-  await expect(page.getByRole("heading", { level: 1, name: "AI Agent Kit" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Give AI agents room to work. Keep control.",
+    }),
+  ).toBeVisible();
 
   await page.goto("/work/incov");
   await expect(page).toHaveURL(/\/products\/incov$/);
+
+  await page.goto("/work/gig");
+  await expect(page).toHaveURL(/\/products\/gig$/);
+});
+
+test("each product profile includes its own real demo and reviewable boundary", async ({
+  page,
+}) => {
+  const products = [
+    {
+      route: "/products/ai-agent-kit",
+      heading: "Give AI agents room to work. Keep control.",
+      video: "/media/products/ai-agent-kit/bootstrap-demo.mp4",
+      boundary: "Open source. Inspectable by design.",
+    },
+    {
+      route: "/products/incov",
+      heading: "Turn every incident into better judgment.",
+      video: "/media/products/incov/architecture-walkthrough.mp4",
+      boundary: "Under validation. Built to be reviewed.",
+    },
+    {
+      route: "/products/gig",
+      heading: "Know what changed. Know what shipped.",
+      video: "/media/products/gig/release-showcase.mp4",
+      boundary: "Open source. Evidence first.",
+    },
+  ];
+
+  for (const product of products) {
+    await page.goto(product.route);
+    await expect(page.getByRole("heading", { level: 1, name: product.heading })).toBeVisible();
+    await expect(page.locator("video source")).toHaveAttribute("src", product.video);
+    await expect(page.locator("video")).toHaveAttribute("poster", /\/media\/products\//);
+    await expect(page.getByRole("heading", { name: product.boundary })).toBeVisible();
+    await expect(page.locator(".product-faq details")).toHaveCount(4);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+  }
+});
+
+test("product demos transition from the designed cover to real footage", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/products/ai-agent-kit");
+
+  await expect(page.locator(".product-demo")).toHaveCSS(
+    "animation-name",
+    "product-panel-enter",
+  );
+  await page.getByRole("button", { name: "Play Governed bootstrap" }).click();
+  await expect(page.locator(".product-demo")).toHaveClass(/is-playing/);
+  await expect(page.locator(".product-demo video")).toHaveCSS("opacity", "1");
+
+  const problem = page.locator(".product-problem");
+  await problem.scrollIntoViewIfNeeded();
+  await expect(problem).toHaveClass(/is-visible/);
 });
 
 test("service pages state fit and boundaries that distinguish adjacent engagements", async ({
@@ -338,6 +421,30 @@ test("about, careers, and contact stay honest and independently addressable", as
     ),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Send project brief" })).toBeDisabled();
+  await expect(
+    page.locator(".contact-direct").getByRole("link", {
+      name: "support@hunpeolabs.com",
+    }),
+  ).toHaveAttribute("href", "mailto:support@hunpeolabs.com");
+
+  const siteGraphText = await page
+    .locator('script[type="application/ld+json"]')
+    .first()
+    .textContent();
+  expect(siteGraphText).not.toBeNull();
+  const siteGraph = JSON.parse(siteGraphText!) as {
+    "@graph": Array<Record<string, unknown>>;
+  };
+  expect(
+    siteGraph["@graph"].find((item) => item["@type"] === "Organization"),
+  ).toMatchObject({
+    email: "mailto:support@hunpeolabs.com",
+  });
+
+  await page.goto("/privacy");
+  await expect(
+    page.getByRole("link", { name: "support@hunpeolabs.com" }).first(),
+  ).toHaveAttribute("href", "mailto:support@hunpeolabs.com");
 
   const unavailableDelivery = await page.request.post("/api/contact", {
     data: {
@@ -362,8 +469,8 @@ test("principles own the detailed operating method instead of repeating the work
   page,
 }) => {
   await page.goto("/company/principles");
-  await expect(page.getByText("In practice:", { exact: false }).first()).toBeVisible();
-  await expect(page.getByText("We avoid:", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("Do", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Avoid", { exact: true }).first()).toBeVisible();
 
   await page.goto("/work");
   await expect(

@@ -12,7 +12,6 @@ const contentSecurityPolicy = [
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "object-src 'none'",
-  ...(isProduction ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [

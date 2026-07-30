@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createPageMetadata } from "@/app/seo";
-import { DetailPage } from "@/components/detail-page";
+import { ProductDetailPage } from "@/components/product-detail-page";
 import { StructuredData } from "@/components/structured-data";
+import { getProductPage } from "@/content/product-pages";
 import { getProduct, products } from "@/content/site";
 import { createProductStructuredData } from "@/lib/structured-data";
 
@@ -27,28 +28,14 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const product = getProduct((await params).slug);
-  if (!product) notFound();
+  const slug = (await params).slug;
+  const product = getProduct(slug);
+  const page = getProductPage(slug);
+  if (!product || !page) notFound();
 
   return (
     <>
-      <DetailPage
-        contextItems={[
-          { title: "Product purpose", body: product.purpose },
-          { title: "Current boundary", body: product.boundary },
-        ]}
-        description={product.summary}
-        items={product.capabilities}
-        label="Hunpeo Labs product"
-        listEyebrow="Current capabilities"
-        listTitle="The parts of the product currently described in public."
-        problem={product.audience}
-        problemTitle="Who this product is for"
-        process={product.flow}
-        processEyebrow="Product workflow"
-        status={product.maturity}
-        title={product.name}
-      />
+      <ProductDetailPage config={page} />
       <StructuredData data={createProductStructuredData(product)} />
     </>
   );

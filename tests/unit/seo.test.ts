@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 import robots from "@/app/robots";
-import { createPageMetadata, getSiteUrl, isIndexableDeployment } from "@/app/seo";
+import {
+  createPageMetadata,
+  getSiteUrl,
+  isIndexableDeployment,
+  SITE_CONTACT_EMAIL,
+} from "@/app/seo";
 import sitemap from "@/app/sitemap";
 
 const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -20,6 +25,10 @@ afterEach(() => {
 });
 
 describe("SEO discovery contract", () => {
+  it("publishes the owner-confirmed direct contact address", () => {
+    expect(SITE_CONTACT_EMAIL).toBe("support@hunpeolabs.com");
+  });
+
   it("normalizes a valid site URL and rejects insecure public origins", () => {
     expect(getSiteUrl("https://example.com/base?query=1#hash").toString()).toBe(
       "https://example.com/",
@@ -95,6 +104,9 @@ describe("SEO discovery contract", () => {
     expect(urls).not.toContain("https://example.com/resources/talks");
     expect(urls).not.toContain("https://example.com/work/ai-agent-kit");
     expect(urls).not.toContain("https://example.com/work/incov");
-    expect(urls).toContain("https://example.com/work/gig");
+    expect(urls).not.toContain("https://example.com/work/gig");
+    expect(urls).toContain("https://example.com/products/ai-agent-kit");
+    expect(urls).toContain("https://example.com/products/incov");
+    expect(urls).toContain("https://example.com/products/gig");
   });
 });

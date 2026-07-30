@@ -1,0 +1,25 @@
+{
+  "apphosting": {
+    "backendId": "hunpeolabs",
+    "rootDir": "/",
+    "ignore": [
+      "node_modules",
+      ".git",
+      ".env",
+      ".env.*",
+      ".ai/local",
+      ".codegraph",
+      ".cocoindex_code",
+      ".mcp.json",
+      ".next",
+      ".lighthouseci",
+      "coverage",
+      "output",
+      "playwright-report",
+      "test-results",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions"
+    ]
+  }
+}

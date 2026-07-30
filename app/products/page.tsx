@@ -6,7 +6,7 @@ import { products } from "@/content/site";
 
 export const metadata = createPageMetadata({
   title: "Products",
-  description: "AI Agent Kit and IncOv, products built by Hunpeo Labs.",
+  description: "AI Agent Kit, IncOv, and Gig, products built by Hunpeo Labs.",
   path: "/products",
 });
 
@@ -22,7 +22,13 @@ export default function ProductsPage() {
         <div className="product-showcase__stories">
           {products.map((product, productIndex) => (
             <article
-              className={product.slug === "incov" ? "product-feature product-feature--dark" : "product-feature"}
+              className={[
+                "product-feature",
+                `product-feature--${product.slug}`,
+                product.slug === "incov" ? "product-feature--dark" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               key={product.slug}
             >
               <div className="product-feature__intro">

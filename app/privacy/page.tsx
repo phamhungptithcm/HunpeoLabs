@@ -1,10 +1,11 @@
-import { createPageMetadata } from "@/app/seo";
-import { PageHero } from "@/components/page-hero";
+import { createPageMetadata, SITE_CONTACT_EMAIL } from "@/app/seo";
+import { PrivacySignal } from "@/components/privacy-signal";
 import { readContactDeliveryConfig } from "@/lib/contact";
 
 export const metadata = createPageMetadata({
   title: "Privacy",
-  description: "Privacy information for the Hunpeo Labs website.",
+  description:
+    "A simple explanation of how Hunpeo Labs uses the information you choose to share.",
   path: "/privacy",
 });
 
@@ -12,49 +13,58 @@ export default function PrivacyPage() {
   const contactDelivery = readContactDeliveryConfig();
 
   return (
-    <main>
-      <PageHero
-        description="This page describes the current website behavior without claiming integrations that are not present."
-        index="Legal / Privacy"
-        title="A minimal, transparent website footprint."
-      />
-      <section className="legal-copy">
-        <h2>Current website behavior</h2>
-        <p>
-          This version does not include account registration, payment processing,
-          newsletter signup, or customer tracking.
-        </p>
+    <main className="privacy-page">
+      <section className="privacy-hero">
+        <div className="privacy-hero__copy">
+          <p className="mono">Privacy / 01</p>
+          <h1>
+            <span className="privacy-hero__line">Privacy,</span>
+            {" "}
+            <span className="privacy-hero__line">
+              without the maze<span className="privacy-hero__period">.</span>
+            </span>
+          </h1>
+          <p className="privacy-hero__description">
+            <span>Share only what you’re comfortable with.</span>
+            {" "}
+            <span>We’ll keep it to the conversation you started.</span>
+          </p>
+        </div>
+        <PrivacySignal />
+      </section>
+
+      <section className="privacy-statements" aria-labelledby="privacy-statements-title">
+        <h2 className="privacy-visually-hidden" id="privacy-statements-title">
+          How we handle what you share
+        </h2>
+        <div className="privacy-statements__rail" aria-hidden="true" />
+        <article>
+          <span className="privacy-statement__number mono">01</span>
+          <p className="privacy-statement__label mono">When you reach out</p>
+          <p>We use what you share to understand your needs and get back to you.</p>
+        </article>
+        <article>
+          <span className="privacy-statement__number mono">02</span>
+          <p className="privacy-statement__label mono">Nothing more</p>
+          <p>We don’t sell your information or use it to target ads.</p>
+        </article>
+        <article>
+          <span className="privacy-statement__number mono">03</span>
+          <p className="privacy-statement__label mono">Still curious?</p>
+          <p>
+            Talk to us at{" "}
+            <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>.
+          </p>
+        </article>
         {contactDelivery ? (
-          <>
-            <h2>Project brief delivery</h2>
+          <aside className="privacy-provider">
+            <p className="mono">Project briefs</p>
             <p>
-              Project briefs are sent to {contactDelivery.providerName} only after you
-              submit the contact form. The form collects your name, work email, optional
-              company, project type, and the brief you write.
+              Project briefs are delivered through {contactDelivery.providerName}.
             </p>
             <p>{contactDelivery.retentionNotice}</p>
-          </>
-        ) : (
-          <>
-            <h2>Project brief delivery</h2>
-            <p>
-              A verified delivery channel has not been configured. The form cannot send
-              or store a project brief in this state.
-            </p>
-          </>
-        )}
-        <h2>Hosting and operational data</h2>
-        <p>
-          A hosting provider may process standard technical request data required to
-          deliver and protect the website. Production hosting and analytics have not
-          yet been selected.
-        </p>
-        <h2>Updates</h2>
-        <p>
-          This notice must be reviewed before production launch and updated whenever a
-          form, analytics service, authentication system, or third-party integration is
-          introduced.
-        </p>
+          </aside>
+        ) : null}
       </section>
     </main>
   );

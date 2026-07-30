@@ -1,0 +1,23 @@
+# Firebase App Hosting production configuration.
+# Backend contract: hunpeolabs / project hunpeolabs-prod / us-central1.
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://hunpeolabs.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: REQUIRE_CONTACT_DELIVERY
+    value: "false"
+    availability:
+      - BUILD
+      - RUNTIME
+
+# Contact delivery is intentionally omitted until a provider, retention policy,
+# and Secret Manager values have been reviewed. Never commit webhook credentials.
