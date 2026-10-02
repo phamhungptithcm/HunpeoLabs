@@ -1,0 +1,51 @@
+.account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.5rem 0;
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: inherit;
+  line-height: inherit;
+  text-decoration: none;
+
+}
+.account:hover .name {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-underline-offset: 0.5rem;
+  text-decoration-thickness: 1px;
+}
+.account:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.avatar {
+  display: inline-flex;
+  flex: 0 0 1.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #eef0ff;
+  color: var(--color-accent);
+  object-fit: cover;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.name {
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: inherit;
+}
+@media (max-width: 78rem) {
+  .name { display: none; }
+  .account { justify-content: center; min-width: 2.75rem; }
+}

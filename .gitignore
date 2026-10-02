@@ -23,3 +23,8 @@
 __pycache__/
 *.py[cod]
 *.tsbuildinfo
+
+# Local package caches and provider debug output
+/.pnpm-store/
+*-debug.log
+firebase-debug.*.log

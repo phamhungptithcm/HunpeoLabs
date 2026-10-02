@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-NAV-002",
+  "status": "PASSED",
+  "commit": "3d53e1b8201251cb28e02dbd2052ad36b1d67fec",
+  "candidate_sha256": {
+    "components/site-header.tsx": "f4f7ddf84fbabaddd6a4c7c3950754fafc18f60a4d02a4ecd95f3038b92c4784",
+    "styles/globals.css": "4f92f531933fdffac9f7027f169786987bdc85d3b02e3e66f57175d4ce5d221b",
+    "tests/e2e/site.spec.ts": "2eeebeb80b6ecc51159858efbb4ea7d8c9c771a0cb6185d8b20410b31d1ee3e7"
+  },
+  "dimensions": {
+    "requirement_match": { "status": "PASSED", "summary": "Approved progressive sizing, reversal, shared mobile menu and privacy override verified by six focused Playwright checks.", "evidence_refs": ["tests/e2e/site.spec.ts:203", "tests/e2e/site.spec.ts:239", "tests/e2e/site.spec.ts:257"] },
+    "security": { "status": "PASSED", "summary": "Scoped numeric CSS progress only; existing links, authentication, consent, APIs, storage and dependencies preserved. No secrets or external requests introduced.", "evidence_refs": ["components/site-header.tsx", "HUNPEOLABS-NAV-002-approval.md"] },
+    "code_quality": { "status": "PASSED", "summary": "Focused ESLint and full tsc --noEmit passed. rAF batches passive scroll events, progress writes avoid React rerenders, footprint reservation keeps content position stable. Chromium, mobile WebKit, Firefox and desktop WebKit checks passed.", "evidence_refs": ["HUNPEOLABS-NAV-002-completion-report.md", "components/site-header.tsx", "styles/globals.css"] },
+    "failure_paths": { "status": "PASSED", "summary": "Progress clamps to bounds; reverse scrolling and live reduced-motion preference updates pass; open-menu freeze and close resync pass. Desktop no-JavaScript navigation verified. Hydration defaults retain original height.", "evidence_refs": ["HUNPEOLABS-NAV-002-completion-report.md", "tests/e2e/site.spec.ts"] },
+    "error_handling": { "status": "PASSED", "summary": "Optional DOM ref access is safe; scroll/media listeners removed and pending frame cancelled on effect cleanup. No new asynchronous network or error surface. Mobile route navigation from an intermediate scroll position passed.", "evidence_refs": ["components/site-header.tsx:62", "HUNPEOLABS-NAV-002-completion-report.md"] },
+    "production_readiness": { "status": "PASSED", "summary": "Scoped local preview change is validated and rollback is confined to task hunks. No migrations or environment changes needed. This dimension assesses local implementation only; full production build/release and deployed behavior are NOT_TESTED.", "evidence_refs": ["HUNPEOLABS-NAV-002-completion-report.md"] },
+    "trade_offs": { "status": "PASSED", "summary": "Height changes require layout; reserved margin prevents content shift and scroll anchoring feedback. Scroll drives progress directly without delayed easing. No 60fps or device-performance claim. Existing surface easing retained; reduced motion skips interpolation and decorative scaling.", "evidence_refs": ["styles/globals.css", "HUNPEOLABS-NAV-002-change-impact-plan.md"] }
+  },
+  "findings": [],
+  "residual_risks": ["Real-device frame pacing and complete site-wide release gates not tested."],
+  "limitations": ["Runtime ledger CLI/package unavailable; current review and rendered report recorded as repository artifacts without a runtime receipt.", "Existing unrelated WIP retained; hashes identify the tested complete files, not a clean release candidate.", "Approval validator initially rejected DEGRADED index status; post-change index refresh achieved READY, approval record updated truthfully and path validation passed."]
+}

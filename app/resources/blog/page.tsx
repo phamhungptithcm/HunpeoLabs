@@ -1,146 +1,217 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createPageMetadata } from "@/app/seo";
-import { ArrowIcon } from "@/components/arrow-icon";
-import { getPublishedBlogPosts } from "@/content/blog";
+import { createPageMetadata, getSiteUrl } from "@/app/seo";
+import { BlogRss } from "@/components/blog-rss";
+import { BlogAccountLink } from "@/components/blog-account-link";
+import { Avatar, Cover, BlogIcon } from "@/components/blog-admin/ui";
+import { listPublished } from "@/lib/blog/repository";
 
 const description =
   "Source-backed notes on product engineering, AI systems, platform engineering, and engineering practice.";
-const posts = getPublishedBlogPosts();
-const baseMetadata = createPageMetadata({
-  title: "Blog",
-  description,
-  path: "/resources/blog",
-  index: posts.length > 0,
-});
+export const dynamic = "force-dynamic";
+export async function generateMetadata(): Promise<Metadata> {
+  const { items: posts } = await listPublished({ limit: 1 });
+  const baseMetadata = createPageMetadata({
+    title: "Blog",
+    description,
+    path: "/resources/blog",
+    index: posts.length > 0,
+  });
 
-export const metadata: Metadata = {
-  ...baseMetadata,
-  alternates: {
-    ...baseMetadata.alternates,
-    types: {
-      "application/rss+xml": "/resources/blog/feed.xml",
+  return {
+    ...baseMetadata,
+    alternates: {
+      ...baseMetadata.alternates,
+      types: {
+        "application/rss+xml": "/resources/blog/feed.xml",
+      },
     },
-  },
-};
+  };
+}
 
-const editorialScope = [
-  ["Product Engineering", "Interfaces, product decisions, and software built around real use."],
-  ["AI Systems", "Agents, evaluation, evidence, guardrails, and human control."],
-  ["Platform Engineering", "Architecture, modernization, ownership, and operational boundaries."],
-  ["Engineering Practice", "Reviewable decisions, reusable learning, and delivery evidence."],
-] as const;
-
-export default function BlogPage() {
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    q?: string;
+    tag?: string;
+    category?: string;
+    cursor?: string;
+  }>;
+}) {
+  const query = await searchParams;
+  const { items: posts, next } = await listPublished(query);
   const [featured, ...remaining] = posts;
-
+  const categories = Array.from(
+    new Set([
+      "Kỹ thuật",
+      "AI & Tự động hóa",
+      "Sản phẩm",
+      "Thiết kế",
+      ...posts.map((p) => p.category),
+    ]),
+  );
   return (
-    <main className="blog-page">
-      <section className="blog-hero">
+    <main className="container">
+      <section className="journal-intro">
         <div>
-          <p className="mono">04.1 / Blog</p>
-          <h1>Notes from the work.</h1>
+          <div className="eyebrow tiny-rule">
+            Góc nhìn từ người làm sản phẩm
+          </div>
+          <h1>
+            Ideas into <em>practice.</em>
+          </h1>
         </div>
         <div>
-          <p>{description}</p>
-          <a className="text-link" href="/resources/blog/feed.xml">
-            RSS feed
-            <ArrowIcon />
-          </a>
+          <p>
+            Chuyện xây sản phẩm, làm kỹ thuật và những điều học được trên hành
+            trình tại HunpeoLabs.
+          </p>
+          <BlogAccountLink />
         </div>
       </section>
-
-      {featured ? (
-        <>
-          <section className="blog-featured">
-            <p className="mono">Latest article</p>
-            <Link href={`/resources/blog/${featured.slug}`}>
-              <div>
-                <span className="mono">{featured.category}</span>
-                <h2>{featured.title}</h2>
-                <p>{featured.summary}</p>
-              </div>
-              <div className="blog-card__meta mono">
-                <span>{featured.publishedAt}</span>
-                <span>{featured.readingMinutes} min read</span>
-                <ArrowIcon />
-              </div>
+      {featured && (
+        <Link className="feature" href={`/resources/blog/${featured.slug}`}>
+          <div className="feature-art">
+            <Cover
+              id={featured.coverId}
+              title={featured.title}
+              loading="eager"
+            />
+          </div>
+          <div className="feature-copy">
+            <div className="eyebrow tiny-rule">
+              Bài viết nổi bật · {featured.category}
+            </div>
+            <h2>{featured.title}</h2>
+            <p>{featured.summary}</p>
+            <div className="byline">
+              <Avatar
+                name={featured.author}
+                mediaId={featured.authorAvatarId}
+              />
+              <span>
+                {featured.author}
+                <br />
+                <span className="small">
+                  {new Date(featured.publishedAt).toLocaleDateString("vi")} ·{" "}
+                  {featured.readingMinutes} phút đọc
+                </span>
+              </span>
+            </div>
+            <span className="arrow-link">
+              Đọc câu chuyện <BlogIcon name="arrow" />
+            </span>
+          </div>
+        </Link>
+      )}
+      <section id="latest">
+        <div className="feed-toolbar">
+          <nav className="categories" aria-label="Chủ đề">
+            <Link
+              className={`category ${!query.category ? "active" : ""}`}
+              href="/resources/blog#latest"
+            >
+              Tất cả bài viết
             </Link>
-          </section>
-          {remaining.length ? (
-            <section className="blog-index" aria-label="More articles">
-              {remaining.map((post, index) => (
-                <Link href={`/resources/blog/${post.slug}`} key={post.slug}>
-                  <span className="mono">{String(index + 2).padStart(2, "0")}</span>
-                  <div>
-                    <p className="mono">{post.category}</p>
-                    <h2>{post.title}</h2>
-                    <p>{post.summary}</p>
+            {categories.map((c) => (
+              <Link
+                key={c}
+                className={`category ${query.category === c ? "active" : ""}`}
+                href={`/resources/blog?category=${encodeURIComponent(c)}#latest`}
+              >
+                {c}
+              </Link>
+            ))}
+          </nav>
+          <form action="/resources/blog" className="search">
+            <BlogIcon name="search" size={15} />
+            {query.category && (
+              <input type="hidden" name="category" value={query.category} />
+            )}
+            <input
+              aria-label="Tìm bài viết"
+              name="q"
+              defaultValue={query.q}
+              placeholder="Tìm bài viết…"
+            />
+            <button aria-label="Tìm kiếm" type="submit">
+              <BlogIcon name="arrow" size={14} />
+            </button>
+          </form>
+        </div>
+        {(query.q || query.tag) && (
+          <p className="private-note">
+            Kết quả {query.q ? `cho từ khóa “${query.q}”` : ""}{" "}
+            {query.tag ? `với tag #${query.tag}` : ""}. Tìm theo một từ trong
+            tiêu đề, tóm tắt hoặc tags.{" "}
+            <Link href="/resources/blog">Xóa bộ lọc</Link>
+          </p>
+        )}
+        {remaining.length > 0 && (
+          <div className="story-grid">
+            {remaining.map((p) => (
+              <article className="story" key={p.id}>
+                <Link href={`/resources/blog/${p.slug}`}>
+                  <div className="thumb">
+                    <Cover id={p.coverId} title={p.title} />
                   </div>
-                  <div className="blog-card__meta mono">
-                    <span>{post.publishedAt}</span>
-                    <span>{post.readingMinutes} min read</span>
-                    <ArrowIcon />
+                  <div className="eyebrow">{p.category}</div>
+                  <h3>{p.title}</h3>
+                  <p>{p.summary}</p>
+                  <div className="byline">
+                    <span>{p.author}</span>
+                    <span>·</span>
+                    <span>{p.readingMinutes} phút đọc</span>
                   </div>
                 </Link>
-              ))}
-            </section>
-          ) : null}
-        </>
-      ) : (
-        <section className="blog-empty">
-          <div>
-            <p className="mono">Publication status</p>
-            <h2>The publishing system is ready. The first article is not public yet.</h2>
-            <p>
-              Articles appear here only after their writing, author, dates, and sources
-              have been reviewed. Until then, the index stays intentionally empty.
-            </p>
-            <div className="blog-empty__actions">
-              <Link className="text-link" href="/work">
-                Explore selected work
-                <ArrowIcon />
-              </Link>
-              <Link className="text-link" href="/resources/open-source">
-                Inspect open source
-                <ArrowIcon />
-              </Link>
+              </article>
+            ))}
+          </div>
+        )}
+        {!featured && (
+          <div className="state-card journal-empty">
+            <div className="state-icon">
+              <BlogIcon name="file" size={22} />
             </div>
+            <h2>
+              {query.q || query.category || query.tag
+                ? "Chưa có bài phù hợp."
+                : "Chưa có bài viết."}
+            </h2>
+            <p>
+              {query.q || query.category || query.tag
+                ? "Thử một chủ đề hoặc từ khóa khác."
+                : "Ghé lại sau hoặc theo dõi qua RSS nhé."}
+            </p>
+            {query.q || query.category || query.tag ? (
+              <Link className="button" href="/resources/blog">
+                Xem tất cả bài viết
+              </Link>
+            ) : (
+              <Link className="button" href="/work">
+                Khám phá công việc của chúng tôi{" "}
+                <BlogIcon name="arrow" size={14} />
+              </Link>
+            )}
           </div>
-          <div>
-            <p className="mono">Publication requirements</p>
-            <ol>
-              {[
-                "A named, verified author",
-                "A reviewed and substantive manuscript",
-                "Inspectable sources for factual claims",
-                "Publication and update history",
-              ].map((requirement, index) => (
-                <li key={requirement}>
-                  <span className="mono">{String(index + 1).padStart(2, "0")}</span>
-                  {requirement}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-      )}
-
-      <section className="blog-scope">
-        <header>
-          <p className="mono">Editorial scope</p>
-          <h2>Four areas, one standard: make the reasoning reusable.</h2>
-        </header>
-        <div>
-          {editorialScope.map(([title, body], index) => (
-            <article key={title}>
-              <span className="mono">{String(index + 1).padStart(2, "0")}</span>
-              <h3>{title}</h3>
-              <p>{body}</p>
-            </article>
-          ))}
-        </div>
+        )}
+        {next && (
+          <Link
+            className="button"
+            href={`/resources/blog?${new URLSearchParams({ ...query, cursor: next })}`}
+          >
+            Xem thêm bài viết <BlogIcon name="arrow" size={14} />
+          </Link>
+        )}
       </section>
+      <div className="journal-bottom">
+        <div>
+          <h3>Đọc bài mới qua RSS</h3>
+          <p className="muted small">Thêm blog vào ứng dụng đọc tin của bạn.</p>
+        </div>
+        <BlogRss url={new URL("/resources/blog/feed.xml", getSiteUrl()).toString()} />
+      </div>
     </main>
   );
 }

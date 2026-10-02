@@ -66,6 +66,30 @@ export default function PrivacyPage() {
           </aside>
         ) : null}
       </section>
+
+      <section
+        aria-labelledby="traffic-analytics-title"
+        className="privacy-analytics"
+        id="traffic-analytics"
+      >
+        <p className="mono">Optional measurement</p>
+        <h2 id="traffic-analytics-title">Traffic analytics stays your choice.</h2>
+        <div>
+          <p>
+            If traffic analytics is enabled and you choose Allow, Google Analytics for
+            Firebase helps us understand aggregate visits, pages viewed, traffic sources,
+            approximate location, and browser or device information. It may use Analytics
+            cookies and a Firebase installation identifier.
+          </p>
+          <p>
+            We do not send project brief fields, use User-ID, or enable advertising
+            personalization. You can change your choice at any time through Analytics
+            preferences in the footer. We review the linked property’s retention setting
+            before production measurement is activated.
+          </p>
+        </div>
+      </section>
+      {process.env.BLOG_ENABLED === 'true' && <section className="privacy-analytics" aria-labelledby="blog-privacy-title"><p className="mono">Blog accounts and discussion</p><h2 id="blog-privacy-title">Your public words, your private account.</h2><div><p>Firebase Authentication processes your email and sign-in details. A necessary session cookie keeps you signed in for up to one day. Your display name and approved comments are public; your email, account identifiers and reports are not included in public comment responses.</p><p>Comments are reviewed before publication. Editing a comment sends it back for review. Deleting a comment removes its public text and name; a placeholder may remain to preserve replies. Moderation records and backups follow our operational retention process. Contact us for account or data deletion requests.</p><p>Rate limits use short-lived hashed network identifiers to reduce spam. Sharing buttons open the service you choose only when clicked; that service handles what you choose to publish. We do not send comment text or account identity to traffic analytics.</p></div></section>}
     </main>
   );
 }

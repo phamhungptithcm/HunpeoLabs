@@ -69,3 +69,46 @@ Product-page copy and data live in `content/product-pages.ts`. Shared product
 index and work-route mappings live in `content/site.ts`. The page renderer is
 `components/product-detail-page.tsx`; product-specific diagrams are kept in
 `components/product-detail-visuals.tsx`.
+
+## Product catalog (approved portfolio revision)
+
+`/products` now uses `content/product-catalog.ts`, separately from the legacy
+product detail registry. The current published catalog is AI-Agent-Kit,
+SatsunicSEO, SatsunicMec and BeFam. Featured selection is editorial, not a
+release-readiness claim. The owner confirmed SatsunicMec as the public name of
+the satsunicmedic/HumanScope educational product.
+
+To add a product, add a stable ID, name, category, summary, sort order,
+publication state, action and optional visual configuration. Use `draft` until
+content is reviewed. Set `featured` independently of publication or maturity.
+Generic workflow, audit and letter visuals are available; missing visuals use
+a name initial. No new route component is needed for an inline summary.
+
+Actions are typed: existing internal product route, verified HTTPS external
+URL, or inline summary. Validate any new external destination before publishing.
+Internal detail destinations must exist in the legacy detail registry. Draft
+and archived entries are excluded; duplicate IDs, incomplete published entries
+and invalid destinations fail validation. Ordering is stable. Empty groups are
+omitted. Adding a full new detail page is a separate scoped task.
+
+SatsunicSEO exposes its source-confirmed Chrome listing. Pending website/store channels remain visible as disabled controls without helper text; no fabricated
+`/products/<slug>` routes or active placeholder links are published. `llms.txt`
+links them to their catalog anchors. The sitemap retains real existing detail
+URLs and has no fragment or nonexistent product URL entries. IncOv/Gig details
+and existing work redirects remain available even though they are not in the
+new catalog. Displaying an entry does not certify app/provider/medical release
+readiness.
+
+Catalog styles are isolated in `app/products/products.module.css`. It reuses
+the global site shell and has static illustrative visuals, native disclosure
+controls, and no extra client JavaScript or dependencies. Visuals are labeled
+as illustrations, not live screenshots. See
+`docs/design/product-catalog-v2/design-and-impact-plan.md` for approval scope.
+
+## Product distribution channels
+
+`content/product-catalog.ts` keeps `action` as the internal overview or fallback for products with no configured channels and optional `channels` for distribution. Use `{ kind: "website" | "npm" | "app-store" | "google-play" | "chrome-store", state: "verified", href }` only after source/owner confirmation. Missing URLs are `{ kind, state: "pending" }`: these render disabled website/store controls with a subdued disabled appearance and no href. Complete the [release link checklist](design/product-catalog-v2/release-links-checklist.md) before publishing.
+
+AI-Agent-Kit uses npm as primary with its existing overview secondary. Known store destinations are shown as compact links; App Store/Google Play use official local artwork. Apple is first when both stores are present. External links use native anchors without Next.js prefetch. Catalog discovery keeps its original internal destination/anchor; legacy profiles remain available.
+
+Repository hosts require `openSourceEvidence` describing verification that the repository is public and open source. No repository link is a fallback for a missing store or website. Verified URL is a content state, not proof of current release availability: live/region/publisher verification remains a release task. Add future channels by content, not by product-specific page conditions.

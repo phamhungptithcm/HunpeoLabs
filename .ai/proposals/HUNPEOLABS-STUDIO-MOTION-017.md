@@ -1,0 +1,2 @@
+# Gentle Studio navigation motion
+Direct user request authorizes light animation between sidebar sections. Plan: scoped 180ms menu color/press transitions and 220ms opacity/4px entrance on pathname-keyed main. Keep routing, authorization, forms and sidebar unchanged. Disable motion for prefers-reduced-motion. No new dependency. Intelligence DEGRADED with targeted source inspection. Validate ESLint, TypeScript and diff whitespace; visual acceptance remains pending due browser security restriction.

@@ -1,6 +1,6 @@
 {
   "name": "@hunpeolabs/website",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "engines": {
@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:analytics": "NEXT_PUBLIC_FIREBASE_ANALYTICS_ENABLED=true NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAnalyticsTestKey000000000000000 NEXT_PUBLIC_FIREBASE_APP_ID=1:1234567890:web:abcdef1234567890 NEXT_PUBLIC_FIREBASE_PROJECT_ID=hunpeolabs-test NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-TEST12345 playwright test tests/e2e/analytics.spec.ts --project=chromium --project=mobile --workers=1",
     "test:e2e:core": "playwright test --project=chromium --project=mobile",
     "test:e2e:cross-browser": "playwright test tests/e2e/smoke.spec.ts --project=firefox --project=webkit",
     "test:e2e:production": "PLAYWRIGHT_USE_PRODUCTION_SERVER=true playwright test --project=chromium --project=mobile",
@@ -23,12 +24,24 @@
     "release:verify-version": "node scripts/verify-release-version.mjs",
     "validate:production-env": "node scripts/validate-production-env.mjs",
     "firebase:preflight": "node scripts/validate-firebase-production.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "test:e2e:blog": "BLOG_E2E=true playwright test --config playwright.blog.config.ts",
+    "blog:package": "python3 scripts/package-blog-release.py",
+    "blog:validate-env": "node scripts/validate-blog-env.mjs"
   },
   "dependencies": {
-    "next": "16.2.12",
+    "@tiptap/extension-image": "3.31.4",
+    "@tiptap/pm": "3.31.4",
+    "@tiptap/react": "3.31.4",
+    "@tiptap/starter-kit": "3.31.4",
+    "firebase": "12.17.0",
+    "firebase-admin": "14.5.0",
+    "next": "16.3.8",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "0.0.1",
+    "sharp": "0.35.5",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@playwright/test": "1.62.0",
@@ -36,7 +49,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "16.2.12",
+    "eslint-config-next": "16.3.8",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }

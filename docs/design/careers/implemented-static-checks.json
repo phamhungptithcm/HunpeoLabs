@@ -1,0 +1,9 @@
+{
+  "sharedVision": true,
+  "solo": true,
+  "email": true,
+  "anchor": true,
+  "products": true,
+  "noVacancy": true,
+  "noJobPosting": true
+}

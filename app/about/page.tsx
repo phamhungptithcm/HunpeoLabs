@@ -2,10 +2,11 @@ import Link from "next/link";
 import { createPageMetadata } from "@/app/seo";
 import { ArrowIcon } from "@/components/arrow-icon";
 import { SystemDiagram } from "@/components/system-diagram";
+import styles from "./about.module.css";
 
 export const metadata = createPageMetadata({
   title: "About",
-  description: "About Hunpeo Labs and its approach to product and engineering work.",
+  description: "Hunpeo Labs is an independent product and engineering studio founded by Hung Pham.",
   path: "/about",
 });
 
@@ -22,13 +23,22 @@ export default function AboutPage() {
       <section className="editorial-hero">
         <div>
           <h1>
-            We build with clarity, evidence, and responsibility<span>.</span>
+            About <br />Hunpeo Labs<span>.</span>
           </h1>
           <p>
-            Hunpeo Labs is an engineering studio for digital products, AI systems,
-            and enterprise platforms. We bring product judgment and technical depth
-            into one practice.
+            An independent product and engineering studio, founded by Hung Pham.
           </p>
+          <div className={styles.founder}>
+            <h2>Hung Pham — Founder</h2>
+            <nav className={styles.links} aria-label="Hung Pham social profiles">
+              <a href="https://www.linkedin.com/in/hunpham/">LinkedIn <ArrowIcon /></a>
+              <a href="https://www.facebook.com/hawaihouu">Facebook <ArrowIcon /></a>
+              <a href="https://github.com/phamhungptithcm">GitHub <ArrowIcon /></a>
+            </nav>
+            <a className={styles.studio} href="https://www.facebook.com/profile.php?id=61579548848441">
+              Follow Hunpeo Labs on Facebook <ArrowIcon />
+            </a>
+          </div>
         </div>
         <SystemDiagram label="How we think" variant="thinking" />
       </section>

@@ -1,0 +1,2 @@
+# Single-line settings header
+Direct user request: compact header into one line. Replace stacked eyebrow/title/description/account with h1 and inline Google/email identity. Scoped CSS flex row, truncate long email on narrow screens while full email remains DOM/title. No functionality/auth change. Intelligence DEGRADED source fallback. Validate lint/types/whitespace; rendered validation remains unavailable.

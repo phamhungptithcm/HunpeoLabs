@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import robots from "@/app/robots";
 import {
   createPageMetadata,
@@ -7,6 +7,8 @@ import {
   SITE_CONTACT_EMAIL,
 } from "@/app/seo";
 import sitemap from "@/app/sitemap";
+
+vi.mock('server-only', () => ({}));
 
 const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 const originalVercelEnv = process.env.VERCEL_ENV;
@@ -86,7 +88,7 @@ describe("SEO discovery contract", () => {
     expect(metadata.robots).toEqual({ index: false, follow: false });
   });
 
-  it("keeps robots and sitemap aligned with the production URL", () => {
+  it("keeps robots and sitemap aligned with the production URL", async () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://example.com";
     process.env.VERCEL_ENV = "production";
 
@@ -96,7 +98,7 @@ describe("SEO discovery contract", () => {
       host: "https://example.com",
     });
 
-    const urls = sitemap().map(({ url }) => url);
+    const urls = (await sitemap()).map(({ url }) => url);
     expect(urls).toContain("https://example.com/");
     expect(urls).toContain("https://example.com/resources/open-source");
     expect(urls).not.toContain("https://example.com/resources/blog");

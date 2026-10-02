@@ -1,4 +1,5 @@
 "use client";
+import { progressFetch } from "@/lib/ui/action-progress";
 
 import { FormEvent, useState } from "react";
 import { ArrowIcon } from "@/components/arrow-icon";
@@ -33,7 +34,7 @@ export function ProjectBriefForm({ deliveryAvailable }: ProjectBriefFormProps) {
     setSubmitState({ status: "submitting", message: "Sending your project brief…" });
 
     try {
-      const deliveryResponse = await fetch("/api/contact", {
+      const deliveryResponse = await progressFetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

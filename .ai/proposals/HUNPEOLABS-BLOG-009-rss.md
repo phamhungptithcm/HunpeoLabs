@@ -1,0 +1,4 @@
+# RSS subscription UX
+Scope approved by ongoing complete-blog UX task and current report of unfinished RSS experience. No backend/data/infra changes. Current link opens valid RSS XML directly; RSS consumers rely on same URL and content type.
+Intelligence DEGRADED (stale indexes), verified page, feed route, dialog/share component and existing E2E assertion. Node/Next/React existing patterns.
+Plan: add BlogRss client control reusing BlogDialog/share styles, concise explanation and readonly absolute feed address with copy feedback/fallback, explicit raw XML link, retain native link fallback before hydration. Pass canonical site feed URL from server. Replace only RSS CTA, update existing relevant site E2E to assert dialog/URL/Escape and unchanged feed contract. Validate lint/typecheck and real browser mobile/desktop. No new dependencies, feed URL/output unchanged; rollback removes component and restores link.

@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-SERVICES-001",
+  "status": "BLOCKED",
+  "dimensions": {
+    "requirement_match": {
+      "status": "FAILED",
+      "summary": "Initial bounded source review; final build and visual verification still pending.",
+      "evidence_refs": [
+        "output/services-implementation/visual-metrics.json",
+        "output/services-implementation/interaction-retry.log"
+      ]
+    },
+    "security": {
+      "status": "PASSED",
+      "summary": "Initial bounded source review; final build and visual verification still pending.",
+      "evidence_refs": [
+        "output/services-implementation/visual-metrics.json",
+        "output/services-implementation/interaction-retry.log"
+      ]
+    },
+    "code_quality": {
+      "status": "PASSED",
+      "summary": "Initial bounded source review; final build and visual verification still pending.",
+      "evidence_refs": [
+        "output/services-implementation/visual-metrics.json",
+        "output/services-implementation/interaction-retry.log"
+      ]
+    },
+    "failure_paths": {
+      "status": "PASSED",
+      "summary": "Initial bounded source review; final build and visual verification still pending.",
+      "evidence_refs": [
+        "output/services-implementation/visual-metrics.json",
+        "output/services-implementation/interaction-retry.log"
+      ]
+    },
+    "error_handling": {
+      "status": "PASSED",
+      "summary": "Initial bounded source review; final build and visual verification still pending.",
+      "evidence_refs": [
+        "output/services-implementation/visual-metrics.json",
+        "output/services-implementation/interaction-retry.log"
+      ]
+    },
+    "production_readiness": {
+      "status": "NOT_RUN",
+      "summary": "Initial bounded source review; final build and visual verification still pending.",
+      "evidence_refs": [
+        "output/services-implementation/visual-metrics.json",
+        "output/services-implementation/interaction-retry.log"
+      ]
+    },
+    "trade_offs": {
+      "status": "PASSED",
+      "summary": "Initial bounded source review; final build and visual verification still pending.",
+      "evidence_refs": [
+        "output/services-implementation/visual-metrics.json",
+        "output/services-implementation/interaction-retry.log"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "severity": "medium",
+      "location": "components/services-content.tsx / app/services/services.css",
+      "summary": "Detail mobile delivery section was 40px shorter than approved mockup because the empty grid row spacing was omitted.",
+      "fix": "Added compact step pseudo-element retaining the 8px gap per step without empty paragraphs.",
+      "status": "fixed_pending_final_visual_verification"
+    },
+    {
+      "severity": "low",
+      "location": "tests/e2e/site.spec.ts",
+      "summary": "Legacy service fit and boundary assertions referenced superseded copy.",
+      "fix": "Migrated assertions to approved wording while retaining adjacent-service distinction coverage.",
+      "status": "fixed_verified_4_interaction_checks_passed"
+    },
+    {
+      "severity": "low",
+      "location": "tests/e2e/services.spec.ts",
+      "summary": "Five-second navigation expectation intermittently expired during loaded local browser runs; isolated click reached the correct route.",
+      "fix": "Bounded the navigation wait to 15 seconds and multi-route test to 120 seconds; preserved all semantic assertions.",
+      "status": "fixed_verified_4_interaction_checks_passed"
+    }
+  ],
+  "residual_risks": [
+    "Full-repository lint includes old output build artifacts and unrelated blog WIP."
+  ],
+  "limitations": [
+    "Initial dev server interrupted by concurrent shared-build activity. Final checks moved to isolated source snapshot.",
+    "Governed-runtime reporting package unavailable; evidence retained in files."
+  ]
+}

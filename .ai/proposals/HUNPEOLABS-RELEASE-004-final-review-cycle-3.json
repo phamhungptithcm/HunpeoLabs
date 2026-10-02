@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-RELEASE-004",
+  "cycle": 3,
+  "status": "BLOCKED",
+  "candidate": {
+    "branch": "hunpeolabs/release-v0.3.0",
+    "baseCommit": "e28331d79fc27842224192ef9f3397e6be80a8b3",
+    "sourceSha256": "456dd2610b69c0add37cb687a3e051e8668320f97d6fa97f011f1f9fee17f721",
+    "scope": "candidate source before final review/report metadata"
+  },
+  "dimensions": {
+    "requirement_match": {
+      "status": "BLOCKED",
+      "summary": "Approved local fixes/provisioning completed; required full release acceptance and promotion are incomplete.",
+      "evidence_refs": [
+        "HUNPEOLABS-RELEASE-004-completion-report.md"
+      ]
+    },
+    "security": {
+      "status": "BLOCKED",
+      "summary": "Verified Google-only claims, revocation, same-origin guard, transactional editorial grants, private media projection and deny-all client rules. Trusted ingress/direct-backend spoof resistance and live Auth abuse settings are not verified.",
+      "evidence_refs": [
+        "HUNPEOLABS-RELEASE-004-completion-report.md"
+      ]
+    },
+    "code_quality": {
+      "status": "PASSED",
+      "summary": "Latest lint/typecheck/84 unit tests, adapter 6 regression cases and selected canonical generator checks pass; one existing proposal warning remains.",
+      "evidence_refs": [
+        "HUNPEOLABS-RELEASE-004-completion-report.md"
+      ]
+    },
+    "failure_paths": {
+      "status": "PASSED",
+      "summary": "Local/emulator invalid identity, outsider denial, revoked access, private preview, conflict, moderation, media, offline editor and real HTTP404 coverage pass. This excludes live provider failure behavior.",
+      "evidence_refs": [
+        "HUNPEOLABS-RELEASE-004-completion-report.md"
+      ]
+    },
+    "error_handling": {
+      "status": "PASSED",
+      "summary": "Reviewed bounded JSON/image bodies, safe error codes/non-sensitive request IDs, 503 provider failures, cancellation on oversized inputs and fail-closed missing ingress. Emulator restore refuses nonempty target.",
+      "evidence_refs": [
+        "HUNPEOLABS-RELEASE-004-completion-report.md"
+      ]
+    },
+    "production_readiness": {
+      "status": "BLOCKED",
+      "summary": "CMS disabled; live revision unchanged. Missing trusted ingress, live acceptance, production DR/retention/alerts/Analytics owner acceptance, clean frozen install and CI evidence.",
+      "evidence_refs": [
+        "HUNPEOLABS-RELEASE-004-completion-report.md"
+      ]
+    },
+    "trade_offs": {
+      "status": "PASSED",
+      "summary": "Cross-region existing bucket reused; bucket-scoped writer after prefix condition rejected, no ACL/UBLA changes. Contact and One Tap off, Analytics consent-only, no synthetic public content.",
+      "evidence_refs": [
+        "HUNPEOLABS-RELEASE-004-completion-report.md"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "id": "R004-INGRESS",
+      "severity": "high",
+      "status": "OPEN",
+      "location": "lib/blog/rate-limit.ts:requestLimits; apphosting.yaml",
+      "evidence": "No provider-guaranteed overwritten header established; Cloud Run ingress all. Entire selected header string becomes rate-limit key.",
+      "production_impact": "Enabling guessed forwarded header allows spoof-based network-limit bypass; missing header prevents session creation.",
+      "correction": "Keep CMS false. Establish and verify trusted ingress with forged-prefix/direct-backend tests before an approved configuration/rollout."
+    },
+    {
+      "id": "R004-DR",
+      "severity": "high",
+      "status": "OPEN",
+      "location": "docs/operations/blog-runbook.md",
+      "evidence": "Zero Firestore backup schedules; emulator archive excludes Auth/private community.",
+      "production_impact": "Production content/access restoration and revoked-grant preservation not proved.",
+      "correction": "Owner-approved private backup/retention/restore scope and controlled restore evidence required."
+    },
+    {
+      "id": "R004-LIVE",
+      "severity": "high",
+      "status": "OPEN",
+      "location": "production acceptance",
+      "evidence": "No candidate rollout; Google desktop/mobile, both owners, private media/IAM and revocation not exercised live.",
+      "production_impact": "Provider compatibility remains unknown.",
+      "correction": "Controlled candidate acceptance after preceding gates, no public synthetic articles."
+    },
+    {
+      "id": "R004-INSTALL",
+      "severity": "medium",
+      "status": "BLOCKED",
+      "location": "dependency installation",
+      "evidence": "Explicit frozen installation automatically rejected: approval required by policy, but AskForApproval is set to Never.",
+      "production_impact": "Copied dependencies/lock comparison do not prove clean Node24/pnpm11.9 install.",
+      "correction": "Run required frozen install in an authorized runner and require green CI; do not bypass rejection."
+    }
+  ],
+  "residual_risks": [
+    "Local dev CMS reports hydration attribute warnings associated with global motion DOM mutation; production smoke has no unexpected console errors, source-causal fix not yet validated.",
+    "Next.js logs internal NoFallbackError on intentionally unknown finite service route while tested HTTP404 semantics pass.",
+    "Media write then Firestore metadata failure can leave an orphan private object; retention/cleanup policy not activated.",
+    "Storage is asia-southeast1 while application/database are us-central1; live latency unmeasured."
+  ],
+  "limitations": [
+    "Repository intelligence DEGRADED: candidate indexes missing; bounded source/native evidence used.",
+    "Approval validator requires READY despite shared workflow allowing approved DEGRADED; mismatch not weakened.",
+    "ai-agent-kit runtime command/package/task ledger unavailable; file review/report used; no fabricated ledger records.",
+    "Token usage and billed cost unavailable.",
+    "No CI, merge, tag, publication or rollout claimed."
+  ]
+}

@@ -1,0 +1,26 @@
+# BLOG-003 — Google sign-in, editorial access and integration QA
+
+Authorization: user explicitly requests Google-only Firebase authentication, initial Studio access only for hunpeo@gmail.com and phamhung.pitit@gmail.com, future add/edit/remove access via Firebase, editor evaluation and end-to-end readiness checks. Existing local implementation approval persists. No production deployment, IAM/provider configuration mutation, billing or real article publication is inferred.
+
+Intelligence: gate rerun; DEGRADED index health/staleness. Bounded source evidence: login/account/session, currentActor, catalog and assignment, settings, CSP, config validators, packaging script, editor and existing emulator tests. Browser plugin absent; installed Playwright fallback per frontend-testing-debugging skill.
+
+Concrete plan / approved paths:
+- `lib/blog/access.ts` and auth/session: Google provider plus verified identity required server-side; canonical Firestore access entries by normalized email; one-time initial two-admin seed; legacy UID membership cannot grant access; safe add/update/revoke with transactional self/last-admin protection and immediate subsequent-request enforcement.
+- `components/blog-admin/login.tsx`, account/chrome, account/login routes: one branded Google action, initialization/busy/cancel/failure states, safe local return navigation and Studio entry for permitted users. No password form or public editor signup.
+- `components/blog-admin/settings.tsx`, members API and repository: list initial/pending members; add email before first login, edit role and remove editorial access with confirmation. Preserve independent author profiles.
+- `next.config.ts`: exact Firebase auth handler/GAPI CSP origins and popup-compatible COOP only on login/account routes. Other site policies remain intact. Environment validation and bootstrap/runbook updated for Google configuration and one-time policy seeding.
+- `tests/e2e/blog*.spec.ts`, `tests/unit/blog*.test.ts`: Google emulator popup and provider rejection, initial identities, outsider denial, add/edit/remove, concurrent/self protection, real editor toolbar/write/media/revision/preview/publish/comments/share/discovery. Migrate old password fixtures to Google emulator identities without weakening assertions.
+- Editor improvements only for demonstrated usability defects in approved writing flow; no new rich-content feature family or dependency without evidence.
+- Local packaging/integration evidence and reproducible release/preflight notes; no deploy/push. Verify scope and preserve unrelated WIP.
+
+Risk HIGH (identity/authorization). Never trust email from client body, legacy role documents or a UI-only allowlist. Seed exactly once so a removed initial member is not silently restored. Signed verified Google claim must match an active access entry on every staff request. Readers with another Google account may comment but cannot enter Studio. Access removal does not delete Firebase Auth account or content.
+
+Validation: typecheck/lint/unit; desktop/mobile E2E and responsive screenshot inspection; production-mode build and local packaged smoke; explicit readiness matrix for source/emulator/local build vs live Google/Firebase domains/IAM/ingress/retention/provider operations. No all-functions-production-ready claim without live evidence. Review-loop and final runtime report required.
+
+References: Firebase official Google sign-in, emulator Auth and redirect best-practices documentation inspected; popup uses direct user gesture. Provider console setup remains an operator launch prerequisite.
+
+Integration validation refinement: refresh existing website E2E selectors to the current Services/Products/Careers navigation and approved current markup; retain consent/revocation, viewport and indexing assertions. Journal regression covers populated and empty cases independently. No unrelated product UI or business behavior change. Findings came from the requested full integration run.
+
+Security remediation within requested production-readiness scope (2026-10-02): pnpm audit found critical Next.js advisories, including next/og ImageResponse used by this blog, plus transitive PostCSS/sharp/nanoid/grpc/uuid advisories. Verified official Next.js September 30 release recommends 16.3.8. Update `package.json` Next.js and matching eslint-config-next to 16.3.8; regenerate `pnpm-lock.yaml`. Add only necessary targeted transitive patched-version overrides in `pnpm-workspace.yaml` after confirming API compatibility. Do not change React, Firebase identity policy or application contracts. Validate isolated install, frozen lockfile, audit, full type/lint/unit/build and browser suites; retain old candidate evidence as superseded. No production deployment. Rollback of the dependency change is local file restoration only; never deploy the vulnerable candidate as a fallback. User's explicit instruction to finish production readiness authorizes these reversible local security fixes.
+
+Final packaging integration: exclude generated output snapshots and local verification artifacts from root lint/TypeScript discovery. Application source remains fully checked; this prevents archived copies from being treated as live modules. Covered by the approved packaging and production-readiness scope.

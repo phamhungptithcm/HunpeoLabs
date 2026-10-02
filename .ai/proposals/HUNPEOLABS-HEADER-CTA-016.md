@@ -1,0 +1,2 @@
+# Compact header CTA
+User directly requests smaller, more refined Start a project button. Source inspection identifies header-cta; limit change to its styles, retaining link, accent and focus/hover behavior. Reduce minimum width 12rem to 10.5rem; height 3rem, padding 1rem, text .875rem, icon 1rem. Intelligence DEGRADED; targeted source fallback. Validate whitespace and source dimensions. Rendered verification remains unavailable due browser security rejection.

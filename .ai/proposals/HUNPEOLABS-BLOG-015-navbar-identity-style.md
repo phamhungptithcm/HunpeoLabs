@@ -1,0 +1,2 @@
+# Integrate navbar identity styling
+User screenshots show outlined account pill clashes with flat navigation. Explicit approved CSS-only refinement: remove pill border/background, reduce avatar to 28px, match nav typography/padding, keep account after CTA and retain mobile touch target/focus. Intelligence DEGRADED; inspected current account module, header flex alignment, nav typography and screenshots. Preserve auth, links, Studio roles and sidebar. Validate diff and existing account SSR; screenshot demonstrates pre-change only, live visual QA remains blocked.

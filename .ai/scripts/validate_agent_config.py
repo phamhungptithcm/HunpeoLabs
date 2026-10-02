@@ -13,6 +13,14 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+from sync_agent_assets import skill_files as safe_skill_files
+from sync_agent_assets import ADAPTER_FILES, selected_adapters, generated_skill_roots
+
+try:
+    import yaml as yaml_parser
+except ModuleNotFoundError:  # Optional full parser; built-in safety checks remain mandatory.
+    yaml_parser = None  # type: ignore[assignment]
+
 try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
@@ -38,10 +46,82 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
 
 
+def starts_quoted_yaml_scalar(line: str, index: int) -> bool:
+    prefix = line[:index].rstrip()
+    return not prefix or prefix[-1] in "-:,[{"
+
+
+def validate_yaml_text(path: Path, root: Path, errors: list[str]) -> None:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        fail(errors, f"invalid YAML {path.relative_to(root)}: cannot read UTF-8 text: {exc}")
+        return
+
+    if yaml_parser is not None:
+        try:
+            yaml_parser.safe_load(text)
+        except Exception as exc:  # noqa: BLE001
+            fail(errors, f"invalid YAML {path.relative_to(root)}: parser rejected document: {exc}")
+
+    quoted_from: int | None = None
+    escaped = False
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        index = 0
+        while index < len(line):
+            char = line[index]
+            if quoted_from is not None:
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == '"':
+                    quoted_from = None
+                index += 1
+                continue
+
+            if char == "#" and (index == 0 or line[index - 1].isspace()):
+                break
+            if char == '"' and starts_quoted_yaml_scalar(line, index):
+                quoted_from = line_number
+                index += 1
+                continue
+            if char == "!":
+                prefix = line[:index].rstrip()
+                token_boundary = not prefix or prefix[-1] in "-:,[{"
+                if token_boundary and index + 1 < len(line) and not line[index + 1].isspace():
+                    fail(
+                        errors,
+                        f"invalid YAML {path.relative_to(root)}:{line_number}: unsupported explicit tag",
+                    )
+            index += 1
+        escaped = False
+
+    if quoted_from is not None:
+        fail(
+            errors,
+            f"invalid YAML {path.relative_to(root)}:{quoted_from}: unterminated double-quoted scalar",
+        )
+
+
+def validate_yaml_files(root: Path, errors: list[str]) -> None:
+    yaml_files = [root / ".aider.conf.yml"] if "aider" in selected_adapters(root) else []
+    yaml_files.extend(sorted(path for path in (root / ".ai").rglob("*") if path.suffix in {".yaml", ".yml"}))
+    for path in yaml_files:
+        if path.is_symlink():
+            fail(errors, f"invalid YAML source is a symbolic link: {path.relative_to(root)}")
+            continue
+        if path.is_file():
+            validate_yaml_text(path, root, errors)
+
+
 def required_paths() -> list[str]:
     return [
         "AGENTS.md",
         "CLAUDE.md",
+        "GEMINI.md",
+        "CONVENTIONS.md",
+        ".aider.conf.yml",
         "AI_AGENT_TEAM_GUIDE.md",
         ".ai/README.md",
         ".ai/PROMPTS.md",
@@ -58,6 +138,8 @@ def required_paths() -> list[str]:
         ".ai/core/definition-of-done.md",
         ".ai/core/output-contract.md",
         ".ai/core/governed-runtime.md",
+        ".ai/core/universal-action-gateway.md",
+        ".ai/core/zero-trust-mcp.md",
         ".ai/context/architecture.md",
         ".ai/context/glossary.md",
         ".ai/context/repository-map.md",
@@ -65,6 +147,7 @@ def required_paths() -> list[str]:
         ".ai/context/ownership.md",
         ".ai/context/agent-roles.md",
         ".ai/context/mcp-trust-registry.yaml",
+        ".ai/context/mcp-trust-registry.json",
         ".ai/rules/engineering.md",
         ".ai/rules/security.md",
         ".ai/rules/testing.md",
@@ -79,7 +162,11 @@ def required_paths() -> list[str]:
         ".ai/rules/seo-geo.md",
         ".ai/rules/visual-design-integrity.md",
         ".ai/rules/animation-integrity.md",
+        ".ai/rules/human-writing-integrity.md",
+        ".ai/rules/marketing-integrity.md",
         ".ai/workflows/start-task.md",
+        ".ai/workflows/authorize-governed-action.md",
+        ".ai/workflows/authorize-mcp-request.md",
         ".ai/workflows/repository-intelligence-workflow.md",
         ".ai/workflows/plan-existing-system-change.md",
         ".ai/workflows/implement-feature.md",
@@ -92,6 +179,8 @@ def required_paths() -> list[str]:
         ".ai/workflows/synchronize-work-item.md",
         ".ai/workflows/prepare-jira-completion-package.md",
         ".ai/workflows/build-public-website.md",
+        ".ai/workflows/plan-evidence-based-marketing.md",
+        ".ai/workflows/run-evidence-quality-evals.md",
         ".ai/prompts/task-contract.md",
         ".ai/prompts/existing-system-change-request.md",
         ".ai/prompts/plan-approval-response.md",
@@ -119,6 +208,15 @@ def required_paths() -> list[str]:
         ".ai/templates/motion-contract.md",
         ".ai/templates/animation-inventory.md",
         ".ai/templates/animation-review.md",
+        ".ai/templates/marketing-context.yaml",
+        ".ai/templates/marketing-brief.md",
+        ".ai/templates/marketing-claim-ledger.yaml",
+        ".ai/templates/marketing-measurement-plan.yaml",
+        ".ai/templates/marketing-experiment.md",
+        ".ai/templates/marketing-review.md",
+        ".ai/templates/eval-case.json",
+        ".ai/templates/review-quality-fixture.json",
+        ".ai/templates/pr-evidence-package.json",
         ".ai/templates/capability.json",
         ".ai/templates/evidence-bundle.json",
         ".ai/guards/policy.yaml",
@@ -136,6 +234,9 @@ def required_paths() -> list[str]:
         ".ai/evals/behavioral-cases.json",
         ".ai/evals/scorecard.yaml",
         ".ai/evals/golden-cases.yaml",
+        ".ai/evals/e2e/eval-case.schema.json",
+        ".ai/evals/e2e/review-quality.schema.json",
+        ".ai/evals/e2e/final-implementation-review.schema.json",
         ".ai/scripts/enforce_command_policy.py",
         ".ai/scripts/evaluate_agent_behavior.py",
         ".ai/scripts/sync_agent_assets.py",
@@ -172,12 +273,29 @@ def required_paths() -> list[str]:
         ".ai/quality-profiles/concurrency.yaml",
         ".ai/quality-profiles/memory.yaml",
         ".ai/quality-profiles/governance-maturity.yaml",
+        ".ai/quality-profiles/human-writing.yaml",
+        ".ai/quality-profiles/marketing-growth.yaml",
+        ".ai/skills-src/humanize-writing/SKILL.md",
+        ".ai/skills-src/humanize-writing/references/ai-patterns-dictionary.md",
+        ".ai/skills-src/humanize-writing/references/voices.md",
+        ".ai/skills-src/marketing-growth-website/SKILL.md",
+        ".ai/skills-src/marketing-growth-website/references/evidence-and-measurement.md",
+        ".ai/skills-src/final-implementation-review/SKILL.md",
+        ".ai/skills-src/final-implementation-review/agents/openai.yaml",
+        ".ai/templates/final-implementation-review.json",
+        ".ai/workflows/final-implementation-review.md",
         ".mcp.json",
         ".codex/config.toml",
         ".codex/hooks.json",
         ".codex/rules/default.rules",
         ".claude/settings.json",
         ".claude/rules/shared-policy.md",
+        ".github/copilot-instructions.md",
+        ".cursor/rules/ai-agent-kit.mdc",
+        ".amazonq/rules/ai-agent-kit.md",
+        ".junie/AGENTS.md",
+        ".clinerules/ai-agent-kit.md",
+        ".continue/rules/ai-agent-kit.md",
     ]
 
 
@@ -209,7 +327,13 @@ def generated_content(source_rel: str, source_text: str) -> str:
 
 
 def validate_required_files(root: Path, errors: list[str]) -> None:
+    active = {rel for agent in selected_adapters(root) for rel in ADAPTER_FILES[agent]}
+    optional = {rel for paths in ADAPTER_FILES.values() for rel in paths}
     for rel in required_paths():
+        if rel in optional and rel not in active:
+            continue
+        if rel == ".mcp.json":
+            continue  # Machine-local, ignored; Codex config supplies the MCP contract.
         if not (root / rel).exists():
             fail(errors, f"required path missing: {rel}")
 
@@ -247,6 +371,11 @@ def validate_skills(root: Path, errors: list[str]) -> None:
     src_root = root / ".ai" / "skills-src"
     names: set[str] = set()
     for skill_file in sorted(src_root.glob("*/SKILL.md")):
+        try:
+            sources = safe_skill_files(skill_file.parent)
+        except (OSError, ValueError) as exc:
+            fail(errors, f"invalid canonical skill resources for {skill_file.parent.name}: {exc}")
+            continue
         data = parse_frontmatter(skill_file, errors)
         name = data.get("name", "")
         description = data.get("description", "")
@@ -262,18 +391,25 @@ def validate_skills(root: Path, errors: list[str]) -> None:
         if skill_file.parent.name != name:
             fail(errors, f"{skill_file} folder name must match frontmatter name {name}")
 
-        source_rel = skill_file.relative_to(root).as_posix()
-        expected = generated_content(source_rel, read(skill_file))
-        for dest_root in [root / ".agents" / "skills", root / ".claude" / "skills"]:
-            dest = dest_root / name / "SKILL.md"
-            if not dest.exists():
-                fail(errors, f"missing generated skill: {dest.relative_to(root)}")
-            elif read(dest) != expected:
-                fail(errors, f"generated skill drift: {dest.relative_to(root)}")
+        for source in sources:
+            source_rel = source.relative_to(root).as_posix()
+            expected = generated_content(source_rel, read(source))
+            resource_rel = source.relative_to(skill_file.parent)
+            for dest_root in generated_skill_roots(root):
+                dest = dest_root / name / resource_rel
+                if not dest.exists():
+                    fail(errors, f"missing generated skill resource: {dest.relative_to(root)}")
+                elif read(dest) != expected:
+                    fail(errors, f"generated skill resource drift: {dest.relative_to(root)}")
 
 
 def validate_json_toml(root: Path, errors: list[str]) -> None:
-    for json_file in [root / ".codex" / "hooks.json", root / ".claude" / "settings.json", root / ".mcp.json"]:
+    for json_file in [
+        root / ".codex" / "hooks.json",
+        root / ".claude" / "settings.json",
+        *([root / ".mcp.json"] if (root / ".mcp.json").exists() else []),
+        root / ".ai" / "context" / "mcp-trust-registry.json",
+    ]:
         try:
             json.loads(read(json_file))
         except Exception as exc:  # noqa: BLE001
@@ -319,7 +455,7 @@ def validate_hooks(root: Path, errors: list[str]) -> None:
         lowered = command.lower()
         if any(term in lowered for term in ["curl ", "wget ", "invoke-webrequest", "http://", "https://", "iex "]):
             fail(errors, f"hook command appears to use network or download execution: {command}")
-        match = re.search(r"(\.ai[\\/ ]scripts[\\/][A-Za-z0-9_.-]+\.py)", command)
+        match = re.search(r"(\.ai[\\/ ]scripts[\\/][A-Za-z0-9_.-]+\.(?:py|mjs))", command)
         if match:
             rel = match.group(1).replace(" ", "/").replace("\\", "/")
             if not (root / rel).exists():
@@ -331,6 +467,8 @@ def validate_hooks(root: Path, errors: list[str]) -> None:
         fail(errors, "pre-tool hooks do not enforce tracked implementation approval")
     if "enforce_command_policy.py --hook" not in joined:
         fail(errors, "pre-tool hooks do not enforce command policy")
+    if "governed_action_gateway.mjs" not in joined:
+        fail(errors, "pre-tool hooks do not invoke the universal action gateway")
 
 
 def validate_delivery_templates(root: Path, errors: list[str]) -> None:
@@ -511,12 +649,61 @@ def validate_team_ready_governance(root: Path, errors: list[str]) -> None:
         if fragment not in database_rules:
             fail(errors, f"database rules missing developer correction rule fragment: {fragment}")
 
+    human_writing_rules = read(root / ".ai" / "rules" / "human-writing-integrity.md")
+    for fragment in [
+        "Preserve Substance",
+        "task-scoped data",
+        "Do not promise to evade AI detectors",
+        "Do not remove attribution",
+    ]:
+        if fragment not in human_writing_rules:
+            fail(errors, f"human writing rules missing required fragment: {fragment}")
+
+    marketing_skill = read(root / ".ai" / "skills-src" / "marketing-growth-website" / "SKILL.md")
+    for fragment in [
+        "`discover`",
+        "`plan`",
+        "`implement`",
+        "`experiment`",
+        "`measure`",
+        "`audit`",
+        "NOT_MEASURED",
+        "marketing-measurement-plan.yaml",
+        "Protected external actions",
+    ]:
+        if fragment not in marketing_skill:
+            fail(errors, f"marketing growth skill missing required fragment: {fragment}")
+
+    marketing_rules = read(root / ".ai" / "rules" / "marketing-integrity.md")
+    for fragment in [
+        "Never fabricate",
+        "NOT_MEASURED",
+        "dark patterns",
+        "minimum data",
+        "governed action gateway",
+        "competitor and campaign references",
+    ]:
+        if fragment not in marketing_rules:
+            fail(errors, f"marketing integrity rules missing required fragment: {fragment}")
+
     golden_cases = read(root / ".ai" / "evals" / "golden-cases.yaml")
     for case_id in [
         "repository-save-in-loop",
         "memory-candidate-approval",
         "memory-retrieval-bounded",
         "cross-area-change-without-approval",
+        "humanize-preserves-claims",
+        "humanize-no-fabricated-specificity",
+        "humanize-detector-request",
+        "humanize-voice-sample-privacy",
+        "marketing-context-missing",
+        "fabricated-marketing-proof",
+        "marketing-missing-baseline",
+        "low-traffic-experiment",
+        "invasive-marketing-tracking",
+        "marketing-external-action-boundary",
+        "marketing-dark-pattern",
+        "regulated-marketing-claim",
     ]:
         if case_id not in golden_cases:
             fail(errors, f"golden cases missing required case: {case_id}")
@@ -565,6 +752,8 @@ def validate_code_quality_profiles(root: Path, errors: list[str]) -> None:
         "database.yaml": ["id: database", "connection leaks prevented", "transaction"],
         "concurrency.yaml": ["id: concurrency", "deadlock", "task/thread/goroutine lifecycle"],
         "memory.yaml": ["id: memory", "heap retention", "resource cleanup"],
+        "human-writing.yaml": ["id: human-writing", "meaning_preservation", "voice_fidelity", "authorship"],
+        "marketing-growth.yaml": ["id: marketing-growth", "claims_and_proof", "measurement", "authorization"],
     }
     profile_root = root / ".ai" / "quality-profiles"
     for filename, fragments in profiles.items():
@@ -631,6 +820,46 @@ def validate_agent_adapter_strategy(root: Path, errors: list[str]) -> None:
             fail(errors, f"agent adapter strategy missing required fragment: {fragment}")
 
 
+def validate_native_adapters(root: Path, errors: list[str]) -> None:
+    adapter_files = [
+        ".github/copilot-instructions.md",
+        ".cursor/rules/ai-agent-kit.mdc",
+        "GEMINI.md",
+        ".amazonq/rules/ai-agent-kit.md",
+        ".junie/AGENTS.md",
+        ".clinerules/ai-agent-kit.md",
+        "CONVENTIONS.md",
+        ".continue/rules/ai-agent-kit.md",
+    ]
+    active = {rel for agent in selected_adapters(root) for rel in ADAPTER_FILES[agent]}
+    for rel in adapter_files:
+        if rel not in active:
+            continue
+        if not (root / rel).is_file():
+            fail(errors, f"selected adapter file missing: {rel}")
+            continue
+        text = read(root / rel)
+        for fragment in [".ai/", "approval", "quality"]:
+            if fragment.lower() not in text.lower():
+                fail(errors, f"{rel} missing adapter contract fragment: {fragment}")
+
+    for agent, rel in [("cursor", ".cursor/rules/ai-agent-kit.mdc"),
+                       ("continue", ".continue/rules/ai-agent-kit.md")]:
+        if agent in selected_adapters(root) and (root / rel).is_file():
+            data = parse_frontmatter(root / rel, errors)
+            if data.get("alwaysApply") != "true":
+                fail(errors, f"{agent} adapter must always apply the shared contract")
+    if "aider" in selected_adapters(root):
+        for rel, fragments in [(".aider.conf.yml", ["read:", "CONVENTIONS.md"])]:
+            if (root / rel).is_file():
+                for fragment in fragments:
+                    if fragment not in read(root / rel):
+                        fail(errors, f"Aider adapter missing: {fragment}")
+    if "gemini" in selected_adapters(root) and (root / "GEMINI.md").is_file():
+        if "@./.ai/core/required-workflow.md" not in read(root / "GEMINI.md"):
+            fail(errors, "Gemini adapter must import the required workflow")
+
+
 def validate_repository_intelligence(root: Path, errors: list[str], quick: bool) -> None:
     guard_text = read(root / ".ai" / "guards" / "repository-intelligence-gate.yaml")
     for fragment in [
@@ -646,13 +875,15 @@ def validate_repository_intelligence(root: Path, errors: list[str], quick: bool)
         "compare_index_metadata_to_current_git_commit",
         "run_codegraph_health_query",
         "run_cocoindex_health_query",
+        "preferred-with-degraded-fallback",
+        "bounded native inspection",
     ]:
         if fragment not in guard_text:
             fail(errors, f"repository intelligence gate missing: {fragment}")
 
     for root_file in ["AGENTS.md", "CLAUDE.md", "AI_AGENT_TEAM_GUIDE.md"]:
         text = read(root / root_file)
-        for fragment in ["Repository Intelligence Gate", "CodeGraph", "CocoIndex"]:
+        for fragment in ["Repository Intelligence Gate", "CodeGraph", "CocoIndex", "DEGRADED"]:
             if fragment not in text:
                 fail(errors, f"{root_file} missing repository intelligence fragment: {fragment}")
 
@@ -707,7 +938,7 @@ def validate_repository_intelligence(root: Path, errors: list[str], quick: bool)
         if fragment not in required_workflow:
             fail(errors, f"required workflow missing repository intelligence fragment: {fragment}")
 
-    mcp_text = read(root / ".mcp.json")
+    mcp_text = read(root / ".mcp.json") if (root / ".mcp.json").exists() else read(root / ".codex/config.toml")
     if "codegraph" not in mcp_text or "cocoindex-code" not in mcp_text:
         fail(errors, ".mcp.json must configure codegraph and cocoindex-code")
 
@@ -717,6 +948,7 @@ def validate_repository_intelligence(root: Path, errors: list[str], quick: bool)
     result = subprocess.run(
         [
             sys.executable,
+            "-B",
             str(root / ".ai" / "scripts" / "check-repository-intelligence.py"),
             "--json",
         ],
@@ -735,8 +967,9 @@ def validate_repository_intelligence(root: Path, errors: list[str], quick: bool)
     except json.JSONDecodeError as exc:
         fail(errors, f"Repository Intelligence Gate JSON invalid: {exc}")
         return
-    if not payload.get("ready"):
-        fail(errors, "Repository Intelligence Gate is not READY")
+    mode = payload.get("mode")
+    if mode not in {"READY", "DEGRADED"}:
+        fail(errors, f"Repository Intelligence Gate returned unsupported mode: {mode!r}")
 
 
 def validate_delivery_artifact_generator(root: Path, errors: list[str]) -> None:
@@ -804,11 +1037,22 @@ def validate_secret_like_values(root: Path, errors: list[str]) -> None:
     scan_roots = [
         root / "AGENTS.md",
         root / "CLAUDE.md",
+        root / "GEMINI.md",
+        root / "CONVENTIONS.md",
+        root / ".aider.conf.yml",
         root / "AI_AGENT_TEAM_GUIDE.md",
         root / ".ai",
         root / ".agents",
         root / ".codex",
         root / ".claude",
+        root / ".github",
+        root / ".cursor",
+        root / ".windsurf",
+        root / ".amazonq",
+        root / ".junie",
+        root / ".cline",
+        root / ".clinerules",
+        root / ".continue",
     ]
     files: list[Path] = []
     for item in scan_roots:
@@ -817,14 +1061,28 @@ def validate_secret_like_values(root: Path, errors: list[str]) -> None:
         elif item.is_dir():
             files.extend(path for path in item.rglob("*") if path.is_file())
     for path in files:
+        if path.is_relative_to(root / ".ai/local"):
+            ignored = subprocess.run(
+                ["git", "check-ignore", "--quiet", "--", str(path)],
+                cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            if ignored.returncode == 0:
+                continue  # Private runtime artifacts, never part of the source candidate.
         text = read(path)
         if SECRET_VALUE_RE.search(text):
             fail(errors, f"secret-like value found in {path.relative_to(root)}")
 
 
 def validate_instruction_budgets(root: Path, errors: list[str]) -> None:
-    budgets = {"AGENTS.md": 32 * 1024, "CLAUDE.md": 32 * 1024}
+    budgets = {
+        "AGENTS.md": 32 * 1024,
+        "CLAUDE.md": 32 * 1024,
+        "GEMINI.md": 8 * 1024,
+        "CONVENTIONS.md": 8 * 1024,
+    }
     for rel, limit in budgets.items():
+        if not (root / rel).is_file():
+            continue  # Selected adapters' existence is checked separately.
         size = (root / rel).stat().st_size
         if size > limit:
             fail(errors, f"{rel} exceeds {limit} byte budget: {size}")
@@ -867,12 +1125,50 @@ def validate_governed_runtime(root: Path, errors: list[str]) -> None:
     for fragment in ["default_trust: deny", "executable_or_image_digest", "review_expires"]:
         if fragment not in registry:
             fail(errors, f"MCP trust registry missing fragment: {fragment}")
+    gateway = read(root / ".ai" / "core" / "universal-action-gateway.md")
+    gateway_normalized = " ".join(gateway.lower().split())
+    for fragment in ["normalized action envelope", "allow", "ask", "deny", "decision token", "fail closed"]:
+        if fragment.lower() not in gateway_normalized:
+            fail(errors, f"universal action gateway missing contract fragment: {fragment}")
+    broker = read(root / ".ai" / "core" / "zero-trust-mcp.md")
+    broker_normalized = " ".join(broker.lower().split())
+    for fragment in ["exact identity", "credential", "SSRF", "prompt injection", "rate limit"]:
+        if fragment.lower() not in broker_normalized:
+            fail(errors, f"zero-trust MCP contract missing fragment: {fragment}")
+    try:
+        registry_json = json.loads(read(root / ".ai" / "context" / "mcp-trust-registry.json"))
+    except Exception:
+        registry_json = {}
+    if registry_json.get("default_trust") != "deny":
+        fail(errors, "JSON MCP trust registry must be deny-by-default")
+    report = read(root / ".ai" / "core" / "task-completion-report.md")
+    report_normalized = " ".join(report.lower().split())
+    for fragment in [
+        "weighted acceptance-criterion progress",
+        "production readiness",
+        "token usage",
+        "api-equivalent estimated cost",
+        "fail-open",
+        "fail-closed",
+    ]:
+        if fragment.lower() not in report_normalized:
+            fail(errors, f"task completion report missing contract fragment: {fragment}")
+    finalizer = read(root / ".ai" / "scripts" / "final_task_report.mjs")
+    for fragment in ["AI_AGENT_KIT_TASK_ID", "buildFinalTaskReport", "renderFinalTaskReport"]:
+        if fragment not in finalizer:
+            fail(errors, f"final task report hook missing fragment: {fragment}")
 
 
 def validate(quick: bool = False) -> int:
     root = repo_root()
     errors: list[str] = []
+    try:
+        selected_adapters(root)
+    except (ValueError, OSError) as exc:
+        print(f"ERROR: invalid adapter selection: {exc}", file=sys.stderr)
+        return 1
     validate_required_files(root, errors)
+    validate_yaml_files(root, errors)
     validate_root_links(root, errors)
     validate_skills(root, errors)
     validate_json_toml(root, errors)
@@ -883,6 +1179,7 @@ def validate(quick: bool = False) -> int:
     validate_code_quality_profiles(root, errors)
     validate_prompt_catalog(root, errors)
     validate_agent_adapter_strategy(root, errors)
+    validate_native_adapters(root, errors)
     validate_delivery_artifact_generator(root, errors)
     validate_repository_intelligence(root, errors, quick)
     validate_secret_like_values(root, errors)
