@@ -94,10 +94,10 @@ test("loads Firebase only after opt-in, initializes once, and supports revocatio
     )
     .toBe(true);
 
-  await page
-    .getByRole("link", { name: "Services", exact: true })
-    .first()
-    .click();
+  const menu = page.getByRole("button", { name: "Menu", exact: true });
+  if (await menu.isVisible()) await menu.click();
+  await page.getByRole("navigation", { name: "Primary navigation" })
+    .getByRole("link", { name: "Services", exact: true }).click();
   await expect(page).toHaveURL(/\/services$/);
   await page
     .getByRole("link", { name: "Privacy", exact: true })
