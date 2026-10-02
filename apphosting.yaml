@@ -18,11 +18,10 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  # Analytics remains fail-closed until the linked GA4 property's retention,
-  # enhanced-measurement, advertising, ownership, and test-traffic settings
-  # have been reviewed. Visitors must still opt in after activation.
+  # Preserve the reviewed live consent-only Analytics activation.
+  # Visitors must still opt in; advertising consent remains denied.
   - variable: NEXT_PUBLIC_FIREBASE_ANALYTICS_ENABLED
-    value: "false"
+    value: "true"
     availability:
       - BUILD
       - RUNTIME

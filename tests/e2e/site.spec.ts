@@ -195,16 +195,16 @@ test("shared navigation exposes Blog directly on desktop and mobile", async ({
   await expect(
     page.getByRole("heading", { level: 1, name: "Ideas into practice." }),
   ).toBeVisible();
-  await expect(page.locator(".journal-nav .brand")).toBeVisible();
-  await expect(page.locator(".journal-nav .brand")).toHaveAttribute(
+  await expect(page.locator(".site-header .brand")).toBeVisible();
+  await expect(page.locator(".site-header .brand")).toHaveAttribute(
     "href",
-    "/resources/blog",
+    "/",
   );
   const article = page.locator("a.feature");
   if (await article.count()) {
     await article.click();
     await expect(page).toHaveURL(/\/resources\/blog\/[^/]+$/);
-    await page.locator(".journal-nav .brand").click();
+    await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Blog", exact: true }).click();
     await expect(page).toHaveURL(/\/resources\/blog$/);
   }
   await expect(page.locator(".site-footer .brand")).toHaveCount(0);
@@ -581,7 +581,7 @@ test("about introduces the founder and keeps its existing layout", async ({
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "About Hunpeo Labs.",
+      name: /About\s+Hunpeo Labs\./,
     }),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Hung Pham — Founder" })).toBeVisible();

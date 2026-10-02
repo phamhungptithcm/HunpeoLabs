@@ -11,6 +11,7 @@ export default defineConfig({
   timeout: 90000,
   expect: { timeout: 15000 },
   reporter: "list",
+  outputDir: ".ai/local/release-evidence/blog",
   use: { baseURL: origin, trace: "retain-on-failure", actionTimeout: 15000 },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },

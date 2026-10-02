@@ -139,7 +139,7 @@ GitHub Actions runs:
 - frozen dependency installation;
 - lint, TypeScript, unit tests, and production build;
 - production-environment contract validation using a reserved example origin;
-- the 32-scenario Chromium desktop/mobile core suite;
+- the current Chromium desktop/mobile core suite;
 - Firefox and WebKit critical-route smoke tests;
 - Lighthouse CI for Home, Services, and Contact, with SEO enforced as a hard
   release gate at `0.90` or higher.
@@ -211,7 +211,7 @@ archive, production URL, checks, and rollback target.
 
 ## Rollback
 
-No database migration or persisted website state is introduced by this foundation.
+The website foundation needs no destructive migration. The integrated CMS persists drafts, access policy, revisions, media and reader records; preserve these through rollout and rollback.
 
 For a failed release:
 

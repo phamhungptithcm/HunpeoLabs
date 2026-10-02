@@ -74,5 +74,5 @@
     "Source flag enabled only; prior CMS-disabled build/source/package evidence stale.",
     "Production DR/retention/live acceptance and frozen install remain blocked."
   ],
-  "configSha256": "263c018d19f609327c0c544ebb04a3d4f023f79173e1128a4873ad73ed2ba00f"
+  "configSha256": "c8ac2ecf35517d03aab0b9f1046bfd2f2b7edc451fdb00f1d46c7d804599ed88"
 }

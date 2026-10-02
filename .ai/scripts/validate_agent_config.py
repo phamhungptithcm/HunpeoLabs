@@ -14,6 +14,7 @@ import zipfile
 from pathlib import Path
 
 from sync_agent_assets import skill_files as safe_skill_files
+from sync_agent_assets import ADAPTER_FILES, selected_adapters, generated_skill_roots
 
 try:
     import yaml as yaml_parser
@@ -104,7 +105,7 @@ def validate_yaml_text(path: Path, root: Path, errors: list[str]) -> None:
 
 
 def validate_yaml_files(root: Path, errors: list[str]) -> None:
-    yaml_files = [root / ".aider.conf.yml"]
+    yaml_files = [root / ".aider.conf.yml"] if "aider" in selected_adapters(root) else []
     yaml_files.extend(sorted(path for path in (root / ".ai").rglob("*") if path.suffix in {".yaml", ".yml"}))
     for path in yaml_files:
         if path.is_symlink():
@@ -326,7 +327,13 @@ def generated_content(source_rel: str, source_text: str) -> str:
 
 
 def validate_required_files(root: Path, errors: list[str]) -> None:
+    active = {rel for agent in selected_adapters(root) for rel in ADAPTER_FILES[agent]}
+    optional = {rel for paths in ADAPTER_FILES.values() for rel in paths}
     for rel in required_paths():
+        if rel in optional and rel not in active:
+            continue
+        if rel == ".mcp.json":
+            continue  # Machine-local, ignored; Codex config supplies the MCP contract.
         if not (root / rel).exists():
             fail(errors, f"required path missing: {rel}")
 
@@ -388,13 +395,7 @@ def validate_skills(root: Path, errors: list[str]) -> None:
             source_rel = source.relative_to(root).as_posix()
             expected = generated_content(source_rel, read(source))
             resource_rel = source.relative_to(skill_file.parent)
-            for dest_root in [
-                root / ".agents" / "skills",
-                root / ".claude" / "skills",
-                root / ".cursor" / "skills",
-                root / ".windsurf" / "skills",
-                root / ".cline" / "skills",
-            ]:
+            for dest_root in generated_skill_roots(root):
                 dest = dest_root / name / resource_rel
                 if not dest.exists():
                     fail(errors, f"missing generated skill resource: {dest.relative_to(root)}")
@@ -406,7 +407,7 @@ def validate_json_toml(root: Path, errors: list[str]) -> None:
     for json_file in [
         root / ".codex" / "hooks.json",
         root / ".claude" / "settings.json",
-        root / ".mcp.json",
+        *([root / ".mcp.json"] if (root / ".mcp.json").exists() else []),
         root / ".ai" / "context" / "mcp-trust-registry.json",
     ]:
         try:
@@ -830,28 +831,33 @@ def validate_native_adapters(root: Path, errors: list[str]) -> None:
         "CONVENTIONS.md",
         ".continue/rules/ai-agent-kit.md",
     ]
+    active = {rel for agent in selected_adapters(root) for rel in ADAPTER_FILES[agent]}
     for rel in adapter_files:
+        if rel not in active:
+            continue
+        if not (root / rel).is_file():
+            fail(errors, f"selected adapter file missing: {rel}")
+            continue
         text = read(root / rel)
         for fragment in [".ai/", "approval", "quality"]:
             if fragment.lower() not in text.lower():
                 fail(errors, f"{rel} missing adapter contract fragment: {fragment}")
 
-    cursor = parse_frontmatter(root / ".cursor" / "rules" / "ai-agent-kit.mdc", errors)
-    if cursor.get("alwaysApply") != "true":
-        fail(errors, "Cursor adapter must always apply the shared contract")
-
-    continuation = parse_frontmatter(root / ".continue" / "rules" / "ai-agent-kit.md", errors)
-    if continuation.get("alwaysApply") != "true":
-        fail(errors, "Continue adapter must always apply the shared contract")
-
-    aider = read(root / ".aider.conf.yml")
-    for fragment in ["read:", "CONVENTIONS.md"]:
-        if fragment not in aider:
-            fail(errors, f"Aider adapter missing: {fragment}")
-
-    gemini = read(root / "GEMINI.md")
-    if "@./.ai/core/required-workflow.md" not in gemini:
-        fail(errors, "Gemini adapter must import the required workflow")
+    for agent, rel in [("cursor", ".cursor/rules/ai-agent-kit.mdc"),
+                       ("continue", ".continue/rules/ai-agent-kit.md")]:
+        if agent in selected_adapters(root) and (root / rel).is_file():
+            data = parse_frontmatter(root / rel, errors)
+            if data.get("alwaysApply") != "true":
+                fail(errors, f"{agent} adapter must always apply the shared contract")
+    if "aider" in selected_adapters(root):
+        for rel, fragments in [(".aider.conf.yml", ["read:", "CONVENTIONS.md"])]:
+            if (root / rel).is_file():
+                for fragment in fragments:
+                    if fragment not in read(root / rel):
+                        fail(errors, f"Aider adapter missing: {fragment}")
+    if "gemini" in selected_adapters(root) and (root / "GEMINI.md").is_file():
+        if "@./.ai/core/required-workflow.md" not in read(root / "GEMINI.md"):
+            fail(errors, "Gemini adapter must import the required workflow")
 
 
 def validate_repository_intelligence(root: Path, errors: list[str], quick: bool) -> None:
@@ -932,7 +938,7 @@ def validate_repository_intelligence(root: Path, errors: list[str], quick: bool)
         if fragment not in required_workflow:
             fail(errors, f"required workflow missing repository intelligence fragment: {fragment}")
 
-    mcp_text = read(root / ".mcp.json")
+    mcp_text = read(root / ".mcp.json") if (root / ".mcp.json").exists() else read(root / ".codex/config.toml")
     if "codegraph" not in mcp_text or "cocoindex-code" not in mcp_text:
         fail(errors, ".mcp.json must configure codegraph and cocoindex-code")
 
@@ -1055,6 +1061,13 @@ def validate_secret_like_values(root: Path, errors: list[str]) -> None:
         elif item.is_dir():
             files.extend(path for path in item.rglob("*") if path.is_file())
     for path in files:
+        if path.is_relative_to(root / ".ai/local"):
+            ignored = subprocess.run(
+                ["git", "check-ignore", "--quiet", "--", str(path)],
+                cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            if ignored.returncode == 0:
+                continue  # Private runtime artifacts, never part of the source candidate.
         text = read(path)
         if SECRET_VALUE_RE.search(text):
             fail(errors, f"secret-like value found in {path.relative_to(root)}")
@@ -1068,6 +1081,8 @@ def validate_instruction_budgets(root: Path, errors: list[str]) -> None:
         "CONVENTIONS.md": 8 * 1024,
     }
     for rel, limit in budgets.items():
+        if not (root / rel).is_file():
+            continue  # Selected adapters' existence is checked separately.
         size = (root / rel).stat().st_size
         if size > limit:
             fail(errors, f"{rel} exceeds {limit} byte budget: {size}")
@@ -1147,6 +1162,11 @@ def validate_governed_runtime(root: Path, errors: list[str]) -> None:
 def validate(quick: bool = False) -> int:
     root = repo_root()
     errors: list[str] = []
+    try:
+        selected_adapters(root)
+    except (ValueError, OSError) as exc:
+        print(f"ERROR: invalid adapter selection: {exc}", file=sys.stderr)
+        return 1
     validate_required_files(root, errors)
     validate_yaml_files(root, errors)
     validate_root_links(root, errors)

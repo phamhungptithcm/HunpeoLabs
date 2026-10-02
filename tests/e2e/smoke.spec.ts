@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 test("critical marketing routes render across supported browser engines", async ({ page }) => {
-  const consoleErrors: string[] = [];
+  const consoleErrors: { text: string; url: string }[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text());
+    if (message.type() === "error") consoleErrors.push({ text: message.text(), url: message.location().url });
   });
 
   const homepage = await page.request.get("/");
@@ -48,6 +48,17 @@ test("critical marketing routes render across supported browser engines", async 
       name: "Bring us the system that needs to change.",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Send project brief" })).toBeDisabled();
-  expect(consoleErrors).toEqual([]);
+  await expect(page.getByRole("button", { name: "Continue in email" })).toBeEnabled();
+  // Anonymous session discovery intentionally returns 401. WebKit reports
+  // that HTTP response in the console; verify its auth contract explicitly
+  // and keep every other resource/runtime error blocking.
+  const sessionUrl = new URL("/api/blog/session", page.url()).href;
+  const session = await page.request.get(sessionUrl);
+  expect(session.status()).toBe(401);
+  expect(await session.json()).toMatchObject({ error: "SIGN_IN_REQUIRED" });
+  expect((await page.request.get("/api/admin/blog/posts")).status()).toBe(401);
+  expect(consoleErrors.filter((error) => !(
+    error.url === sessionUrl &&
+    error.text === "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ))).toEqual([]);
 });

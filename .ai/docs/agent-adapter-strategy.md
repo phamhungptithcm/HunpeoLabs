@@ -33,3 +33,10 @@ Every adapter must:
 Use `bootstrap --agents all` for every adapter or `bootstrap --agents codex,copilot,cursor` for a reviewed subset.
 
 Migration-safe updates preserve the current adapter selection. Re-run bootstrap with a reviewed `--agents` list to add adapters to an existing installation.
+
+This repository selects Codex and Claude explicitly in
+`.ai/context/agent-adapters.json`. Skill generation and validation honor that
+selection and still require every selected adapter file and shared policy check.
+Without an explicit selection, the full-scaffold default remains in effect.
+Machine-local `.mcp.json` is optional; the committed Codex configuration must
+still configure CodeGraph and CocoIndex.
