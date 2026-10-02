@@ -63,6 +63,7 @@ It includes:
 - Playwright
 - Lighthouse CI
 - GitHub Actions
+- Firebase App Hosting
 
 ## Requirements
 
@@ -87,6 +88,7 @@ pnpm typecheck
 pnpm test
 pnpm build
 pnpm test:e2e:core
+pnpm test:e2e:production
 pnpm test:e2e:cross-browser
 pnpm lighthouse:ci
 ```
@@ -94,15 +96,15 @@ pnpm lighthouse:ci
 ## Release build
 
 ```bash
-NEXT_PUBLIC_SITE_URL=https://example.com \
+NEXT_PUBLIC_SITE_URL=https://hunpeolabs.com \
 VERCEL_ENV=production \
-pnpm release:build v0.1.0
+pnpm release:build v0.2.0
 ```
 
 The example origin is a CI fixture only. A production build requires the real,
 verified HTTPS origin.
 
-See the [v0.1.0 release notes](docs/releases/v0.1.0.md) for the current source
+See the [v0.2.0 release notes](docs/releases/v0.2.0.md) for the current source
 release and its verified scope.
 
 ## Production configuration
@@ -111,4 +113,20 @@ See [Production readiness](docs/operations/production-readiness.md) for contact
 delivery, indexing, privacy, security, monitoring, preview, and rollback
 requirements.
 
-Creating a GitHub source release does not deploy the website.
+The production target is Firebase App Hosting backend `hunpeolabs` in Firebase
+project `hunpeolabs-prod`. Before creating or rolling out the backend:
+
+```bash
+pnpm firebase:preflight
+```
+
+App Hosting requires the Firebase Blaze plan. Contact delivery remains disabled
+until a reviewed provider and its secrets are configured through Firebase
+Secret Manager. Creating a GitHub source release does not deploy the website.
+
+Optional Google Analytics for Firebase is implemented as explicit opt-in and
+remains disabled in `apphosting.yaml` until the linked GA4 property settings are
+reviewed. A complete public Web App configuration is required before enabling
+it; local and test environments stay fail-closed by default. See the production
+readiness guide for the data boundary, consent behavior, CSP, validation, and
+rollback checklist.

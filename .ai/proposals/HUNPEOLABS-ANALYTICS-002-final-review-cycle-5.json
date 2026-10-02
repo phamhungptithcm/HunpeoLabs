@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-ANALYTICS-002",
+  "status": "PASSED",
+  "dimensions": {
+    "requirement_match": {
+      "status": "PASSED",
+      "summary": "The owner-supplied GA4 business fields and approved America/Chicago timezone were saved under hunpeo97@gmail.com; the isolated candidate was deployed to hunpeolabs-prod and Realtime received the controlled consented traffic.",
+      "evidence_refs": [
+        "browser://ga4-property-547589548-property-details-success",
+        "firebase://build-2026-08-04-001",
+        "browser://ga4-realtime-pages-root-and-privacy"
+      ]
+    },
+    "security": {
+      "status": "PASSED",
+      "summary": "Analytics remains opt-in and advertising consent remains denied; no custom event, User-ID, or user-property API is present; contact delivery remains disabled and the production CSP permits only the reviewed Firebase and GA endpoints.",
+      "evidence_refs": [
+        "lib/firebase-analytics.ts",
+        "browser://production-consent-off-before-choice",
+        "http://production-security-headers",
+        "firebase://build-2026-08-04-001-effective-env"
+      ]
+    },
+    "code_quality": {
+      "status": "PASSED",
+      "summary": "The complete candidate previously passed lint, typecheck, 30 unit tests, 54 core E2E cases, two Firefox/WebKit smoke cases, six Analytics E2E cases, production validation, Firebase preflight, and a 37-route build; final preflight, typecheck, and all 30 unit tests passed again immediately before deployment.",
+      "evidence_refs": [
+        "command://firebase-preflight-final",
+        "command://pnpm-typecheck-final",
+        "command://vitest-30-passed-final",
+        "HUNPEOLABS-ANALYTICS-002-final-review-cycle-4.json"
+      ]
+    },
+    "failure_paths": {
+      "status": "PASSED",
+      "summary": "Disabled, invalid, unsupported, declined, revoked, repeated initialization, storage failure, and blocked-network paths remain covered; live revocation changed the controlled browser to Current choice: off and a subsequent Home navigation did not increase Realtime page counts.",
+      "evidence_refs": [
+        "tests/unit/firebase-analytics.test.ts",
+        "tests/e2e/analytics.spec.ts",
+        "browser://production-revocation-no-new-page-view"
+      ]
+    },
+    "error_handling": {
+      "status": "PASSED",
+      "summary": "Analytics dependency failures remain bounded no-ops, and live health, apex, hosted-domain, Privacy, and www redirect checks succeeded after rollout.",
+      "evidence_refs": [
+        "lib/firebase-analytics.ts",
+        "http://production-health-200",
+        "http://production-domain-checks"
+      ]
+    },
+    "production_readiness": {
+      "status": "PASSED",
+      "summary": "Rollout UID e6e8975e-9e2e-415f-a0b3-63a43c1b04fe is SUCCEEDED with reconciling=false; build-2026-08-04-001 is READY and Current, the Analytics flag is true, contact delivery is false, production routes are healthy, and rollback build-2026-07-30-001 remains available.",
+      "evidence_refs": [
+        "firebase://rollout-e6e8975e-9e2e-415f-a0b3-63a43c1b04fe",
+        "firebase://build-2026-08-04-001",
+        "browser://firebase-app-hosting-current-build",
+        "http://production-domain-checks"
+      ]
+    },
+    "trade_offs": {
+      "status": "PASSED",
+      "summary": "The owner accepted the scoped inherited Next.js dependency risk; internal traffic remains Testing because IP/CIDR is pending; measurement intentionally covers only consenting traffic.",
+      "evidence_refs": [
+        "HUNPEOLABS-ANALYTICS-002-pnpm-delta-approval.md",
+        "HUNPEOLABS-ANALYTICS-002-approval.md"
+      ]
+    }
+  },
+  "findings": [],
+  "residual_risks": [
+    "Internal IP/CIDR remains pending, so the Internal Traffic filter remains Testing and internal visits are not excluded.",
+    "The owner accepted the scoped sharp/PostCSS advisories inherited from the existing Next.js dependency tree; no untrusted image or CSS processing path was found.",
+    "Realtime represents opted-in Analytics traffic rather than all HTTP requests.",
+    "Firebase App Hosting remains on the Blaze plan, so usage beyond monthly no-cost quotas can incur charges."
+  ],
+  "limitations": [
+    "The uploaded GCS object does not expose a SHA-256 in App Hosting metadata; the source URI is recorded and the matching candidate content-manifest SHA-256 is 7f564c3df2dd4ffd6a17658b30c531dfca7b87b7d07f63f375d653928697eeeb.",
+    "The governed runtime task was created after implementation, so its acceptance ledger does not retroactively represent the earlier approved workflow; the current final review itself was recorded successfully.",
+    "Repository-wide agent configuration validation crashes on the unrelated dirty-worktree omission of .github/copilot-instructions.md; the isolated release candidate and its approved Analytics paths were validated independently.",
+    "Provider token usage and actual billed cost are unavailable."
+  ]
+}

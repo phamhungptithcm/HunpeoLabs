@@ -48,10 +48,13 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium firefox webkit
 
       - name: Run core desktop and mobile E2E
-        run: pnpm test:e2e:core
+        run: pnpm test:e2e:production
+
+      - name: Verify opt-in Analytics with isolated fake configuration
+        run: pnpm test:e2e:analytics
 
       - name: Run Firefox and WebKit smoke coverage
-        run: pnpm test:e2e:cross-browser
+        run: pnpm test:e2e:production:cross-browser
 
       - name: Enforce Lighthouse SEO and quality baseline
         run: pnpm lighthouse:ci

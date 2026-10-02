@@ -25,7 +25,7 @@ describe("public content registry", () => {
       "platform-modernization",
       "architecture-governance",
     ]);
-    expect(products.map(({ slug }) => slug)).toEqual(["ai-agent-kit", "incov"]);
+    expect(products.map(({ slug }) => slug)).toEqual(["ai-agent-kit", "incov", "gig"]);
   });
 
   it("publishes only verified public repository links", () => {
@@ -33,6 +33,9 @@ describe("public content registry", () => {
       "https://github.com/phamhungptithcm/ai-agent-kit",
     );
     expect(getWork("gig")?.repositoryUrl).toBe("https://github.com/phamhungptithcm/gig");
+    expect(getProduct("gig")?.repositoryUrl).toBe(
+      "https://github.com/phamhungptithcm/gig",
+    );
     expect(getProduct("incov")?.repositoryUrl).toBeUndefined();
   });
 
@@ -51,14 +54,14 @@ describe("public content registry", () => {
     }
     expect(getService("ai-agent-development")?.boundary).toMatch(/AI Product Engineering/);
     expect(getService("ai-product-engineering")?.boundary).toMatch(/AI Agent Development/);
-    expect(getService("platform-modernization")?.boundary).toMatch(/modernization/);
-    expect(getService("architecture-governance")?.boundary).toMatch(/decision ownership/);
+    expect(getService("platform-modernization")?.boundary).toMatch(/Implementation, data migration/);
+    expect(getService("architecture-governance")?.boundary).toMatch(/advisory engagement/);
   });
 
   it("keeps product intent canonical when work lacks independent case-study evidence", () => {
     expect(getWork("ai-agent-kit")?.productSlug).toBe("ai-agent-kit");
     expect(getWork("incov")?.productSlug).toBe("incov");
-    expect(getWork("gig")?.productSlug).toBeUndefined();
+    expect(getWork("gig")?.productSlug).toBe("gig");
     expect(products.every(({ audience, purpose, boundary }) => audience && purpose && boundary)).toBe(
       true,
     );
@@ -66,6 +69,14 @@ describe("public content registry", () => {
 
   it("makes the principles page the detailed source for operating practices", () => {
     expect(principles).toHaveLength(5);
+    expect(principles.map(({ title }) => title)).toEqual([
+      "See the real system",
+      "Make risk visible",
+      "Start small",
+      "Prove it works",
+      "Scale with care",
+    ]);
     expect(principles.every(({ body, practice, avoid }) => body && practice && avoid)).toBe(true);
+    expect(JSON.stringify(principles)).not.toMatch(/—|--/);
   });
 });

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 const LOCAL_SITE_URL = "http://localhost:3000";
 
 export const SITE_NAME = "Hunpeo Labs";
+export const SITE_CONTACT_EMAIL = "support@hunpeolabs.com";
 export const SITE_DESCRIPTION =
   "Hunpeo Labs designs and builds web, mobile, and AI products with product taste, engineering depth, and responsible AI.";
 export const DEFAULT_TITLE =

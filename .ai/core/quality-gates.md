@@ -20,8 +20,15 @@ Every implementation completion must report each gate with `PASSED`, `FAILED`, `
 | API compatibility reviewed | TODO | TODO |
 | Observability impact reviewed | TODO | TODO |
 | Diff self-reviewed | TODO | TODO |
+| Final implementation review current and passed | TODO | `.ai/templates/final-implementation-review.json` and runtime review receipt |
 | Search metadata, crawler policy, structured data, and claims reviewed where applicable | TODO | TODO |
 | Design direction, responsive composition, UI states, accessibility, motion, and visual evidence reviewed where applicable | TODO | TODO |
 | Animation purpose, reduced motion, interruptibility, performance, compatibility, lifecycle cleanup, and evidence reviewed where applicable | TODO | TODO |
 
 `NOT_RUN` is allowed only when paired with a reason and reviewer-visible risk. `NOT_APPLICABLE` is allowed only when the gate truly does not apply to the scoped change.
+
+Record applicable gate results with `ai-agent-kit runtime check record`, then
+render `ai-agent-kit runtime task report --id TASK-ID`. A previous passing
+result becomes `STALE` when its repository commit does not match the current
+commit. Missing, stale, failed, blocked, or not-run required gates prevent a
+production-readiness result of `READY`.

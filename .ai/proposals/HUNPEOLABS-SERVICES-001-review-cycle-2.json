@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-SERVICES-001",
+  "status": "PASSED",
+  "dimensions": {
+    "requirement_match": {
+      "status": "PASSED",
+      "summary": "Seven routes reproduce approved mockup; three overview and eighteen detail viewport comparisons have zero measured geometry delta; preview-only tooling removed and real links supplied.",
+      "evidence_refs": [
+        "output/services-implementation/visual-metrics.json",
+        "output/services-implementation/detail-visual-metrics.json",
+        "output/services-implementation/services-final.log"
+      ]
+    },
+    "security": {
+      "status": "PASSED",
+      "summary": "No new dependencies, API changes, data collection, HTML injection or security-policy changes. JSX renders static approved data; privacy and analytics preferences preserved.",
+      "evidence_refs": [
+        "components/services-chrome.tsx",
+        "components/services-content.tsx",
+        "app/layout.tsx"
+      ]
+    },
+    "code_quality": {
+      "status": "PASSED",
+      "summary": "Scoped lint, final standalone TypeScript, production build, 41 unit tests and six Services browser tests passed. Shared application WIP retained.",
+      "evidence_refs": [
+        "output/services-implementation/scoped-lint-final.log",
+        "output/services-implementation/typecheck-v2.log",
+        "output/services-implementation/build-v2.log",
+        "output/services-implementation/unit-snapshot.log",
+        "output/services-implementation/services-final.log"
+      ]
+    },
+    "failure_paths": {
+      "status": "PASSED",
+      "summary": "Unknown service route returns 404; pages and navigation remain useful without JavaScript; responsive checks cover 320/390/1440 widths.",
+      "evidence_refs": [
+        "output/services-implementation/services-final.log"
+      ]
+    },
+    "error_handling": {
+      "status": "PASSED",
+      "summary": "Existing notFound and metadata fallbacks retained. Native FAQ and real navigation replace mockup dialogs; Services rendering console check passed. Cross-page WebKit prefetch behavior disclosed separately.",
+      "evidence_refs": [
+        "app/services/[slug]/page.tsx",
+        "tests/e2e/services.spec.ts"
+      ]
+    },
+    "production_readiness": {
+      "status": "PASSED",
+      "summary": "Readiness boundary reviewed: local production build succeeds; no config, migrations or deployments. Whole-repository production release is NOT_READY; scoped changes are locally reviewable and reversible.",
+      "evidence_refs": [
+        "output/services-implementation/build-v2.log",
+        "docs/design/services/implementation-review.md"
+      ]
+    },
+    "trade_offs": {
+      "status": "PASSED",
+      "summary": "Exact approved visual composition retained with semantic headings, functioning links, and privacy footer. Small pathname-based chrome switch preserves other route shells; no global restyle.",
+      "evidence_refs": [
+        "components/services-chrome.tsx",
+        "app/services/services.css",
+        "docs/design/services/implementation-review.md"
+      ]
+    }
+  },
+  "findings": [],
+  "residual_risks": [
+    "Whole-repository release remains NOT_READY: unrelated Blog assertions and broad lint output traversal are not repaired in this scope.",
+    "WebKit cross-page RSC prefetch cancellations on existing product/contact pages were observed and recorded; no whole-site clean-console claim.",
+    "Concurrent unrelated Blog navigation test was added to shared site.spec.ts after snapshot; preserved but not included in snapshot test evidence."
+  ],
+  "limitations": [
+    "Validation is local, using source snapshot build GQlRxKZ8Yb2vC3wP6vFTX, not a production deployment.",
+    "Repository intelligence DEGRADED after one failed refresh; source/tsc/tests/browser evidence used.",
+    "Optional governed-runtime package unavailable; no ledger receipt claimed.",
+    "No provider token usage or actual billing data available."
+  ]
+}

@@ -1,0 +1,79 @@
+# Firebase App Hosting production configuration.
+# Backend contract: hunpeolabs / project hunpeolabs-prod / us-central1.
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://hunpeolabs.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: REQUIRE_CONTACT_DELIVERY
+    value: "false"
+    availability:
+      - BUILD
+      - RUNTIME
+  # Analytics remains fail-closed until the linked GA4 property's retention,
+  # enhanced-measurement, advertising, ownership, and test-traffic settings
+  # have been reviewed. Visitors must still opt in after activation.
+  - variable: NEXT_PUBLIC_FIREBASE_ANALYTICS_ENABLED
+    value: "false"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyAuY0Bzq3VOimVpdmvH9k_Ne1gHlpukMxc
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:91549992622:web:50f947dc656de933c18f3f
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: hunpeolabs-prod
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-7N5K4TXCTL
+    availability:
+      - BUILD
+      - RUNTIME
+
+# Contact delivery is intentionally omitted until a provider, retention policy,
+# and Secret Manager values have been reviewed. Never commit webhook credentials.
+
+# CMS enabled in source at the user request; production rollout remains blocked
+# until trusted ingress and live acceptance gates are verified.
+  - variable: BLOG_ENABLED
+    value: "true"
+    availability: [BUILD, RUNTIME]
+  - variable: BLOG_FIREBASE_PROJECT_ID
+    value: hunpeolabs-prod
+    availability: [RUNTIME]
+  - variable: BLOG_STORAGE_BUCKET
+    value: hunpeolabs-prod.firebasestorage.app
+    availability: [RUNTIME]
+  - variable: BLOG_RATE_LIMIT_SECRET
+    secret: hunpeolabs-blog-rate-limit@1
+    availability: [RUNTIME]
+  - variable: NEXT_PUBLIC_BLOG_FIREBASE_PROJECT_ID
+    value: hunpeolabs-prod
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_BLOG_FIREBASE_API_KEY
+    value: AIzaSyAuY0Bzq3VOimVpdmvH9k_Ne1gHlpukMxc
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_BLOG_FIREBASE_AUTH_DOMAIN
+    value: hunpeolabs-prod.firebaseapp.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED
+    value: "false"
+    availability: [BUILD, RUNTIME]
+# BLOG_TRUSTED_IP_HEADER deliberately absent until verified spoof-resistant.

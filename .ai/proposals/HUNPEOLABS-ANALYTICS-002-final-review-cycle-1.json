@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-ANALYTICS-002",
+  "status": "BLOCKED",
+  "dimensions": {
+    "requirement_match": { "status": "BLOCKED", "summary": "Analytics E2E did not yet cover blocked dependencies or prove absence of manual page_view commands.", "evidence_refs": ["tests/e2e/analytics.spec.ts"] },
+    "security": { "status": "PASSED", "summary": "Consent defaults and advertising consent remain denied; no custom event API exists.", "evidence_refs": ["lib/firebase-analytics.ts", "tests/unit/firebase-analytics.test.ts"] },
+    "code_quality": { "status": "PASSED", "summary": "Lint, typecheck, unit tests, and production build passed before review fixes.", "evidence_refs": ["command://eslint", "command://tsc", "command://vitest", "command://next-build"] },
+    "failure_paths": { "status": "BLOCKED", "summary": "Third-party network failure was not executable evidence yet.", "evidence_refs": ["tests/e2e/analytics.spec.ts"] },
+    "error_handling": { "status": "PASSED", "summary": "Unsupported or failed Analytics initialization degrades to a bounded no-op.", "evidence_refs": ["lib/firebase-analytics.ts"] },
+    "production_readiness": { "status": "BLOCKED", "summary": "GA4 property timezone could not be saved without owner-provided business fields; frozen install policy remained unresolved.", "evidence_refs": ["HUNPEOLABS-ANALYTICS-002-change-impact-plan.md"] },
+    "trade_offs": { "status": "PASSED", "summary": "Basic opt-in intentionally measures only consenting traffic and defers permanent internal-traffic exclusion.", "evidence_refs": ["HUNPEOLABS-ANALYTICS-002-change-impact-plan.md"] }
+  },
+  "findings": [
+    { "severity": "Medium", "location": "tests/e2e/analytics.spec.ts", "problem": "Missing blocked-network and no-manual-page-view evidence.", "production_impact": "A third-party outage or duplicate route instrumentation could regress without detection.", "correction": "Add isolated blocked-endpoint coverage and inspect the queued Analytics commands after client navigation.", "status": "FIXED" }
+  ],
+  "residual_risks": [],
+  "limitations": ["Governed runtime review recorder is unavailable in this checkout; cycle is recorded in the approved proposal path."]
+}

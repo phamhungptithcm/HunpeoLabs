@@ -1,4 +1,4 @@
-import { createPageMetadata } from "@/app/seo";
+import { createPageMetadata, SITE_CONTACT_EMAIL } from "@/app/seo";
 import { ProjectBriefForm } from "@/components/project-brief-form";
 import { contactDeliveryIsConfigured } from "@/lib/contact";
 
@@ -37,8 +37,16 @@ export default function ContactPage() {
             Tell us what you are building, where it is stuck, and what a credible next
             step needs to accomplish.
           </p>
+          <div className="contact-direct">
+            <p className="mono">Prefer email?</p>
+            <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>
+            <p>
+              Write to us directly, or fill in the form to prepare your project brief.
+              Tell us what you need and how we can reach you.
+            </p>
+          </div>
         </div>
-        <ProjectBriefForm deliveryAvailable={deliveryAvailable} />
+        <ProjectBriefForm contactEmail={SITE_CONTACT_EMAIL} deliveryAvailable={deliveryAvailable} />
       </section>
       <section className="contact-steps">
         {usefulContext.map(([title, body], index) => (

@@ -1,0 +1,37 @@
+{
+  "author": {
+    "id": "hung-pham-original",
+    "name": "Hung Pham",
+    "bio": ""
+  },
+  "posts": [
+    {
+      "file": "ai-agent-kit-a-story-that-began-with-a-small-worry.md",
+      "slug": "ai-agent-kit-a-story-that-began-with-a-small-worry",
+      "title": "AI Agent Kit - A Story That Began With a Small Worry",
+      "summary": "AI Agent Kit did not begin with a dream of replacing people with AI. It began with a much more ordinary question: if I hand part of a codebase to AI, how do I know it is doing the right thing?",
+      "category": "AI Engineering in Practice",
+      "tags": [
+        "AI",
+        "AI Agent Kit"
+      ],
+      "sourceUrl": "https://hunpeolabs.hashnode.dev/ai-agent-kit-a-story-that-began-with-a-small-worry",
+      "sourceSha256": "6907ca8ffe23240d7ab98ca111be71fd8512d2d4e2fd217d4f6264504d4d307e",
+      "sourceUpdatedDate": "2026-08-22"
+    },
+    {
+      "file": "you-can-run-a-company-with-ai-agents-but-who-is-running-the-agents.md",
+      "slug": "you-can-run-a-company-with-ai-agents-but-who-is-running-the-agents",
+      "title": "You Can Run a Company With AI Agents. But Who Is Running the Agents?",
+      "summary": "AI agents can research, code, test, and review at remarkable speed. The harder question is whether anyone still owns the outcome.",
+      "category": "AI Engineering in Practice",
+      "tags": [
+        "AI",
+        "AI Agent Kit"
+      ],
+      "sourceUrl": "https://hunpeolabs.hashnode.dev/you-can-run-a-company-with-ai-agents-but-who-is-running-the-agents",
+      "sourceSha256": "ff9d4ae5c32b1cf92302be1e0f92371fa520dd4674b227f39d26211cd5b34a50",
+      "sourceUpdatedDate": "2026-08-22"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Studio footer refinement
+User requests removal of pictured draft notice and a better footer. Approved low-risk presentation-only scope, interpreted as Studio shown in screenshot. Intelligence gate DEGRADED; inspected Dashboard notice/pagination, StudioShell and responsive styles.
+Plan: remove redundant draft notice; refine pagination with compact count/end state; add restrained Studio footer at content bottom with brand copyright and existing privacy/blog links. Use existing typography/color tokens, wrapping on mobile. Preserve publishing behavior, pagination links, public website footer and auth. Validate lint/typecheck and existing Studio SSR tests. Visual QA remains unavailable due localhost browser policy.

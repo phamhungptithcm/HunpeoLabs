@@ -8,6 +8,7 @@ const incovSteps = [
   ["agent", "Bounded AI assessment"],
   ["approval", "Policy & approval"],
 ] as const;
+const gigSteps = ["Ticket", "Commit", "Checks", "Deploy", "Production"] as const;
 
 function AgentKitVisual() {
   return (
@@ -77,6 +78,38 @@ function IncovVisual() {
   );
 }
 
+function GigVisual() {
+  return (
+    <div className="gig-architecture" aria-label="Gig release truth path">
+      <ol>
+        {gigSteps.map((step, index) => (
+          <li key={step}>
+            <span className="mono">{String(index + 1).padStart(2, "0")}</span>
+            <LineIcon
+              name={
+                ["document", "code", "approval", "rollback", "platform"][index] as
+                  | "document"
+                  | "code"
+                  | "approval"
+                  | "rollback"
+                  | "platform"
+              }
+            />
+            <strong>{step}</strong>
+          </li>
+        ))}
+      </ol>
+      <pre aria-label="Gig release evidence sample">{`gig trace ABC-123
+ticket       connected
+source       reviewable
+checks       recorded
+production   review ready`}</pre>
+    </div>
+  );
+}
+
 export function ProductSystemVisual({ slug }: { slug: string }) {
-  return slug === "incov" ? <IncovVisual /> : <AgentKitVisual />;
+  if (slug === "incov") return <IncovVisual />;
+  if (slug === "gig") return <GigVisual />;
+  return <AgentKitVisual />;
 }

@@ -1,0 +1,47 @@
+{
+  "apphosting": {
+    "backendId": "hunpeolabs",
+    "rootDir": "/",
+    "ignore": [
+      "node_modules",
+      ".git",
+      ".env",
+      ".env.*",
+      ".ai/local",
+      ".codegraph",
+      ".cocoindex_code",
+      ".mcp.json",
+      ".next",
+      ".lighthouseci",
+      "coverage",
+      "output",
+      "playwright-report",
+      "test-results",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions"
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
+  }
+}

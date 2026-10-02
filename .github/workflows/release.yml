@@ -76,6 +76,6 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" \
             --repo "$GITHUB_REPOSITORY" \
-            --title "Hunpeo Labs Website $GITHUB_REF_NAME — Production-Ready Marketing Foundation" \
+            --title "Hunpeo Labs Website $GITHUB_REF_NAME — Product Stories and Principles" \
             --notes-file "$RUNNER_TEMP/release-notes.md" \
             --verify-tag

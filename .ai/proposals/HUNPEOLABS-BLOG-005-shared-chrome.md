@@ -1,0 +1,4 @@
+# BLOG-005 shared public navigation and footer
+User explicitly requests the existing HunpeoLabs navbar/footer when entering the blog. Approval covers replacing blog-specific public chrome. Gate rerun; use bounded source evidence in degraded intelligence mode.
+Observed: RootLayout already provides SiteHeader/SiteFooter, but BlogChrome intercepts public blog routes and renders a different journal nav/footer. Blog content styles are scoped separately.
+Plan: pass public routes through to existing shared chrome; retain private Studio/account shell behavior. Remove obsolete public session-fetch/navigation branch. Keep an account entry within blog content for discoverability. No auth or data changes. Profiles: TypeScript/frontend/webapp. Validate root lint/typecheck, browser comparison of home/blog/article header+footer, mobile menu, active Blog nav and no overflow. Existing user-approved content design remains intact.

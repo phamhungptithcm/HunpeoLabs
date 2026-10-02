@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-CAREERS-001",
+  "status": "BLOCKED",
+  "cycle": 1,
+  "commit": "3d53e1b8201251cb28e02dbd2052ad36b1d67fec",
+  "dimensions": {
+    "requirement_match": {
+      "status": "BLOCKED",
+      "summary": "Approved copy, static links and server rendering verified in source and build HTML. Actual desktop/mobile visual and keyboard checks could not run.",
+      "evidence_refs": [
+        "docs/design/careers/completion-report.md",
+        "docs/design/careers/implementation-hashes.json"
+      ]
+    },
+    "security": {
+      "status": "PASSED",
+      "summary": "Static server page; no user input, unsafe HTML, network submission, new tracking, dependencies or data store. Mailto uses existing public contact constant.",
+      "evidence_refs": [
+        "docs/design/careers/completion-report.md",
+        "docs/design/careers/implementation-hashes.json"
+      ]
+    },
+    "code_quality": {
+      "status": "BLOCKED",
+      "summary": "Focused ESLint and production build passed. Repository-wide lint and standalone typecheck fail in generated/output areas outside Careers. Browser regression remains unexecuted.",
+      "evidence_refs": [
+        "docs/design/careers/completion-report.md",
+        "docs/design/careers/implementation-hashes.json"
+      ]
+    },
+    "failure_paths": {
+      "status": "BLOCKED",
+      "summary": "No vacancy explicitly disclosed; mail client availability remains external. Anchor has focus target and scroll margin, but keyboard and viewport runtime assertions are not executed.",
+      "evidence_refs": [
+        "docs/design/careers/completion-report.md",
+        "docs/design/careers/implementation-hashes.json"
+      ]
+    },
+    "error_handling": {
+      "status": "PASSED",
+      "summary": "No new asynchronous resource or submission lifecycle. Mailto does not promise delivery. Existing Contact navigation retained for alternate contact discovery.",
+      "evidence_refs": [
+        "docs/design/careers/completion-report.md",
+        "docs/design/careers/implementation-hashes.json"
+      ]
+    },
+    "production_readiness": {
+      "status": "BLOCKED",
+      "summary": "No deployment. Browser checks rejected by execution policy. Full repository checks not green. No production/email delivery evidence.",
+      "evidence_refs": [
+        "docs/design/careers/completion-report.md",
+        "docs/design/careers/implementation-hashes.json"
+      ]
+    },
+    "trade_offs": {
+      "status": "PASSED",
+      "summary": "Approved single-member invitation without employment/equity promises. Scoped CSS, no animation/runtime dependency. Existing shell retained. Stale indexes disclosed.",
+      "evidence_refs": [
+        "docs/design/careers/completion-report.md",
+        "docs/design/careers/implementation-hashes.json"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "severity": "medium",
+      "location": "tests/e2e/site.spec.ts:435",
+      "summary": "Required browser evidence unavailable: execution-policy rejection. Do not mark new tests passed.",
+      "status": "OPEN"
+    },
+    {
+      "severity": "medium",
+      "location": "output/analytics-release-candidate and tests/unit/product-catalog.test.ts",
+      "summary": "Repository checks fail outside approved Careers scope: generated-output lint/type errors and missing listDiscoveryPosts mock.",
+      "status": "OPEN"
+    }
+  ],
+  "residual_risks": [
+    "Actual responsive layout, browser focus movement and shared-shell visual compatibility unverified."
+  ],
+  "limitations": [
+    "DEGRADED indexes; explicit native-evidence fallback used.",
+    "Legacy approval validator incorrectly requires READY despite current repository DEGRADED policy.",
+    "Runtime package unavailable; report command produced no output. Manual report retained."
+  ]
+}
