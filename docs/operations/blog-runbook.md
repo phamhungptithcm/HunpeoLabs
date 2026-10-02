@@ -22,7 +22,7 @@ Auth cookies are HttpOnly/Secure/SameSite=strict, valid for one day and checked 
 
 Run Firebase Auth, Firestore and Storage emulators using a `demo-*` project. Configure all three hosts, the demo Storage bucket, server project and browser project/API key, and `NEXT_PUBLIC_BLOG_AUTH_EMULATOR_URL`. Never mix a real project with emulator settings. Use dedicated ports if another task is running.
 
-The task's validation uses `/tmp/hunpeolabs-blog-003` as a source snapshot, origin `http://localhost:3107`, Auth `127.0.0.1:19099`, Firestore `127.0.0.1:18080`, Storage `127.0.0.1:19199`, project `demo-hunpeolabs-blog-001`. These addresses are local evidence, not staging or production.
+Historical BLOG-003 validation used `/tmp/hunpeolabs-blog-003` as a source snapshot, origin `http://localhost:3107`, Auth `127.0.0.1:19099`, Firestore `127.0.0.1:18080`, Storage `127.0.0.1:19199`, project `demo-hunpeolabs-blog-001`. These addresses are local evidence, not staging or production.
 
 Google sign-in initializes exactly `hunpeo@gmail.com` and `phamhung.pitit@gmail.com` once. `blogAccess` keyed by normalized-email SHA-256 is authoritative; legacy `blogMembers` does not grant rights. Other Google users remain readers. For operator-assisted binding of an initial Google identity only, run:
 
@@ -49,7 +49,7 @@ node scripts/blog-backup.mjs restore demo-EMPTY-PROJECT /tmp/blog-archive
 
 The script is emulator-only and refuses nonempty restore targets. Production backup must cover Firestore subcollections, Storage objects and Auth/membership under an operator-approved policy; the UI export is not a disaster recovery backup. Verify restoration before launch.
 
-Proposed retention awaits owner acceptance: revisions 90 days, moderation audit 180 days, orphan private media 30 days, rate-limit identifiers at most 24 hours. No destructive scheduled cleanup is activated. User comment deletion immediately removes public text/name; resolving an account erasure request also requires bounded private-record and backup-retention procedures. Do not promise completed production erasure from a UI tombstone.
+Owner-approved retention targets (CMS-008, 2026-10-02): revisions 90 days, moderation audit 180 days, orphan private media 30 days, rate-limit identifiers at most 24 hours. No destructive scheduled cleanup is activated. User comment deletion immediately removes public text/name; resolving an account erasure request also requires bounded private-record and backup-retention procedures. Do not promise completed production erasure from a UI tombstone.
 
 ## Operations and rollback
 
@@ -110,3 +110,5 @@ Owner approved revisions 90 days, moderation audit 180 days, orphan private medi
 Production monitoring checks `https://hunpeolabs.com/api/health` every 300 seconds from Iowa, Europe and Asia Pacific, with 10-second timeout, valid TLS, HTTP 200 and JSON status `ok`. An enabled alert policy routes two-region failures lasting 300 seconds to `hunpeo97@gmail.com`. Configuration readback is not proof of email receipt or alert delivery. Monitoring health does not assert CMS/Firestore/Auth readiness. Provider format follows [Google's uptime alert policy example](https://docs.cloud.google.com/monitoring/alerts/policies-in-json).
 
 Direct anonymous Cloud Run health returned 403 during preflight; ingress `all` alone does not prove public bypass. Recheck after rollout. The currently served revision predates this source change.
+
+CMS-008 validation used a separate worktree, localhost3109, Auth29099, Firestore28080 and Storage29199, all in the guarded demo project. Twelve desktop/mobile CMS workflows and a dedicated concurrent limiter/TTL test passed on this candidate; these do not replace the live provider or recovery gates.

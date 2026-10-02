@@ -94,6 +94,12 @@
       "severity": "HIGH",
       "status": "OPEN",
       "summary": "Production recovery and live identity acceptance evidence are incomplete. Do not merge/release/deploy this candidate as production-ready."
+    },
+    {
+      "id": "CMS008-04",
+      "severity": "LOW",
+      "status": "FIXED",
+      "summary": "Historical runbook still called retention unapproved and its old test snapshot current. Clarified approved targets and historical versus current emulator evidence."
     }
   ],
   "residual_risks": [
