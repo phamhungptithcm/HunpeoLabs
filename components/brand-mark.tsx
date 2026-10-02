@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-export function BrandMark() {
+export function BrandMark({ href = "/" }: { href?: string }) {
   return (
-    <Link className="brand" href="/" aria-label="Hunpeo Labs home">
+    <Link className="brand" href={href} aria-label={href === "/" ? "Hunpeo Labs home" : "Hunpeo Labs"}>
       <span className="brand__mark" aria-hidden="true">
         <span />
         <span />

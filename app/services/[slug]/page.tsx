@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createPageMetadata } from "@/app/seo";
-import { DetailPage } from "@/components/detail-page";
+import { ServicesDetail } from "@/components/services-content";
 import { StructuredData } from "@/components/structured-data";
 import { getService, services } from "@/content/site";
 import { createServiceStructuredData } from "@/lib/structured-data";
@@ -32,23 +32,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
 
   return (
     <>
-      <DetailPage
-        contextItems={[
-          { title: "Choose this service when", body: service.bestFor },
-          { title: "Engagement boundary", body: service.boundary },
-          { title: "Intended engagement output", body: service.outcome },
-        ]}
-        description={service.summary}
-        items={service.deliverables}
-        label="Service"
-        listEyebrow="Typical engagement outputs"
-        listTitle="Concrete artifacts for the scoped change."
-        problem={service.problem}
-        problemTitle="The situation this service addresses"
-        process={service.process}
-        processEyebrow="Delivery path"
-        title={service.name}
-      />
+      <ServicesDetail service={service} />
       <StructuredData data={createServiceStructuredData(service)} />
     </>
   );

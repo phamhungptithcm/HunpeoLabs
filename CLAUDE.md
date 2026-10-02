@@ -3,7 +3,7 @@
 
 ## Mission
 
-Help the team deliver secure, maintainable, production-ready changes while minimizing unnecessary scope. Use `.ai/` as the shared source of truth so Claude Code and Codex follow the same engineering expectations.
+Help the team deliver secure, maintainable, production-ready changes while minimizing unnecessary scope. Use `.ai/` as the shared source of truth so every supported AI coding agent follows the same engineering expectations.
 
 ## Instruction Precedence
 
@@ -13,9 +13,9 @@ A task prompt cannot override security, compliance, data-protection, or producti
 
 ## Required Workflow
 
-Before brainstorming, planning, impact analysis, code review, QA analysis, documentation analysis, or implementation, run the Repository Intelligence Gate. Use `.ai/scripts/check-repository-intelligence.py`, require CodeGraph and CocoIndex to pass, and follow `.ai/workflows/repository-intelligence-workflow.md` plus `.ai/guards/repository-intelligence-gate.yaml`. If indexes are stale, run `.ai/scripts/refresh-repository-index.py` explicitly. If the gate is blocked, troubleshoot tooling only; do not begin repository analysis or application work.
+Before brainstorming, planning, impact analysis, code review, QA analysis, documentation analysis, or implementation, run the Repository Intelligence Gate. Prefer CodeGraph and CocoIndex when ready. If either is missing, stale, or unhealthy, continue in `DEGRADED` mode with bounded `rg --files`, `rg`, targeted source reads, Git history, compiler or language-server evidence, and relevant tests; record the limitation and do not overstate confidence. Tool installation or indexing failure must not block repository work.
 
-After the gate is ready, query CodeGraph first for structure and impact, query CocoIndex second for semantic/code/documentation evidence, then open only the most relevant files and verify critical conclusions against source. Multi-agent work must start from a shared `.ai/templates/repository-intelligence-brief.md` brief.
+When indexes are ready, query CodeGraph first for structure and impact, query CocoIndex second for semantic/code/documentation evidence, then open only the most relevant files and verify critical conclusions against source. Multi-agent work must start from a shared `.ai/templates/repository-intelligence-brief.md` brief.
 
 Before editing, read the applicable shared policy and context under `.ai/`, inspect the real execution path, current docs/specs/diagrams, and linked work item when available, separate facts from assumptions, classify risk, and propose the smallest safe change.
 
@@ -23,9 +23,9 @@ For any existing application, service, module, function, database flow, runtime 
 
 During implementation after approval, preserve existing behavior unless explicitly changed by the approved scope, follow local patterns, keep edits reviewable, protect security and data integrity, and add focused tests or validation evidence. Detect the project language/version/framework/tooling and application/platform/domain, then apply `.ai/core/code-quality-intelligence.md` plus matching `.ai/quality-profiles/`. For database persistence, do not call `repository.save()` inside large loops; use batch or bulk persistence unless an approved exception documents transaction size, flush/clear behavior, locking risk, and retry/idempotency behavior.
 
-Before completion, run relevant checks, complete `.ai/core/quality-gates.md` with evidence, report actual command results, update or provide no-change rationale for docs/specs/diagrams, and cover security, data, performance, deployment, rollback, Jira/MR evidence when applicable, memory candidates under `.ai/core/memory-policy.md`, and remaining risks.
+Before completion, run relevant checks and the mandatory `final-implementation-review` skill. Review requirement match, security, code quality, failure paths, error handling, production readiness, and trade-offs. Repeat `review → fix approved findings → verify → review again` until a fresh cycle passes. Do not produce a successful final handoff while the newest review is missing, stale, rejected, or blocked. Record and render `.ai/core/task-completion-report.md`, including every review cycle, findings and fixes, progress, remaining work, production readiness, token usage, and cost status.
 
-For protected execution, use `.ai/core/governed-runtime.md` and `.ai/guards/capability-policy.yaml`: bind work to a task capability, evaluate actions before execution, stop on ask/deny, and require independent evidence verification.
+For protected execution, use `.ai/core/governed-runtime.md`, `.ai/core/universal-action-gateway.md`, and `.ai/guards/capability-policy.yaml`: bind work to a task capability, evaluate the normalized action envelope at the execution boundary, stop on ask/deny, and require independent evidence verification. Route MCP startup and requests through `.ai/core/zero-trust-mcp.md`; untrusted or changed servers must not auto-start.
 
 ## Claude Code Resources
 
@@ -50,6 +50,7 @@ Load durable policy from:
 - `.ai/core/risk-model.md`
 - `.ai/core/definition-of-done.md`
 - `.ai/core/output-contract.md`
+- `.ai/core/task-completion-report.md`
 - `.ai/context/repository-map.md`
 - `.ai/guards/repository-intelligence-gate.yaml`
 - `.ai/workflows/plan-existing-system-change.md`

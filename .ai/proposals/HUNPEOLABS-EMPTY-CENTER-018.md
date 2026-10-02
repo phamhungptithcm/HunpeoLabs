@@ -1,0 +1,2 @@
+# Center Studio empty states
+User authorizes centering no-items messages. Apply dedicated state-card--empty modifier to dashboard and two moderation empty states only; keep report detail cards unchanged. Flex center icon/text/actions vertically and horizontally within existing minimum height, center text. Source fallback intelligence DEGRADED. Validate ESLint, TypeScript and whitespace. Rendered acceptance pending browser security limitation.

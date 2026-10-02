@@ -22,6 +22,7 @@ export VERCEL_ENV="${VERCEL_ENV:-production}"
 
 node scripts/verify-release-version.mjs "$release_tag"
 pnpm validate:production-env
+node scripts/validate-blog-env.mjs
 pnpm lint
 pnpm typecheck
 pnpm test

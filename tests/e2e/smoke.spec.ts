@@ -9,6 +9,16 @@ test("critical marketing routes render across supported browser engines", async 
   const homepage = await page.request.get("/");
   expect(homepage.ok()).toBe(true);
   expect(homepage.headers()["content-security-policy"]).toContain("default-src 'self'");
+  expect(homepage.headers()["content-security-policy"]).toContain(
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+  );
+  expect(homepage.headers()["content-security-policy"]).toContain(
+    "https://firebaseinstallations.googleapis.com",
+  );
+  expect(homepage.headers()["content-security-policy"]).not.toContain("doubleclick.net");
+  expect(homepage.headers()["content-security-policy"]).not.toContain(
+    "pagead2.googlesyndication.com",
+  );
   expect(homepage.headers()["x-content-type-options"]).toBe("nosniff");
   expect(homepage.headers()["x-frame-options"]).toBe("DENY");
 

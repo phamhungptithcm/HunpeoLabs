@@ -1,0 +1,3 @@
+# Studio sidebar identity
+Explicit user request: remove workspace branding card and show signed-in name/avatar at sidebar bottom. Approved low-risk presentation change. Intelligence DEGRADED; bounded source inspection of StudioShell, layout actor projection, avatar utility and CSS.
+Plan: remove redundant workspace card, retain bottom account link/role; pass verified actor avatar from server layout, validate Google URL and fall back on initials if missing/failed. Match current Studio typography and constrain long names. Keep roles, navigation and public navbar unchanged. Verify focused SSR anonymous/editor/unsafe-image cases, lint/typecheck. Browser visual QA blocked by existing localhost policy.

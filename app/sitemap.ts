@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/app/seo";
 import { products, services, work } from "@/content/site";
-import { getPublishedBlogPosts } from "@/content/blog";
+import { listDiscoveryPosts } from "@/lib/blog/repository";
+export const dynamic = "force-dynamic";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
-  const blogPosts = getPublishedBlogPosts();
+  const blogPosts = await listDiscoveryPosts();
   const staticRoutes = [
     "",
     "/services",
@@ -23,7 +24,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const dynamicRoutes = [
     ...services.map(({ slug }) => `/services/${slug}`),
     ...products.map(({ slug }) => `/products/${slug}`),
-    ...work.filter(({ productSlug }) => !productSlug).map(({ slug }) => `/work/${slug}`),
+    ...work
+      .filter(({ productSlug }) => !productSlug)
+      .map(({ slug }) => `/work/${slug}`),
     ...blogPosts.map(({ slug }) => `/resources/blog/${slug}`),
   ];
 

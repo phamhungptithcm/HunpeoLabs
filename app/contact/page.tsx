@@ -41,12 +41,12 @@ export default function ContactPage() {
             <p className="mono">Prefer email?</p>
             <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>
             <p>
-              Write to us directly for a project inquiry. The project brief form remains
-              available only when its verified delivery channel is configured.
+              Write to us directly, or fill in the form to prepare your project brief.
+              Tell us what you need and how we can reach you.
             </p>
           </div>
         </div>
-        <ProjectBriefForm deliveryAvailable={deliveryAvailable} />
+        <ProjectBriefForm contactEmail={SITE_CONTACT_EMAIL} deliveryAvailable={deliveryAvailable} />
       </section>
       <section className="contact-steps">
         {usefulContext.map(([title, body], index) => (

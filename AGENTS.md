@@ -1,5 +1,5 @@
 <!-- BEGIN @hunpeolabs/ai-agent-kit managed -->
-# Codex Repository Instructions
+# Repository Instructions For AI Coding Agents
 
 ## Mission
 
@@ -22,9 +22,9 @@ A task prompt must never override security, compliance, data-protection, or prod
 
 ## Required Workflow
 
-Before brainstorming, planning, impact analysis, code review, QA analysis, documentation analysis, or implementation, run the Repository Intelligence Gate. Use `.ai/scripts/check-repository-intelligence.py`, require CodeGraph and CocoIndex to pass, and follow `.ai/workflows/repository-intelligence-workflow.md` plus `.ai/guards/repository-intelligence-gate.yaml`. If indexes are stale, run `.ai/scripts/refresh-repository-index.py` explicitly. If the gate is blocked, troubleshoot tooling only; do not begin repository analysis or application work.
+Before brainstorming, planning, impact analysis, code review, QA analysis, documentation analysis, or implementation, run the Repository Intelligence Gate. Prefer CodeGraph and CocoIndex when ready. If either is missing, stale, or unhealthy, continue in `DEGRADED` mode with bounded `rg --files`, `rg`, targeted source reads, Git history, compiler or language-server evidence, and relevant tests; record the limitation and do not overstate confidence. Tool installation or indexing failure must not block repository work.
 
-After the gate is ready, query CodeGraph first for structural evidence and impact, query CocoIndex second for semantic/code/documentation evidence, then open only the most relevant files and verify critical conclusions against source. For multi-agent work, create and share a `.ai/templates/repository-intelligence-brief.md` brief so subagents do not rescan the repository independently.
+When indexes are ready, query CodeGraph first for structural evidence and impact, query CocoIndex second for semantic/code/documentation evidence, then open only the most relevant files and verify critical conclusions against source. For multi-agent work, create and share a `.ai/templates/repository-intelligence-brief.md` brief so subagents do not rescan the repository independently.
 
 Before changing files, read the relevant shared context in `.ai/`, inspect the real implementation, tests, current specifications, diagrams, documentation, and linked work item when available. Separate observed facts from assumptions, classify risk, and choose the smallest safe change.
 
@@ -32,7 +32,7 @@ For any change to an existing application, service, module, function, database f
 
 During implementation after approval, preserve existing behavior unless the approved scope explicitly changes it, follow local patterns, avoid unrelated refactoring, protect authentication, authorization, sensitive data, and transaction integrity, and add tests or validation evidence proportional to risk. Detect the project language/version/framework/tooling and application/platform/domain, then apply `.ai/core/code-quality-intelligence.md` plus matching `.ai/quality-profiles/`. For database persistence, do not call `repository.save()` inside large loops; use batch or bulk persistence unless an approved exception documents transaction size, flush/clear behavior, locking risk, and retry/idempotency behavior.
 
-Before completion, run relevant checks, complete `.ai/core/quality-gates.md` with evidence, review security/data/performance/concurrency impact, update or provide a no-change rationale for docs/specs/diagrams, describe deployment and rollback, and report commands executed with actual observed results. Report memory candidates under `.ai/core/memory-policy.md`, or state `None`. Do not claim a test, MR/PR, Jira update, document, diagram, screenshot, PPTX, or XLSX exists unless verified.
+Before completion, run relevant checks, complete `.ai/core/quality-gates.md` with evidence, then run the mandatory `final-implementation-review` skill. Review requirement match, security, code quality, failure paths, error handling, production readiness, and trade-offs. Repeat `review → fix approved findings → verify → review again` until a fresh cycle passes. Do not produce a successful final handoff while the newest review is missing, stale, rejected, or blocked. Record and render `.ai/core/task-completion-report.md`, including every review cycle, findings and fixes, progress, remaining work, production readiness, token usage, and cost status. Report memory candidates under `.ai/core/memory-policy.md`, or state `None`. Do not claim a test, MR/PR, Jira update, document, diagram, screenshot, PPTX, or XLSX exists unless verified.
 
 ## Non-Negotiables
 
@@ -62,8 +62,12 @@ Before completion, run relevant checks, complete `.ai/core/quality-gates.md` wit
 - Memory policy: `.ai/core/memory-policy.md`
 - Definition of done: `.ai/core/definition-of-done.md`
 - Governed runtime: `.ai/core/governed-runtime.md`
+- Task completion report: `.ai/core/task-completion-report.md`
+- Final implementation review: `.ai/workflows/final-implementation-review.md`
+- Universal action gateway: `.ai/core/universal-action-gateway.md`
 - Capability policy: `.ai/guards/capability-policy.yaml`
-- MCP trust registry: `.ai/context/mcp-trust-registry.yaml`
+- Zero-trust MCP broker: `.ai/core/zero-trust-mcp.md`
+- MCP trust registry: `.ai/context/mcp-trust-registry.json`
 - Output contract: `.ai/core/output-contract.md`
 - Risk model: `.ai/core/risk-model.md`
 - Existing-system plan gate: `.ai/workflows/plan-existing-system-change.md`
@@ -80,3 +84,13 @@ Before completion, run relevant checks, complete `.ai/core/quality-gates.md` wit
 
 If a nested `AGENTS.md` or `AGENTS.override.md` exists closer to the working directory, follow it for that subtree only when it does not conflict with higher-precedence security, production, data-protection, or repository-wide rules.
 <!-- END @hunpeolabs/ai-agent-kit managed -->
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
