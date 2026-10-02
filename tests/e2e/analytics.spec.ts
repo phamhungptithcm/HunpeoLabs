@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+// First-visit consent must not inherit the general navigation declined fixture.
+test.use({ storageState: { cookies: [], origins: [] } });
+
 const CONSENT_KEY = "hunpeolabs:analytics-consent:v1";
 const ANALYTICS_HOST_PATTERN =
   /(^|\.)(firebase\.googleapis\.com|firebaseinstallations\.googleapis\.com|googletagmanager\.com|google-analytics\.com|analytics\.google\.com)$/;
