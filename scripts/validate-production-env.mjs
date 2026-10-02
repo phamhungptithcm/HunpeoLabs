@@ -5,6 +5,16 @@ const REQUIRED_CONTACT_KEYS = [
   "CONTACT_RETENTION_NOTICE",
 ];
 
+const FIREBASE_ANALYTICS_KEYS = [
+  "NEXT_PUBLIC_FIREBASE_API_KEY",
+  "NEXT_PUBLIC_FIREBASE_APP_ID",
+  "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+  "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID",
+];
+
+const EXPECTED_FIREBASE_PROJECT_ID = "hunpeolabs-prod";
+const EXPECTED_FIREBASE_APP_ID = "1:91549992622:web:50f947dc656de933c18f3f";
+
 function fail(message) {
   process.stderr.write(`production configuration error: ${message}\n`);
   process.exitCode = 1;
@@ -63,10 +73,56 @@ if (configuredContactKeys.length === REQUIRED_CONTACT_KEYS.length) {
   }
 }
 
+const analyticsEnabled = process.env.NEXT_PUBLIC_FIREBASE_ANALYTICS_ENABLED === "true";
+const analyticsFlag = process.env.NEXT_PUBLIC_FIREBASE_ANALYTICS_ENABLED;
+const configuredAnalyticsKeys = FIREBASE_ANALYTICS_KEYS.filter((key) =>
+  process.env[key]?.trim(),
+);
+
+if (analyticsFlag && analyticsFlag !== "true" && analyticsFlag !== "false") {
+  fail("NEXT_PUBLIC_FIREBASE_ANALYTICS_ENABLED must be true or false.");
+}
+
+if (
+  configuredAnalyticsKeys.length > 0 &&
+  configuredAnalyticsKeys.length < FIREBASE_ANALYTICS_KEYS.length
+) {
+  fail(
+    `Firebase Analytics is partially configured; provide all of ${FIREBASE_ANALYTICS_KEYS.join(", ")} or none of them.`,
+  );
+}
+
+if (analyticsEnabled && configuredAnalyticsKeys.length !== FIREBASE_ANALYTICS_KEYS.length) {
+  fail("Firebase Analytics is enabled without a complete public Web App configuration.");
+}
+
+if (configuredAnalyticsKeys.length === FIREBASE_ANALYTICS_KEYS.length) {
+  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY.trim();
+  const appId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID.trim();
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID.trim();
+  const measurementId = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID.trim();
+
+  if (!/^AIza[\w-]{20,}$/.test(apiKey)) {
+    fail("NEXT_PUBLIC_FIREBASE_API_KEY has an invalid public Web API key format.");
+  }
+  if (!/^\d+:\d+:web:[a-f0-9]+$/i.test(appId)) {
+    fail("NEXT_PUBLIC_FIREBASE_APP_ID has an invalid Firebase Web App ID format.");
+  }
+  if (!/^G-[A-Z0-9]+$/.test(measurementId)) {
+    fail("NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID has an invalid GA4 measurement ID format.");
+  }
+  if (analyticsEnabled && projectId !== EXPECTED_FIREBASE_PROJECT_ID) {
+    fail(`enabled Analytics must target Firebase project ${EXPECTED_FIREBASE_PROJECT_ID}.`);
+  }
+  if (analyticsEnabled && appId !== EXPECTED_FIREBASE_APP_ID) {
+    fail(`enabled Analytics must target Firebase Web App ${EXPECTED_FIREBASE_APP_ID}.`);
+  }
+}
+
 if (!process.exitCode) {
   process.stdout.write(
     `production configuration valid; contact delivery ${
       configuredContactKeys.length ? "configured" : "disabled"
-    }.\n`,
+    }; Firebase Analytics ${analyticsEnabled ? "enabled" : "disabled"}.\n`,
   );
 }

@@ -123,3 +123,10 @@ pnpm firebase:preflight
 App Hosting requires the Firebase Blaze plan. Contact delivery remains disabled
 until a reviewed provider and its secrets are configured through Firebase
 Secret Manager. Creating a GitHub source release does not deploy the website.
+
+Optional Google Analytics for Firebase is implemented as explicit opt-in and
+remains disabled in `apphosting.yaml` until the linked GA4 property settings are
+reviewed. A complete public Web App configuration is required before enabling
+it; local and test environments stay fail-closed by default. See the production
+readiness guide for the data boundary, consent behavior, CSP, validation, and
+rollback checklist.

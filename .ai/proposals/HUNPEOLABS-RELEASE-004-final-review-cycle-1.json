@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-RELEASE-004",
+  "cycle": 1,
+  "status": "BLOCKED",
+  "scope": "Preparation before user approval",
+  "findings": [
+    "Existing BLOG approvals covered emulator/local only; RELEASE003 excluded integrated dirty tree.",
+    "Baseline production E2E67passed9failed12skipped; adapter validator missing-file crash; Analytics startup blocked by unrelated server; CMS config/IAM/secret and live evidence absent."
+  ],
+  "correction": "Produced concrete RELEASE004-v1 plan; user approved; preserved original checkout and proceeded in isolated candidate.",
+  "superseded_by_cycle": 3
+}

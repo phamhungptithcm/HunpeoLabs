@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-CMS-ENABLE-005",
+  "status": "BLOCKED",
+  "dimensions": {
+    "requirement_match": {
+      "status": "PASSED",
+      "summary": "Scoped source flag/config reference review; no deployment or control bypass. Production ingress/live gates incomplete.",
+      "evidence_refs": [
+        "apphosting.yaml",
+        "HUNPEOLABS-CMS-ENABLE-005-status.md"
+      ]
+    },
+    "security": {
+      "status": "BLOCKED",
+      "summary": "Scoped source flag/config reference review; no deployment or control bypass. Production ingress/live gates incomplete.",
+      "evidence_refs": [
+        "apphosting.yaml",
+        "HUNPEOLABS-CMS-ENABLE-005-status.md"
+      ]
+    },
+    "code_quality": {
+      "status": "PASSED",
+      "summary": "Scoped source flag/config reference review; no deployment or control bypass. Production ingress/live gates incomplete.",
+      "evidence_refs": [
+        "apphosting.yaml",
+        "HUNPEOLABS-CMS-ENABLE-005-status.md"
+      ]
+    },
+    "failure_paths": {
+      "status": "PASSED",
+      "summary": "Scoped source flag/config reference review; no deployment or control bypass. Production ingress/live gates incomplete.",
+      "evidence_refs": [
+        "apphosting.yaml",
+        "HUNPEOLABS-CMS-ENABLE-005-status.md"
+      ]
+    },
+    "error_handling": {
+      "status": "PASSED",
+      "summary": "Scoped source flag/config reference review; no deployment or control bypass. Production ingress/live gates incomplete.",
+      "evidence_refs": [
+        "apphosting.yaml",
+        "HUNPEOLABS-CMS-ENABLE-005-status.md"
+      ]
+    },
+    "production_readiness": {
+      "status": "BLOCKED",
+      "summary": "Scoped source flag/config reference review; no deployment or control bypass. Production ingress/live gates incomplete.",
+      "evidence_refs": [
+        "apphosting.yaml",
+        "HUNPEOLABS-CMS-ENABLE-005-status.md"
+      ]
+    },
+    "trade_offs": {
+      "status": "PASSED",
+      "summary": "Scoped source flag/config reference review; no deployment or control bypass. Production ingress/live gates incomplete.",
+      "evidence_refs": [
+        "apphosting.yaml",
+        "HUNPEOLABS-CMS-ENABLE-005-status.md"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "severity": "high",
+      "status": "OPEN",
+      "location": "BLOG_TRUSTED_IP_HEADER",
+      "evidence": "Absent trusted header: session mutations fail closed; spoof-resistant ingress not established.",
+      "correction": "Keep production rollout blocked until verified."
+    }
+  ],
+  "residual_risks": [],
+  "limitations": [
+    "Source flag enabled only; prior CMS-disabled build/source/package evidence stale.",
+    "Production DR/retention/live acceptance and frozen install remain blocked."
+  ],
+  "configSha256": "c8ac2ecf35517d03aab0b9f1046bfd2f2b7edc451fdb00f1d46c7d804599ed88"
+}

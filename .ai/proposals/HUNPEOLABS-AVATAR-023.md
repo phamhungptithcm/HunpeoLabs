@@ -1,0 +1,2 @@
+# Author picker and avatar alignment
+Direct user request approves placing avatar beside author select. Move existing avatar/upload block unchanged into a two-column picker row; align avatar with input bottom, fixed 44px avatar and flexible select. No behavior/backend changes. Intelligence degraded source fallback. Validate lint/types/diff. Visual verification unavailable under prior browser security restriction.

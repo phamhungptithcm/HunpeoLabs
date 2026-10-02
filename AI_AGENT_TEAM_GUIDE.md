@@ -1,6 +1,6 @@
 # AI Agent Team Guide
 
-This repository uses a shared AI agent operating model for Claude Code and OpenAI Codex. The durable policy lives in `.ai/`; platform-specific files are thin adapters.
+This repository uses one shared operating model across supported AI coding agents. The durable policy lives in `.ai/`; platform-specific files are thin adapters.
 
 ## What Is Shared
 
@@ -17,10 +17,14 @@ This repository uses a shared AI agent operating model for Claude Code and OpenA
 
 ## Platform-Specific Files
 
-- `AGENTS.md` routes Codex to shared policy.
+- `AGENTS.md` routes Codex, Copilot, Cursor, Windsurf/Cascade, Junie, Cline, and Devin to shared policy.
 - `CLAUDE.md` routes Claude Code to shared policy.
-- `.agents/skills/` contains generated Codex skill copies.
+- `GEMINI.md` routes Gemini CLI to shared policy.
+- `.github/copilot-instructions.md`, `.cursor/rules/`, `.amazonq/rules/`, `.junie/`, `.clinerules/`, and `.continue/rules/` provide native instruction adapters.
+- `CONVENTIONS.md` and `.aider.conf.yml` provide the Aider adapter.
+- `.agents/skills/` contains generated shared skill copies used by Codex, Copilot, and Devin.
 - `.claude/skills/` contains generated Claude skill copies.
+- `.cursor/skills/`, `.windsurf/skills/`, and `.cline/skills/` contain generated native skill copies.
 - `.codex/` contains Codex project config, custom agents, command rules, and hooks.
 - `.claude/` contains Claude commands, rules, agents, settings, and generated skills.
 
@@ -44,7 +48,7 @@ For full repository intelligence, first run `npx --yes @hunpeolabs/ai-agent-kit@
 
 ## Starting Work
 
-Every repository task starts with the Repository Intelligence Gate. Run `.ai/scripts/check-repository-intelligence.py`; CodeGraph and CocoIndex must both be installed, configured, indexed for the current checkout, and health-checked before brainstorming, planning, review, QA analysis, documentation analysis, or implementation. Use `.ai/scripts/refresh-repository-index.py` explicitly when the gate reports stale indexes.
+Every repository task starts with the Repository Intelligence Gate. Run `.ai/scripts/check-repository-intelligence.py`. Use CodeGraph and CocoIndex when ready; if either is missing, stale, unhealthy, or cannot be installed, continue in `DEGRADED` mode with bounded native evidence. Attempt recovery once, record the limitation, and do not overstate confidence. Tooling failure alone does not block work.
 
 Use CodeGraph first for structural evidence and impact. Use CocoIndex second for semantic retrieval across code, specs, docs, runbooks, tests, ADRs, and similar implementations. For multi-agent work, the Team Lead Orchestrator creates a shared `.ai/templates/repository-intelligence-brief.md` brief before assigning specialists.
 
@@ -71,7 +75,7 @@ Use these persona bundles when the team wants a familiar role rather than a sing
 | QA Lead | `test-strategy` + `code-quality-review` + `delivery-documentation` |
 | Release Manager | `release-readiness` + `delivery-documentation` + `jira-completion-package` |
 | Tech Lead | `change-impact-plan` + `architecture-review` + `repository-health` |
-| Web Growth Engineer | `start-task` + `design-taste-website` + `animation-design-engineering` + `seo-geo-website` + `implement-feature` + `code-quality-review` + `test-strategy` |
+| Web Growth Engineer | `start-task` + `marketing-growth-website` + `design-taste-website` + `animation-design-engineering` + `seo-geo-website` + `governed-action-gateway` + `implement-feature` + `code-quality-review` + `test-strategy` |
 
 ## Risk Gates
 
@@ -89,7 +93,7 @@ Agents must not access production systems, run datafixes, rotate credentials, di
 
 ## Approval Gate
 
-Existing-system changes require the Repository Intelligence Gate, indexed analysis, multi-agent brainstorming, a concrete impact/implementation plan, and explicit human approval before protected files are edited. Use `.ai/templates/repository-intelligence-brief.md`, `.ai/templates/change-impact-plan.md`, and `.ai/templates/implementation-approval-record.md`. A vague assignment, branch creation, or request like "start working" is not approval.
+Existing-system changes require sufficient repository evidence, multi-agent brainstorming when applicable, a concrete impact/implementation plan, and explicit human approval before protected files are edited. Indexed evidence is preferred; bounded native evidence is valid in `DEGRADED` mode. Use `.ai/templates/repository-intelligence-brief.md`, `.ai/templates/change-impact-plan.md`, and `.ai/templates/implementation-approval-record.md`. A vague assignment, branch creation, or request like "start working" is not approval.
 
 Store the active record at `.ai/local/implementation-approval.md` or set `AI_AGENT_APPROVAL_RECORD`. Protected edit hooks validate each target path, and the completion gate compares the complete Git diff to the approved paths:
 
@@ -102,6 +106,8 @@ Repository maintainers own governance policy. Escalate gate failures, policy con
 ## Governed Runtime
 
 Protected or unattended work should use the executable state machine and capability policy documented in `.ai/docs/governed-runtime-guide.md`. Every action must remain within its tool/path/domain/risk budget and produce an allow, ask, or deny receipt. Stop on ask/deny. A separate verifier must validate the hash-linked ledger and completion evidence before release readiness is claimed.
+
+All supported adapters route protected tool use through `.ai/core/universal-action-gateway.md`. Authorization is bound to the task, adapter, exact action envelope, approval hash, repository commit, policy revision, capability expiry, and action budget; a prior allow cannot be reused after any binding changes. MCP servers additionally use `.ai/core/zero-trust-mcp.md` and the deny-by-default JSON trust registry. Exact server identity, tool scope, filesystem roots, network domains, timeout, rate limit, and credential isolation are enforced before invocation.
 
 Use `assist`, `governed`, `regulated`, or `autonomous-safe` maturity guidance from `.ai/quality-profiles/governance-maturity.yaml`. `autonomous-safe` is restricted to sandboxed low-risk work; critical operations remain human procedures only.
 

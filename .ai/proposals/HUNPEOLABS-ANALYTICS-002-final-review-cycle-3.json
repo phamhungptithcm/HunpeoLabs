@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-ANALYTICS-002",
+  "status": "BLOCKED",
+  "dimensions": {
+    "requirement_match": { "status": "BLOCKED", "summary": "Local integration criteria pass, but the approved GA4 timezone, deployment, and Realtime proof are incomplete.", "evidence_refs": ["HUNPEOLABS-ANALYTICS-002-approval.md"] },
+    "security": { "status": "BLOCKED", "summary": "Production dependency audit exits nonzero with three high and two moderate transitive Next.js findings; repository reachability is limited but risk acceptance or a separate remediation scope is required.", "evidence_refs": ["command://pnpm-audit-prod-exit-1"] },
+    "code_quality": { "status": "PASSED", "summary": "Lint, typecheck, 30 unit tests, six Analytics E2E cases, targeted repaired regressions, and the 37-route production build pass.", "evidence_refs": ["command://eslint", "command://tsc", "command://vitest-30-passed", "command://playwright-analytics-6-passed", "command://playwright-targeted-2-passed", "command://next-build"] },
+    "failure_paths": { "status": "PASSED", "summary": "Disabled, invalid, unsupported, denied, revoked, and blocked-network behavior was reviewed and exercised where applicable.", "evidence_refs": ["tests/unit/firebase-analytics.test.ts", "tests/e2e/analytics.spec.ts"] },
+    "error_handling": { "status": "PASSED", "summary": "Analytics errors do not block content or navigation and do not expose server credentials.", "evidence_refs": ["lib/firebase-analytics.ts", "tests/e2e/analytics.spec.ts"] },
+    "production_readiness": { "status": "BLOCKED", "summary": "pnpm requires an unapproved policy-path delta, GA4 requires owner business fields before timezone save, dependency audit is unresolved, and no deployment/Realtime evidence exists.", "evidence_refs": ["HUNPEOLABS-ANALYTICS-002-pnpm-delta-plan.md", "command://pnpm-audit-prod-exit-1"] },
+    "trade_offs": { "status": "PASSED", "summary": "Internal traffic remains Testing with pending IP/CIDR; Analytics measures only opted-in users and error monitoring remains separate.", "evidence_refs": ["docs/operations/production-readiness.md"] }
+  },
+  "findings": [
+    { "severity": "High", "location": "pnpm-workspace.yaml", "problem": "pnpm 11 requires explicit policy for two newly introduced transitive install scripts.", "production_impact": "App Hosting dependency installation can fail before build.", "correction": "Await approval for HUNPEOLABS-ANALYTICS-002-PNPM-DELTA-v1 and set both scripts to allowBuilds false.", "status": "OPEN" },
+    { "severity": "High", "location": "pnpm-lock.yaml: next transitive dependencies", "problem": "pnpm audit reports sharp and PostCSS advisories inherited through Next.js.", "production_impact": "The scan gate is nonzero; current repository exposes no untrusted image or CSS processing path, but the dependencies remain vulnerable.", "correction": "Obtain explicit risk acceptance for this rollout or approve a separately validated dependency-remediation plan.", "status": "OPEN" },
+    { "severity": "High", "location": "GA4 property details", "problem": "America/Chicago cannot be saved in the Console until required industry, business-size, and objective fields are provided.", "production_impact": "The property reporting timezone does not match the approved value.", "correction": "Owner must provide the three factual business selections.", "status": "OPEN" }
+  ],
+  "residual_risks": ["Internal IP/CIDR remains pending and the Internal Traffic filter remains Testing as approved."],
+  "limitations": ["No production deployment was attempted.", "No Realtime or DebugView event evidence exists.", "Governed runtime review recorder and task-report CLI are unavailable in this checkout."]
+}

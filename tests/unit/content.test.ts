@@ -54,8 +54,8 @@ describe("public content registry", () => {
     }
     expect(getService("ai-agent-development")?.boundary).toMatch(/AI Product Engineering/);
     expect(getService("ai-product-engineering")?.boundary).toMatch(/AI Agent Development/);
-    expect(getService("platform-modernization")?.boundary).toMatch(/modernization/);
-    expect(getService("architecture-governance")?.boundary).toMatch(/decision ownership/);
+    expect(getService("platform-modernization")?.boundary).toMatch(/Implementation, data migration/);
+    expect(getService("architecture-governance")?.boundary).toMatch(/advisory engagement/);
   });
 
   it("keeps product intent canonical when work lacks independent case-study evidence", () => {

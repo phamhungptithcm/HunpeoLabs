@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-ANALYTICS-002",
+  "status": "BLOCKED",
+  "dimensions": {
+    "requirement_match": { "status": "PASSED", "summary": "Six Analytics E2E cases passed on Chromium and mobile, including blocked dependencies and no manual page_view command.", "evidence_refs": ["command://playwright-analytics-6-passed"] },
+    "security": { "status": "PASSED", "summary": "No Analytics request occurs before consent; revocation prevents collection after reload.", "evidence_refs": ["command://playwright-analytics-6-passed"] },
+    "code_quality": { "status": "PASSED", "summary": "Focused lint and TypeScript checks passed after the test correction.", "evidence_refs": ["command://eslint-analytics", "command://tsc"] },
+    "failure_paths": { "status": "PASSED", "summary": "The site remains usable when Firebase, Installations, Tag Manager, and Analytics endpoints are blocked.", "evidence_refs": ["tests/e2e/analytics.spec.ts"] },
+    "error_handling": { "status": "PASSED", "summary": "Dependency failures remain isolated from navigation and content.", "evidence_refs": ["tests/e2e/analytics.spec.ts"] },
+    "production_readiness": { "status": "BLOCKED", "summary": "Full mobile regression found the fixed consent surface intercepted unrelated CTA and media interactions.", "evidence_refs": ["command://playwright-core-52-passed-2-failed"] },
+    "trade_offs": { "status": "PASSED", "summary": "The consent surface is intentionally non-modal and must not prevent use of the site.", "evidence_refs": ["components/analytics-consent.tsx", "styles/globals.css"] }
+  },
+  "findings": [
+    { "severity": "High", "location": "styles/globals.css:.analytics-consent", "problem": "The fixed mobile consent surface intercepted clicks on the primary CTA and product video.", "production_impact": "Visitors could be unable to use core site actions until choosing an Analytics preference.", "correction": "Make non-interactive banner regions pointer-transparent and reserve mobile scroll space while the banner is present.", "status": "FIXED" }
+  ],
+  "residual_risks": [],
+  "limitations": ["Governed runtime review recorder is unavailable in this checkout; cycle is recorded in the approved proposal path."]
+}

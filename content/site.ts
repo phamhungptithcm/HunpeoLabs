@@ -1,4 +1,5 @@
 export type Service = {
+  headline: string;
   slug: string;
   name: string;
   summary: string;
@@ -40,137 +41,149 @@ export type WorkItem = {
 
 export const services: Service[] = [
   {
-    slug: "web-development",
-    name: "Web Development",
-    summary:
-      "High-quality marketing sites, web applications, and SaaS experiences built around clarity, speed, and durable product foundations.",
-    problem:
-      "Teams need a web presence or product experience that communicates clearly and can evolve without a costly rebuild.",
-    bestFor:
-      "Teams launching or rebuilding a marketing site, SaaS interface, or web application that needs a maintainable product and content foundation.",
-    boundary:
-      "The engagement covers product and content structure plus frontend delivery. Backend systems, commerce, and ongoing content operations are included only when explicitly scoped.",
-    outcome:
-      "A reviewable web foundation with accessible interface behavior, content structure, delivery checks, and handoff documentation.",
-    deliverables: [
-      "Product and content architecture",
-      "Responsive UX and visual direction",
-      "Accessible frontend implementation",
-      "SEO-ready delivery foundation",
-      "Production and handoff documentation",
+    "slug": "web-development",
+    "name": "Web Development",
+    "headline": "A website that explains your business. A web app that gets work done.",
+    "summary": "We design and build marketing websites, customer portals, and web application interfaces that make your offer clear and your users' next step easy.",
+    "problem": "You are launching a business, replacing an outdated website, or turning a product idea into a usable web experience.",
+    "bestFor": "You are launching a business, replacing an outdated website, or turning a product idea into a usable web experience.",
+    "boundary": "Backend services, payments, CMS integrations, hosting setup, and ongoing content support are agreed separately when needed.",
+    "outcome": "A working website or web interface, reviewed against the agreed scope, with the materials your team needs to maintain it.",
+    "deliverables": [
+      "Page structure and content organized around your audience and offer.",
+      "Responsive interface designs for desktop and mobile.",
+      "Implemented pages, reusable components, and the agreed user journeys.",
+      "Technical SEO foundations and accessibility and performance checks.",
+      "Source code, setup instructions, test results, and release guidance."
     ],
-    process: ["Discover", "Design", "Build", "Validate", "Launch"],
+    "process": [
+      "Understand",
+      "Design",
+      "Build",
+      "Test",
+      "Hand over"
+    ]
   },
   {
-    slug: "mobile-app-development",
-    name: "Mobile App Development",
-    summary:
-      "Mobile products designed for real workflows, dependable interaction, and a coherent experience across the product ecosystem.",
-    problem:
-      "A mobile app must earn its place on a user’s device through utility, speed, and a carefully designed interaction model.",
-    bestFor:
-      "Teams shaping a new mobile product or improving a mobile workflow whose value depends on focused, dependable interaction.",
-    boundary:
-      "Platform choice, backend changes, device capabilities, and store submission support are confirmed during scoping rather than assumed.",
-    outcome:
-      "A defined mobile product direction with interaction, implementation, quality, and release-readiness decisions made explicit.",
-    deliverables: [
-      "Mobile product strategy",
-      "Interaction and navigation model",
-      "iOS, Android, or cross-platform implementation plan",
-      "Quality and release readiness",
-      "Store submission support when scoped",
+    "slug": "mobile-app-development",
+    "name": "Mobile App Development",
+    "headline": "Bring your service into your customers' hands.",
+    "summary": "We turn a mobile product idea into an app built around the actions your users need most, from the first screen through the core workflow.",
+    "problem": "You need a first mobile release, a better experience in an existing app, or a mobile companion to your web product.",
+    "bestFor": "You need a first mobile release, a better experience in an existing app, or a mobile companion to your web product.",
+    "boundary": "iOS, Android, or cross-platform delivery, backend work, device integrations, and store submission support are confirmed before development. Store approval remains subject to the platform's review.",
+    "outcome": "A tested app build covering the agreed journeys, plus the source and release materials needed for the next step.",
+    "deliverables": [
+      "A focused release scope and clear user journeys.",
+      "Navigation, screen designs, and an interactive prototype.",
+      "An implemented app for the platform or platforms agreed for the project.",
+      "Device and workflow testing, including loading, error, and empty states.",
+      "Source code, build instructions, release checklist, and handover documentation."
     ],
-    process: ["Frame", "Prototype", "Engineer", "Test", "Release"],
+    "process": [
+      "Define",
+      "Prototype",
+      "Build",
+      "Test",
+      "Prepare release"
+    ]
   },
   {
-    slug: "ai-agent-development",
-    name: "AI Agent Development",
-    summary:
-      "Custom agents and intelligent workflows with explicit tools, evaluation, evidence, and human decision boundaries.",
-    problem:
-      "Useful AI agents need more than a prompt: they need bounded capabilities, system context, verification, and accountable controls.",
-    bestFor:
-      "Teams automating a bounded workflow where an agent must use tools, act on system context, and remain within explicit approval boundaries.",
-    boundary:
-      "This service focuses on agent behavior, tools, evaluation, and governance. A broader user-facing AI experience is better framed as AI Product Engineering; an unbounded autonomous system is not the goal.",
-    outcome:
-      "A bounded agent workflow with named capabilities, integrations, evaluation scenarios, approval points, and an operational evidence plan.",
-    deliverables: [
-      "Agent workflow and capability model",
-      "Tool and system integrations",
-      "Evaluation and test scenarios",
-      "Human approval boundaries",
-      "Operational evidence and observability plan",
+    "slug": "ai-agent-development",
+    "name": "AI Agent Development",
+    "headline": "Turn repeatable work into an AI-assisted workflow.",
+    "summary": "We build agents that work with your approved tools and information to complete defined tasks, with clear limits on what they can do and when they need your team's approval.",
+    "problem": "Your team repeatedly gathers information, prepares outputs, or moves work between systems, and you want to automate a specific part of that process.",
+    "bestFor": "Your team repeatedly gathers information, prepares outputs, or moves work between systems, and you want to automate a specific part of that process.",
+    "boundary": "We agree on data access, actions, model providers, and usage costs before implementation. For a complete user-facing AI experience, choose AI Product Engineering.",
+    "outcome": "A working agent for the agreed task, with reviewed evaluation results and a clear way for your team to supervise it.",
+    "deliverables": [
+      "A workflow map defining inputs, actions, outputs, and approval steps.",
+      "Agent implementation with the agreed tool and system integrations.",
+      "Access rules and human review for sensitive actions.",
+      "Evaluation scenarios for successful tasks, incorrect outputs, and tool failures.",
+      "Run logs, operating instructions, and a handover of known limitations."
     ],
-    process: ["Model intent", "Bound tools", "Build", "Evaluate", "Govern"],
+    "process": [
+      "Map the task",
+      "Connect tools",
+      "Build",
+      "Evaluate",
+      "Hand over"
+    ]
   },
   {
-    slug: "ai-product-engineering",
-    name: "AI Product Engineering",
-    summary:
-      "AI features and products shaped around a real user journey, measurable behavior, and production constraints.",
-    problem:
-      "AI prototypes often fail when they meet product UX, latency, data, cost, safety, and operational reality.",
-    bestFor:
-      "Teams turning an AI capability or prototype into a user-facing feature or product with explicit experience and failure-state decisions.",
-    boundary:
-      "This service owns the product behavior around AI. A tool-using autonomous workflow with approval boundaries is better framed as AI Agent Development.",
-    outcome:
-      "A production-shaped AI product direction covering user value, interaction, model integration, evaluation, failure states, and readiness risks.",
-    deliverables: [
-      "AI product discovery",
-      "Experience and failure-state design",
-      "Model and integration architecture",
-      "Evaluation strategy",
-      "Production readiness roadmap",
+    "slug": "ai-product-engineering",
+    "name": "AI Product Engineering",
+    "headline": "Make AI a useful part of your product.",
+    "summary": "We design and build AI features that fit a real user journey, connecting the interface, model, and approved data with clear behavior when an answer is missing or wrong.",
+    "problem": "You have an AI idea or prototype and need to turn it into a feature people can use, understand, and give feedback on.",
+    "bestFor": "You have an AI idea or prototype and need to turn it into a feature people can use, understand, and give feedback on.",
+    "boundary": "Data preparation, provider charges, hosting, and ongoing model evaluation are agreed for each project. For an agent that takes actions across tools, choose AI Agent Development.",
+    "outcome": "An integrated AI feature tested against the agreed use case, with the evidence and instructions needed to assess release readiness.",
+    "deliverables": [
+      "A defined use case and acceptance criteria for the first release.",
+      "Interface and interaction designs, including feedback and fallback paths.",
+      "An implemented AI feature with the agreed model and data integrations.",
+      "Quality evaluations and latency and usage-cost checks for agreed scenarios.",
+      "Release documentation, operating guidance, and documented limitations."
     ],
-    process: ["Find value", "Design behavior", "Integrate", "Evaluate", "Operate"],
+    "process": [
+      "Define value",
+      "Design",
+      "Integrate",
+      "Evaluate",
+      "Prepare release"
+    ]
   },
   {
-    slug: "platform-modernization",
-    name: "Platform Modernization",
-    summary:
-      "Practical modernization paths for teams constrained by fragmented systems, slow delivery, or fragile operational foundations.",
-    problem:
-      "Modernization becomes risky when architecture, migration sequence, ownership, and rollback are not treated as one system.",
-    bestFor:
-      "Teams that have decided change is necessary and need a phased path from the current platform to a more dependable operating foundation.",
-    boundary:
-      "The engagement focuses on modernization direction, sequencing, migration risk, and rollback. Ongoing governance policy is treated separately unless scoped.",
-    outcome:
-      "A phased modernization path connecting current-state architecture, target direction, delivery guardrails, migration evidence, and rollback decisions.",
-    deliverables: [
-      "Current-state architecture map",
-      "Target platform direction",
-      "Phased migration plan",
-      "Delivery and operational guardrails",
-      "Risk, evidence, and rollback model",
+    "slug": "platform-modernization",
+    "name": "Platform Modernization",
+    "headline": "Improve the system your business already depends on.",
+    "summary": "We assess your existing platform and carry out agreed improvements in manageable stages, with checks and a rollback approach for each release.",
+    "problem": "An existing application is difficult to change, integrations are fragile, or an aging platform is holding back the next release.",
+    "bestFor": "An existing application is difficult to change, integrations are fragile, or an aging platform is holding back the next release.",
+    "boundary": "Assessment can be purchased separately. Implementation, data migration, deployment windows, and production access require explicit agreement for each phase.",
+    "outcome": "A completed modernization phase, reviewed against its acceptance criteria, and a documented path for the remaining work.",
+    "deliverables": [
+      "A map of the current system and its important dependencies.",
+      "Prioritized changes tied to your operational and product needs.",
+      "A phased modernization plan with clear acceptance criteria.",
+      "Implemented improvements for the agreed phase, with migration work where scoped.",
+      "Validation results, rollback instructions, and updated operating documentation."
     ],
-    process: ["Observe", "Map", "Prioritize", "Migrate", "Prove"],
+    "process": [
+      "Assess",
+      "Prioritize",
+      "Implement",
+      "Validate",
+      "Hand over"
+    ]
   },
   {
-    slug: "architecture-governance",
-    name: "Architecture & Governance",
-    summary:
-      "Architecture review and engineering governance that turn technical decisions into an executable, reviewable change path.",
-    problem:
-      "Enterprise change stalls when technical direction, risk, evidence, and decision ownership live in separate conversations.",
-    bestFor:
-      "Teams that need to make or govern consequential technical decisions before committing to a migration or implementation path.",
-    boundary:
-      "The engagement establishes decision ownership, review evidence, approval, and sign-off. It does not imply delivery of the resulting modernization program.",
-    outcome:
-      "A reviewable decision system linking architecture, dependencies, risk, ownership, implementation direction, and verification expectations.",
-    deliverables: [
-      "Architecture and dependency review",
-      "Risk and decision register",
-      "Governance and approval model",
-      "Implementation roadmap",
-      "Verification and sign-off contract",
+    "slug": "architecture-governance",
+    "name": "Architecture & Governance",
+    "headline": "Make the next technical decision with a clear path forward.",
+    "summary": "We review your architecture and delivery practices, identify the decisions that matter, and turn them into a practical roadmap your team can follow.",
+    "problem": "You need an independent review before a major build, clearer engineering standards, or a consistent way to approve and verify changes.",
+    "bestFor": "You need an independent review before a major build, clearer engineering standards, or a consistent way to approve and verify changes.",
+    "boundary": "This is an advisory engagement. Implementation can be scoped as a follow-on project. Reviews do not constitute legal advice, certification, or a compliance audit.",
+    "outcome": "A documented technical direction, clear responsibilities, and an actionable plan for delivery.",
+    "deliverables": [
+      "Architecture and dependency review with prioritized findings.",
+      "Technical options and trade-offs linked to your requirements.",
+      "A decision register with decision ownership and next actions.",
+      "Practical review, approval, and verification checklists.",
+      "An implementation roadmap and a walkthrough with your team."
     ],
-    process: ["Inspect", "Trace", "Decide", "Plan", "Verify"],
-  },
+    "process": [
+      "Inspect",
+      "Compare options",
+      "Decide",
+      "Document",
+      "Walk through"
+    ]
+  }
 ];
 
 export const products: Product[] = [

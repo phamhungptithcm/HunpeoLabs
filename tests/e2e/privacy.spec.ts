@@ -24,6 +24,15 @@ test("privacy explains the information path in a few natural sentences", async (
   await expect(
     page.getByText("We don’t sell your information or use it to target ads."),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Traffic analytics stays your choice." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "We do not send project brief fields, use User-ID, or enable advertising personalization.",
+      { exact: false },
+    ),
+  ).toBeVisible();
 
   const email = page
     .locator(".privacy-statements")

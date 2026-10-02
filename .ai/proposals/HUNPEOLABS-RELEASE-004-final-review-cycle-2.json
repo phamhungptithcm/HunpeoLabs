@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-RELEASE-004",
+  "cycle": 2,
+  "status": "BLOCKED",
+  "findings": [
+    {
+      "finding": "Unknown service/private preview streamed HTTP200; stale shared brand/member selectors; mobile consent overlay; missing adapter files/malformed profile; backend-only preflight; default noindex Lighthouse build",
+      "correction": "Scope service loading and finite params; remove root/admin Suspense; migrate semantic selectors; isolate general declined consent from dedicated firstvisit tests; explicit selected adapters with canonical regeneration; parse profile; add runtime preflight; rebuild explicit production canonical",
+      "verification": "Latest 74 core, 12 separate CMS, 4 separate Analytics, 2 Firefox/WebKit; adapter6; unit84; lint/typecheck; Lighthouse3 routes passed."
+    }
+  ],
+  "remaining": [
+    "Trusted ingress/live acceptance/DR/owner policy/frozen install remain blocked; superseded by cycle3."
+  ]
+}
