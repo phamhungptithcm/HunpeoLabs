@@ -18,8 +18,11 @@ const key = (email: string) =>
   createHash("sha256").update(email.toLowerCase()).digest("hex");
 function fixture() {
   if (
-    process.env.FIRESTORE_EMULATOR_HOST !== "127.0.0.1:18080" ||
-    process.env.FIREBASE_AUTH_EMULATOR_HOST !== "127.0.0.1:19099"
+    !((process.env.FIRESTORE_EMULATOR_HOST === "127.0.0.1:18080" &&
+       process.env.FIREBASE_AUTH_EMULATOR_HOST === "127.0.0.1:19099") ||
+      (process.env.BLOG_RELEASE_EMULATORS === "true" &&
+       process.env.FIRESTORE_EMULATOR_HOST === "127.0.0.1:28080" &&
+       process.env.FIREBASE_AUTH_EMULATOR_HOST === "127.0.0.1:29099"))
   )
     throw Error("Refuse non-demo fixtures");
   return (
@@ -47,7 +50,7 @@ async function googleToken(
     "",
   ].join(".");
   const result = await r.post(
-    "http://127.0.0.1:19099/identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=demo-key",
+    `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=demo-key`,
     {
       data: {
         requestUri: origin,
@@ -157,6 +160,7 @@ test("Google-only initial policy, membership UI and immediate revocation", async
     ).status(),
   ).toBe(403);
   await page.goto(`${origin}/admin/blog/settings`);
+  await page.getByRole("button", { name: "Thành viên", exact: true }).click();
   await page
     .getByRole("button", { name: "Thêm thành viên", exact: true })
     .click();
@@ -252,7 +256,7 @@ test("server rejects password and unverified Google identities", async ({
     password: "Synthetic-Only-Password-123!",
   });
   const password = await request.post(
-    "http://127.0.0.1:19099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-key",
+    `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-key`,
     {
       data: {
         email,

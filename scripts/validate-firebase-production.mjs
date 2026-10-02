@@ -84,9 +84,13 @@ if (process.env.REQUIRE_BLOG_RELEASE === "true") {
       const env = runtime.spec?.template?.spec?.containers?.[0]?.env ?? [];
       const values = Object.fromEntries(env.map((entry) => [entry.name, entry.value]));
       const required = [
-        "BLOG_STORAGE_BUCKET", "BLOG_TRUSTED_IP_HEADER",
+        "BLOG_STORAGE_BUCKET", "BLOG_RATE_LIMIT_MODE",
         "NEXT_PUBLIC_BLOG_FIREBASE_API_KEY", "NEXT_PUBLIC_BLOG_FIREBASE_AUTH_DOMAIN",
       ];
+      if (!["identity-global", "trusted-ingress"].includes(values.BLOG_RATE_LIMIT_MODE)) {
+        fail("CMS runtime rate-limit mode is invalid.");
+      }
+      if (values.BLOG_RATE_LIMIT_MODE === "trusted-ingress") required.push("BLOG_TRUSTED_IP_HEADER");
       for (const name of required) {
         if (!values[name]) fail(`CMS runtime configuration is missing ${name}.`);
       }

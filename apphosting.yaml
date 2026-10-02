@@ -60,6 +60,9 @@ env:
   - variable: BLOG_STORAGE_BUCKET
     value: hunpeolabs-prod.firebasestorage.app
     availability: [RUNTIME]
+  - variable: BLOG_RATE_LIMIT_MODE
+    value: identity-global
+    availability: [RUNTIME]
   - variable: BLOG_RATE_LIMIT_SECRET
     secret: hunpeolabs-blog-rate-limit@1
     availability: [RUNTIME]
@@ -75,4 +78,4 @@ env:
   - variable: NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED
     value: "false"
     availability: [BUILD, RUNTIME]
-# BLOG_TRUSTED_IP_HEADER deliberately absent until verified spoof-resistant.
+# identity-global does not depend on client IP headers.

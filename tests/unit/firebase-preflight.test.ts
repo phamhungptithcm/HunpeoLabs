@@ -36,8 +36,9 @@ describe("production CMS preflight", () => {
   const config = () => ({
     spec: { template: { spec: { containers: [{ env: [
       { name: "BLOG_ENABLED", value: "true" },
+      { name: "BLOG_RATE_LIMIT_MODE", value: "identity-global" },
       ...["BLOG_FIREBASE_PROJECT_ID", "NEXT_PUBLIC_BLOG_FIREBASE_PROJECT_ID"].map((name) => ({ name, value: project })),
-      ...["BLOG_STORAGE_BUCKET", "BLOG_TRUSTED_IP_HEADER", "NEXT_PUBLIC_BLOG_FIREBASE_API_KEY", "NEXT_PUBLIC_BLOG_FIREBASE_AUTH_DOMAIN"].map((name) => ({ name, value: "configured-fixture" })),
+      ...["BLOG_STORAGE_BUCKET", "NEXT_PUBLIC_BLOG_FIREBASE_API_KEY", "NEXT_PUBLIC_BLOG_FIREBASE_AUTH_DOMAIN"].map((name) => ({ name, value: "configured-fixture" })),
       { name: "BLOG_RATE_LIMIT_SECRET", valueFrom: { secretKeyRef: { name: "fixture-reference", key: "1" } } },
     ] }] } } },
     status: { conditions: [{ type: "Ready", status: "True" }] },
@@ -58,6 +59,22 @@ describe("production CMS preflight", () => {
     expect(errors).toBe("");
     expect(output).toContain("live CMS/provider acceptance remains a separate gate");
     expect(output).not.toContain("configured-fixture");
+  });
+
+  it("rejects unknown modes and missing trusted-ingress headers", async () => {
+    const runtime = config();
+    const env = runtime.spec.template.spec.containers[0].env;
+    env.find((entry) => entry.name === "BLOG_RATE_LIMIT_MODE")!.value = "trusted-ingress";
+    provider(runtime);
+    await import("../../scripts/validate-firebase-production.mjs");
+    expect(process.exitCode).toBe(1);
+    expect(errors).toContain("BLOG_TRUSTED_IP_HEADER");
+    vi.resetModules(); process.exitCode = 0; errors = "";
+    env.find((entry) => entry.name === "BLOG_RATE_LIMIT_MODE")!.value = "unknown";
+    provider(runtime);
+    await import("../../scripts/validate-firebase-production.mjs");
+    expect(process.exitCode).toBe(1);
+    expect(errors).toContain("rate-limit mode is invalid");
   });
 
   it("rejects inline secret values and emulator settings without printing values", async () => {
