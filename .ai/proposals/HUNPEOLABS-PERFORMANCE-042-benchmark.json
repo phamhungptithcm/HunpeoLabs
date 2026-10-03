@@ -1,0 +1,970 @@
+{
+  "profile": {
+    "origin": "http://127.0.0.1:3142",
+    "viewport": "390x844",
+    "latencyMs": 150,
+    "downMbps": 1.6,
+    "upMbps": 0.75,
+    "cpu": 4,
+    "samples": 5,
+    "settleMs": 1500
+  },
+  "baseline": {
+    "/ cold": {
+      "ttfb": {
+        "median": 2.7000000029802322,
+        "min": 2.5,
+        "max": 19.799999997019768,
+        "n": 5
+      },
+      "fcp": {
+        "median": 992,
+        "min": 984,
+        "max": 1064,
+        "n": 5
+      },
+      "lcp": {
+        "median": 992,
+        "min": 984,
+        "max": 1064,
+        "n": 5
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "js": {
+        "median": 158219,
+        "min": 158219,
+        "max": 158219,
+        "n": 5
+      },
+      "css": {
+        "median": 47529,
+        "min": 47529,
+        "max": 47529,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 249169,
+        "min": 249167,
+        "max": 249169,
+        "n": 5
+      },
+      "sessions": {
+        "median": 2,
+        "min": 2,
+        "max": 2,
+        "n": 5
+      }
+    },
+    "/ warm": {
+      "ttfb": {
+        "median": 1.800000011920929,
+        "min": 1.5,
+        "max": 2.5,
+        "n": 5
+      },
+      "fcp": {
+        "median": 200,
+        "min": 192,
+        "max": 200,
+        "n": 5
+      },
+      "lcp": {
+        "median": 200,
+        "min": 192,
+        "max": 200,
+        "n": 5
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "js": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "css": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 36724,
+        "min": 36723,
+        "max": 36725,
+        "n": 5
+      },
+      "sessions": {
+        "median": 2,
+        "min": 2,
+        "max": 2,
+        "n": 5
+      }
+    },
+    "/products cold": {
+      "ttfb": {
+        "median": 2.7000000029802322,
+        "min": 2.5,
+        "max": 7.799999997019768,
+        "n": 5
+      },
+      "fcp": {
+        "median": 956,
+        "min": 944,
+        "max": 964,
+        "n": 5
+      },
+      "lcp": {
+        "median": 956,
+        "min": 944,
+        "max": 964,
+        "n": 5
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "js": {
+        "median": 156097,
+        "min": 156097,
+        "max": 156097,
+        "n": 5
+      },
+      "css": {
+        "median": 47529,
+        "min": 47529,
+        "max": 47529,
+        "n": 5
+      },
+      "images": {
+        "median": 9588,
+        "min": 9588,
+        "max": 9588,
+        "n": 5
+      },
+      "total": {
+        "median": 248322,
+        "min": 248321,
+        "max": 248322,
+        "n": 5
+      },
+      "sessions": {
+        "median": 2,
+        "min": 2,
+        "max": 2,
+        "n": 5
+      }
+    },
+    "/products warm": {
+      "ttfb": {
+        "median": 2.2999999970197678,
+        "min": 1.7999999970197678,
+        "max": 7.5,
+        "n": 5
+      },
+      "fcp": {
+        "median": 200,
+        "min": 192,
+        "max": 220,
+        "n": 5
+      },
+      "lcp": {
+        "median": 200,
+        "min": 192,
+        "max": 220,
+        "n": 5
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "js": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "css": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "images": {
+        "median": 600,
+        "min": 600,
+        "max": 600,
+        "n": 5
+      },
+      "total": {
+        "median": 28834,
+        "min": 28833,
+        "max": 28834,
+        "n": 5
+      },
+      "sessions": {
+        "median": 2,
+        "min": 2,
+        "max": 2,
+        "n": 5
+      }
+    },
+    "/resources/blog cold": {
+      "ttfb": {
+        "median": 5.700000002980232,
+        "min": 4.700000002980232,
+        "max": 8.599999994039536,
+        "n": 5
+      },
+      "fcp": {
+        "median": 968,
+        "min": 968,
+        "max": 972,
+        "n": 5
+      },
+      "lcp": {
+        "median": 1284,
+        "min": 1036,
+        "max": 1292,
+        "n": 5
+      },
+      "cls": {
+        "median": 0.3366633087637554,
+        "min": 0.3366633087637554,
+        "max": 0.3366633087637554,
+        "n": 5
+      },
+      "js": {
+        "median": 158746,
+        "min": 158746,
+        "max": 158746,
+        "n": 5
+      },
+      "css": {
+        "median": 47529,
+        "min": 47529,
+        "max": 47529,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 253240,
+        "min": 253238,
+        "max": 253244,
+        "n": 5
+      },
+      "sessions": {
+        "median": 3,
+        "min": 3,
+        "max": 3,
+        "n": 5
+      }
+    },
+    "/resources/blog warm": {
+      "ttfb": {
+        "median": 5.9000000059604645,
+        "min": 4.799999997019768,
+        "max": 7.299999997019768,
+        "n": 5
+      },
+      "fcp": {
+        "median": 204,
+        "min": 188,
+        "max": 232,
+        "n": 5
+      },
+      "lcp": {
+        "median": 516,
+        "min": 500,
+        "max": 540,
+        "n": 5
+      },
+      "cls": {
+        "median": 0.3366633087637554,
+        "min": 0.3366633087637554,
+        "max": 0.3366633087637554,
+        "n": 5
+      },
+      "js": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "css": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 47503,
+        "min": 47184,
+        "max": 47505,
+        "n": 5
+      },
+      "sessions": {
+        "median": 3,
+        "min": 3,
+        "max": 3,
+        "n": 5
+      }
+    },
+    "/resources/blog/performance-fixture-0 cold": {
+      "ttfb": {
+        "median": 5.9000000059604645,
+        "min": 5,
+        "max": 8.900000005960464,
+        "n": 5
+      },
+      "fcp": {
+        "median": 980,
+        "min": 968,
+        "max": 996,
+        "n": 5
+      },
+      "lcp": {
+        "median": 1312,
+        "min": 1304,
+        "max": 1372,
+        "n": 5
+      },
+      "cls": {
+        "median": 0.3222748815165877,
+        "min": 0.3222748815165877,
+        "max": 0.3222748815165877,
+        "n": 5
+      },
+      "js": {
+        "median": 167821,
+        "min": 167821,
+        "max": 167821,
+        "n": 5
+      },
+      "css": {
+        "median": 47529,
+        "min": 47529,
+        "max": 47529,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 258618,
+        "min": 258617,
+        "max": 258619,
+        "n": 5
+      },
+      "sessions": {
+        "median": 2,
+        "min": 2,
+        "max": 2,
+        "n": 5
+      }
+    },
+    "/resources/blog/performance-fixture-0 warm": {
+      "ttfb": {
+        "median": 6.399999991059303,
+        "min": 5.200000002980232,
+        "max": 8.399999991059303,
+        "n": 5
+      },
+      "fcp": {
+        "median": 208,
+        "min": 204,
+        "max": 216,
+        "n": 5
+      },
+      "lcp": {
+        "median": 512,
+        "min": 508,
+        "max": 520,
+        "n": 5
+      },
+      "cls": {
+        "median": 0.3222748815165877,
+        "min": 0.3222748815165877,
+        "max": 0.3222748815165877,
+        "n": 5
+      },
+      "js": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "css": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 43315,
+        "min": 43315,
+        "max": 43317,
+        "n": 5
+      },
+      "sessions": {
+        "median": 2,
+        "min": 2,
+        "max": 2,
+        "n": 5
+      }
+    },
+    "category-navigation cold": {
+      "clickToContent": {
+        "median": 311,
+        "min": 307,
+        "max": 370,
+        "n": 5
+      }
+    },
+    "category-navigation warm": {
+      "clickToContent": {
+        "median": 264,
+        "min": 260,
+        "max": 273,
+        "n": 5
+      }
+    }
+  },
+  "final": {
+    "/ cold": {
+      "ttfb": {
+        "median": 4.799999997019768,
+        "min": 2.7999999970197678,
+        "max": 30.700000002980232,
+        "n": 5
+      },
+      "fcp": {
+        "median": 992,
+        "min": 988,
+        "max": 1076,
+        "n": 5
+      },
+      "lcp": {
+        "median": 992,
+        "min": 988,
+        "max": 1076,
+        "n": 5
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "js": {
+        "median": 159735,
+        "min": 159735,
+        "max": 159735,
+        "n": 5
+      },
+      "css": {
+        "median": 48242,
+        "min": 48242,
+        "max": 48242,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 252555,
+        "min": 252554,
+        "max": 252556,
+        "n": 5
+      },
+      "sessions": {
+        "median": 1,
+        "min": 1,
+        "max": 1,
+        "n": 5
+      }
+    },
+    "/ warm": {
+      "ttfb": {
+        "median": 2,
+        "min": 1.7999999970197678,
+        "max": 2.8999999910593033,
+        "n": 5
+      },
+      "fcp": {
+        "median": 204,
+        "min": 196,
+        "max": 208,
+        "n": 5
+      },
+      "lcp": {
+        "median": 204,
+        "min": 196,
+        "max": 208,
+        "n": 5
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "js": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "css": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 37877,
+        "min": 37876,
+        "max": 37879,
+        "n": 5
+      },
+      "sessions": {
+        "median": 1,
+        "min": 1,
+        "max": 1,
+        "n": 5
+      }
+    },
+    "/products cold": {
+      "ttfb": {
+        "median": 3.199999988079071,
+        "min": 2.6000000089406967,
+        "max": 3.5,
+        "n": 5
+      },
+      "fcp": {
+        "median": 940,
+        "min": 928,
+        "max": 972,
+        "n": 5
+      },
+      "lcp": {
+        "median": 940,
+        "min": 928,
+        "max": 972,
+        "n": 5
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "js": {
+        "median": 157613,
+        "min": 157613,
+        "max": 157613,
+        "n": 5
+      },
+      "css": {
+        "median": 48242,
+        "min": 48242,
+        "max": 48242,
+        "n": 5
+      },
+      "images": {
+        "median": 9588,
+        "min": 9588,
+        "max": 9588,
+        "n": 5
+      },
+      "total": {
+        "median": 251694,
+        "min": 251693,
+        "max": 251696,
+        "n": 5
+      },
+      "sessions": {
+        "median": 1,
+        "min": 1,
+        "max": 1,
+        "n": 5
+      }
+    },
+    "/products warm": {
+      "ttfb": {
+        "median": 4,
+        "min": 1.8999999910593033,
+        "max": 6.200000002980232,
+        "n": 5
+      },
+      "fcp": {
+        "median": 200,
+        "min": 200,
+        "max": 208,
+        "n": 5
+      },
+      "lcp": {
+        "median": 200,
+        "min": 200,
+        "max": 208,
+        "n": 5
+      },
+      "cls": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "js": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "css": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "images": {
+        "median": 600,
+        "min": 600,
+        "max": 600,
+        "n": 5
+      },
+      "total": {
+        "median": 29975,
+        "min": 29973,
+        "max": 29976,
+        "n": 5
+      },
+      "sessions": {
+        "median": 1,
+        "min": 1,
+        "max": 1,
+        "n": 5
+      }
+    },
+    "/resources/blog cold": {
+      "ttfb": {
+        "median": 7,
+        "min": 5.799999997019768,
+        "max": 39.5,
+        "n": 5
+      },
+      "fcp": {
+        "median": 964,
+        "min": 932,
+        "max": 996,
+        "n": 5
+      },
+      "lcp": {
+        "median": 1240,
+        "min": 980,
+        "max": 1312,
+        "n": 5
+      },
+      "cls": {
+        "median": 0.014388427247167716,
+        "min": 0.014388427247167716,
+        "max": 0.014388427247167716,
+        "n": 5
+      },
+      "js": {
+        "median": 169800,
+        "min": 169800,
+        "max": 169800,
+        "n": 5
+      },
+      "css": {
+        "median": 48242,
+        "min": 48242,
+        "max": 48242,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 266694,
+        "min": 266380,
+        "max": 266696,
+        "n": 5
+      },
+      "sessions": {
+        "median": 1,
+        "min": 1,
+        "max": 1,
+        "n": 5
+      }
+    },
+    "/resources/blog warm": {
+      "ttfb": {
+        "median": 7.800000011920929,
+        "min": 5.700000002980232,
+        "max": 9.099999994039536,
+        "n": 5
+      },
+      "fcp": {
+        "median": 228,
+        "min": 192,
+        "max": 240,
+        "n": 5
+      },
+      "lcp": {
+        "median": 536,
+        "min": 500,
+        "max": 548,
+        "n": 5
+      },
+      "cls": {
+        "median": 0.014388427247167716,
+        "min": 0.014388427247167716,
+        "max": 0.014388427247167716,
+        "n": 5
+      },
+      "js": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "css": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 48653,
+        "min": 48326,
+        "max": 48655,
+        "n": 5
+      },
+      "sessions": {
+        "median": 1,
+        "min": 1,
+        "max": 1,
+        "n": 5
+      }
+    },
+    "/resources/blog/performance-fixture-0 cold": {
+      "ttfb": {
+        "median": 7.899999991059303,
+        "min": 6,
+        "max": 11.5,
+        "n": 5
+      },
+      "fcp": {
+        "median": 956,
+        "min": 940,
+        "max": 1056,
+        "n": 5
+      },
+      "lcp": {
+        "median": 1280,
+        "min": 1056,
+        "max": 1380,
+        "n": 5
+      },
+      "cls": {
+        "median": 0.0924170616113744,
+        "min": 0,
+        "max": 0.0924170616113744,
+        "n": 5
+      },
+      "js": {
+        "median": 168244,
+        "min": 168244,
+        "max": 168244,
+        "n": 5
+      },
+      "css": {
+        "median": 48242,
+        "min": 48242,
+        "max": 48242,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 261181,
+        "min": 261181,
+        "max": 261182,
+        "n": 5
+      },
+      "sessions": {
+        "median": 1,
+        "min": 1,
+        "max": 1,
+        "n": 5
+      }
+    },
+    "/resources/blog/performance-fixture-0 warm": {
+      "ttfb": {
+        "median": 6.5,
+        "min": 5.5,
+        "max": 10.399999991059303,
+        "n": 5
+      },
+      "fcp": {
+        "median": 212,
+        "min": 208,
+        "max": 220,
+        "n": 5
+      },
+      "lcp": {
+        "median": 520,
+        "min": 512,
+        "max": 532,
+        "n": 5
+      },
+      "cls": {
+        "median": 0.0924170616113744,
+        "min": 0.0924170616113744,
+        "max": 0.0924170616113744,
+        "n": 5
+      },
+      "js": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "css": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "images": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "n": 5
+      },
+      "total": {
+        "median": 44738,
+        "min": 44737,
+        "max": 44742,
+        "n": 5
+      },
+      "sessions": {
+        "median": 1,
+        "min": 1,
+        "max": 1,
+        "n": 5
+      }
+    },
+    "category-navigation cold": {
+      "clickToContent": {
+        "median": 328,
+        "min": 308,
+        "max": 398,
+        "n": 5
+      }
+    },
+    "category-navigation warm": {
+      "clickToContent": {
+        "median": 284,
+        "min": 282,
+        "max": 285,
+        "n": 5
+      }
+    }
+  },
+  "slowRelatedProbe": {
+    "390": {
+      "primaryVisibleMs": 502,
+      "relatedVisibleMs": 4315,
+      "title": "Performance fixture 0 \u2014 Hunpeo Labs",
+      "horizontalOverflow": false,
+      "errors": []
+    },
+    "1280": {
+      "primaryVisibleMs": 401,
+      "relatedVisibleMs": 4211,
+      "title": "Performance fixture 0 \u2014 Hunpeo Labs",
+      "horizontalOverflow": false,
+      "errors": []
+    },
+    "noJS": {
+      "titleVisible": true,
+      "horizontalOverflow": false
+    }
+  },
+  "limitations": [
+    "Local production build with synthetic emulator posts. No uploaded image transfer samples.",
+    "LCP/CLS are laboratory snapshots; no field INP or production/CDN measurement.",
+    "Cold/warm sampling uses new browser contexts then same-context second navigation; it is not a server process cold-start benchmark.",
+    "Localhost response-start timing does not represent WAN RTT."
+  ]
+}

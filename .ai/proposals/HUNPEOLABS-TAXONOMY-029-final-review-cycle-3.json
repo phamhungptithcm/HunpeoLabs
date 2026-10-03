@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-TAXONOMY-029",
+  "status": "PASSED",
+  "dimensions": {
+    "requirement_match": {
+      "status": "PASSED",
+      "summary": "Approved taxonomy fields implemented; selection/create-only and Enter/delete/limits locally verified.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    },
+    "security": {
+      "status": "PASSED",
+      "summary": "Same-origin and staff authentication preserved; server requires admin for creation, bounded names and reads, no secret or production actions.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    },
+    "code_quality": {
+      "status": "PASSED",
+      "summary": "Scoped ESLint, TypeScript and build pass; existing update/autosave patterns preserved; no dependency additions.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    },
+    "failure_paths": {
+      "status": "PASSED",
+      "summary": "Invalid input, capacity, permission, storage failure, IME, duplicate and concurrent rename/recreate paths checked.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    },
+    "error_handling": {
+      "status": "PASSED",
+      "summary": "Existing request-ID error envelope and dismissible toast preserved; failed creation does not replace confirmed category.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    },
+    "production_readiness": {
+      "status": "PASSED",
+      "summary": "Deployment and rollback constraints reviewed. No migrations. Actual production status remains NOT_READY; full authenticated editor E2E and live checks absent.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    },
+    "trade_offs": {
+      "status": "PASSED",
+      "summary": "Snapshot suggestions and bounded 100-entry catalog; legacy edit flow can independently duplicate names; dirty WIP and declared-only self-review limitations disclosed.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "id": "ime-enter",
+      "severity": "MEDIUM",
+      "category": "failure_paths",
+      "location": "components/blog-editor/taxonomy-fields.tsx",
+      "summary": "Composition-end Enter can have isComposing false; premature tag/category commit must be prevented.",
+      "resolution": "Added composition refs and keyCode 229 guard; browser composition-state checks pass.",
+      "status": "FIXED",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    },
+    {
+      "id": "repeat-toast",
+      "severity": "LOW",
+      "category": "error_handling",
+      "location": "components/blog-editor/editor.tsx",
+      "summary": "Repeated identical limit notices did not restart the existing toast timer.",
+      "resolution": "Taxonomy notice increments the toast key revision on every attempt; existing toast effect resets on remount.",
+      "status": "FIXED",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    },
+    {
+      "id": "renamed-category",
+      "severity": "MEDIUM",
+      "category": "correctness",
+      "location": "lib/blog/repository.ts",
+      "summary": "A deterministic catalog ID may be renamed; requesting its old name could select the renamed value.",
+      "resolution": "Compare stored normalized name and probe a bounded deterministic suffix preserving renamed records. Unit and actual emulator concurrency tests pass.",
+      "status": "FIXED",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    },
+    {
+      "id": "arrow-up",
+      "severity": "LOW",
+      "category": "accessibility",
+      "location": "components/blog-editor/taxonomy-fields.tsx",
+      "summary": "ArrowUp from no active option selected the penultimate entry and active entries could be off-screen.",
+      "resolution": "Initial ArrowUp selects the last choice and active option scrolls into view; browser navigation checks pass.",
+      "status": "FIXED",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-TAXONOMY-029-completion.md",
+        "tests/unit/blog-taxonomy.test.ts",
+        "tests/unit/blog-taxonomy-route.test.ts",
+        "tests/unit/blog-taxonomy-emulator.test.ts",
+        "/private/tmp/hunpeolabs-taxonomy-029/browser-check.mjs"
+      ]
+    }
+  ],
+  "residual_risks": [
+    "Existing category-edit flow can independently produce duplicate names; suggestions snapshot loaded catalog."
+  ],
+  "limitations": [
+    "DEGRADED indexes; scoped source fallback.",
+    "UI browser fixture uses stubbed API, not full authenticated editor E2E.",
+    "Legacy review is declared self-review, not authenticated independent production certification.",
+    "Shared dirty worktree and concurrent unrelated edits retained; production readiness NOT_READY."
+  ]
+}

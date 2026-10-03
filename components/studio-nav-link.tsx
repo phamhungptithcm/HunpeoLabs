@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ProgressLink as Link } from "@/components/progress-link";
 import { useBlogSession } from "./use-blog-session";
 
 export function StudioNavLink({ onNavigate }: { onNavigate?: () => void }) {

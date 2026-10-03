@@ -1,4 +1,5 @@
 import "server-only";
+import { matchesPublicPost, queryWords, scanPublicSearch } from "./discovery";
 import { categoryAliases, categoryLabel } from "./categories";
 import { listAccess, changeAccess, assignableAccess } from "./access";
 import { taxonomyKey } from "./taxonomy-input";
@@ -9,6 +10,7 @@ import {
   Actor,
   BlogError,
   Post,
+  type WorkspacePost,
   PublishedPost,
   canEdit,
   draftSchema,
@@ -47,8 +49,20 @@ export async function listPublished(
     q?: string;
     limit?: number;
   } = {},
-) {
+): Promise<{ items: PublishedPost[]; next: string | null }> {
   if (!blogEnabled()) return { items: [] as PublishedPost[], next: null };
+  const search = typeof options.q === 'string' ? options.q : '';
+  const words = queryWords(search);
+  if (search.trim() && !words.length) return { items: [], next: null };
+  if (words.length) {
+    const limit = Math.max(1, Math.min(options.limit ?? 20, 100));
+    return scanPublicSearch<PublishedPost>(
+      (cursor, batchLimit) => listPublished({ ...options, q: undefined, cursor, limit: batchLimit }),
+      post => Buffer.from(`${post.publishedAt}|${post.id}`).toString('base64url'),
+      post => matchesPublicPost(post, words),
+      { cursor: options.cursor, limit },
+    );
+  }
   let q: Query = blogDb().collection("blogPublished");
   if (options.category) {
     const aliases = categoryAliases(options.category.slice(0, 80));
@@ -58,8 +72,6 @@ export async function listPublished(
   }
   if (options.tag)
     q = q.where("tags", "array-contains", options.tag.slice(0, 40));
-  const token = searchTokens(options.q ?? "")[0];
-  if (token && !options.tag) q = q.where("tokens", "array-contains", token);
   q = q.orderBy("publishedAt", "desc").orderBy(FieldPath.documentId());
   if (options.cursor) {
     const [time, id] = Buffer.from(options.cursor, "base64url")
@@ -132,8 +144,15 @@ export async function listDrafts(
   }
   const snap = await q.limit(21).get();
   const page = snap.docs.slice(0, 20);
+  // Only fetch schedules for the already-authorized, bounded page. Never project job UID/operation IDs.
+  const schedules = page.length ? await blogDb().getAll(...page.map(d => blogDb().collection("blogSchedules").doc(d.id))) : [];
   return {
-    items: page.map((d) => d.data() as Post),
+    items: page.map((d, index): WorkspacePost => {
+      const post = d.data() as Post;
+      const dueAt = schedules[index]?.get("dueAt");
+      const revision = schedules[index]?.get("revision");
+      return { ...post, ...(typeof dueAt === "string" && Number.isFinite(Date.parse(dueAt)) && Number.isSafeInteger(revision) ? { schedule: { dueAt, revision } } : {}) };
+    }),
     next:
       snap.size > 20
         ? Buffer.from(

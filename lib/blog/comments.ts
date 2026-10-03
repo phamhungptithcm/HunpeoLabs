@@ -4,10 +4,20 @@ import { z } from "zod";
 import { FieldPath } from "firebase-admin/firestore";
 import { blogDb } from "@/lib/firebase-admin";
 import { Actor, BlogError, idSchema, requirePublisher } from "./schema";
+import {
+  classifyComment,
+  moderationReasons,
+  moderationVersion,
+  normalizedComment,
+  readReputation,
+  type ModerationReason,
+} from "./comment-moderation";
+const commentText = z.string().trim().min(1).max(2000)
+  .refine((text) => normalizedComment(text).length > 0);
 export const commentInput = z.object({
   postId: idSchema,
   parentId: z.union([idSchema, z.literal("")]).default(""),
-  text: z.string().trim().min(1).max(2000),
+  text: commentText,
   operationId: z.string().uuid(),
   website: z.literal("").default(""),
 });
@@ -24,6 +34,9 @@ type Comment = {
   updatedAt: string;
   badge: string;
   approvedReplyCount?: number;
+  moderationReasons?: ModerationReason[];
+  reputationCredit?: boolean;
+  reputationRestriction?: boolean;
 };
 function project(c: Comment) {
   return {
@@ -110,16 +123,20 @@ export async function createComment(actor: Actor, input: unknown) {
     .update(`${actor.uid}:${c.operationId}`)
     .digest("hex");
   const ref = db.collection("blogComments").doc(id);
+  const stateRef = db.collection("blogPosts").doc(c.postId);
+  const reputationRef = db.collection("blogCommentReputation").doc(createHash("sha256").update(actor.uid).digest("hex"));
   return db.runTransaction(async (tx) => {
-    const [post, existing, parent] = await Promise.all([
+    const [post, existing, parent, state, reputationSnap] = await Promise.all([
       tx.get(db.collection("blogPublished").doc(c.postId)),
       tx.get(ref),
       c.parentId ? tx.get(db.collection("blogComments").doc(c.parentId)) : null,
+      tx.get(stateRef),
+      tx.get(reputationRef),
     ]);
     if (!post.exists) throw new BlogError(404, "NOT_FOUND");
     if (!post.get("commentsEnabled"))
       throw new BlogError(403, "COMMENTS_CLOSED");
-    if (existing.exists) return { ok: true };
+    if (existing.exists) return { ok: true, status: existing.get("status") as string };
     if (
       parent &&
       (!parent.exists ||
@@ -129,6 +146,15 @@ export async function createComment(actor: Actor, input: unknown) {
     )
       throw new BlogError(400, "INVALID_PARENT");
     const now = new Date().toISOString();
+    const reputation = readReputation(reputationSnap.data());
+    const decision = classifyComment(c.text, id, reputation, now);
+    tx.set(reputationRef, { ...reputation, recent: decision.recent });
+    if (decision.status === "approved") {
+      const count = Number(post.get("commentCount") ?? 0) + 1;
+      tx.update(post.ref, { commentCount: count });
+      if (state.exists) tx.update(stateRef, { commentCount: count });
+      if (parent) tx.update(parent.ref, { approvedReplyCount: Number(parent.get("approvedReplyCount") ?? 0) + 1 });
+    }
     tx.create(ref, {
       id,
       postId: c.postId,
@@ -136,14 +162,16 @@ export async function createComment(actor: Actor, input: unknown) {
       uid: actor.uid,
       name: actor.name,
       text: c.text,
-      status: "pending",
+      status: decision.status,
+      moderationReasons: decision.reasons,
+      moderationVersion,
       revision: 1,
       createdAt: now,
       updatedAt: now,
       badge:
         actor.role === "admin" || actor.role === "publisher" ? "Moderator" : "",
     });
-    return { ok: true };
+    return { ok: true, status: decision.status };
   });
 }
 export async function changeComment(
@@ -161,10 +189,12 @@ export async function changeComment(
     const c = snap.data() as Comment;
     const postRef = db.collection("blogPublished").doc(c.postId);
     const postStateRef = db.collection("blogPosts").doc(c.postId);
-    const [p, postState, parent] = await Promise.all([
+    const reputationRef = db.collection("blogCommentReputation").doc(createHash("sha256").update(c.uid).digest("hex"));
+    const [p, postState, parent, reputationSnap] = await Promise.all([
       tx.get(postRef),
       tx.get(postStateRef),
       c.parentId ? tx.get(db.collection("blogComments").doc(c.parentId)) : null,
+      tx.get(reputationRef),
     ]);
     if (action === "edit" || action === "delete") {
       if (c.uid !== actor.uid) throw new BlogError(403, "FORBIDDEN");
@@ -185,8 +215,26 @@ export async function changeComment(
         (parent && !["approved", "deleted"].includes(parent.get("status"))))
     )
       throw new BlogError(400, "APPROVAL_FORBIDDEN");
-    const status =
-      action === "edit" ? "pending" : action === "delete" ? "deleted" : action;
+    const now = new Date().toISOString();
+    const reputation = readReputation(reputationSnap.data());
+    const nextText = action === "edit" ? commentText.parse(text) : c.text;
+    // Credits belong to the reviewed content, so editing cannot reuse its trust credit.
+    const baseReputation = { ...reputation, approvedCount: Math.max(0, reputation.approvedCount - Number(c.reputationCredit === true)) };
+    const decision = action === "edit" ? classifyComment(nextText, id, baseReputation, now) : null;
+    if (decision && parent && !["approved", "deleted"].includes(parent.get("status"))) {
+      decision.status = "pending";
+      decision.reasons.push("thread");
+    }
+    const status = decision?.status ?? (action === "delete" ? "deleted" : action);
+    const credit = action === "approved";
+    // Deleting an already hidden/rejected comment must not erase its moderation history.
+    const restriction = ["hidden", "rejected"].includes(action) || (action === "delete" && c.reputationRestriction === true);
+    tx.set(reputationRef, {
+      ...reputation,
+      approvedCount: Math.max(0, reputation.approvedCount + Number(credit) - Number(c.reputationCredit === true)),
+      restrictedCount: Math.max(0, reputation.restrictedCount + Number(restriction) - Number(c.reputationRestriction === true)),
+      recent: decision?.recent ?? reputation.recent,
+    });
     const replies = Number(c.approvedReplyCount ?? 0);
     const oldVisible = c.status === "approved" ? 1 : 0;
     const newVisible = status === "approved" ? 1 : 0;
@@ -208,16 +256,19 @@ export async function changeComment(
     }
     const count = Math.max(
       0,
-      Number(postState.get("commentCount") ?? 0) + delta,
+      Number(p.get("commentCount") ?? postState.get("commentCount") ?? 0) + delta,
     );
     if (postState.exists) tx.update(postStateRef, { commentCount: count });
     if (p.exists) tx.update(postRef, { commentCount: count });
     tx.update(ref, {
       status,
       revision: c.revision + 1,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
+      reputationCredit: credit,
+      reputationRestriction: restriction,
+      ...(decision ? { moderationReasons: decision.reasons, moderationVersion } : {}),
       ...(action === "edit"
-        ? { text: z.string().trim().min(1).max(2000).parse(text) }
+        ? { text: nextText }
         : {}),
       ...(action === "delete" ? { text: "", name: "", badge: "" } : {}),
     });
@@ -225,9 +276,10 @@ export async function changeComment(
       action: `comment_${action}`,
       actor: actor.uid,
       commentId: id,
-      at: new Date().toISOString(),
+      at: now,
+      ...(decision ? { moderationReasons: decision.reasons, moderationVersion } : {}),
     });
-    return { ok: true };
+    return { ok: true, status };
   });
 }
 export async function reportComment(id: string, actor: Actor, reason: string) {
@@ -273,7 +325,10 @@ export async function moderationQueue(actor: Actor, status = "pending") {
       .orderBy("createdAt")
       .limit(100)
       .get()
-  ).docs.map((d) => project(d.data() as Comment));
+  ).docs.map((d) => {
+    const c = d.data() as Comment;
+    return { ...project(c), moderationReasons: (c.moderationReasons ?? []).filter((r) => Object.hasOwn(moderationReasons, r)).map((r) => moderationReasons[r]) };
+  });
 }
 
 export async function publicThread(postId: string, commentId: string) {

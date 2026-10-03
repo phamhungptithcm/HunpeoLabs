@@ -1,9 +1,10 @@
 "use client";
+import { BlogImageViewer } from "./blog-image-viewer";
 import { mermaidSource } from "@/lib/blog/mermaid-source";
 import { useEffect, useId, useState } from "react";
 
 let rendering = Promise.resolve();
-export function MermaidDiagram({ source, showSource = true }: { source: string; showSource?: boolean }) {
+export function MermaidDiagram({ source, showSource = true, enlarge = false }: { source: string; showSource?: boolean; enlarge?: boolean }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, "");
   const [result, setResult] = useState<{ source: string; url?: string; error?: boolean } | null>(null);
   useEffect(() => {
@@ -30,7 +31,7 @@ export function MermaidDiagram({ source, showSource = true }: { source: string; 
   return <figure className="mermaid-diagram">
     {result?.source === source && result.url ? (
       // eslint-disable-next-line @next/next/no-img-element -- Isolated SVG blob generated locally with strict Mermaid security.
-      <img src={result.url} alt="Sơ đồ Mermaid" />
+      enlarge ? <BlogImageViewer src={result.url} alt="Mermaid diagram" vi={false} loading="eager" /> : <img src={result.url} alt="Sơ đồ Mermaid" />
     ) : <p role="status">{result?.source === source && result.error ? "Chưa vẽ được sơ đồ. Kiểm tra lại cú pháp Mermaid." : "Đang vẽ sơ đồ…"}</p>}
     {showSource && <details><summary>Xem mã sơ đồ</summary><pre><code>{source}</code></pre></details>}
   </figure>;

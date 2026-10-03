@@ -10,19 +10,74 @@ import type { RichNode } from "@/lib/blog/schema";
 import { safeUrl } from "@/lib/blog/schema";
 import { BlogIcon } from "@/components/blog-admin/ui";
 import { BlogDialog } from "@/components/blog-admin/dialog";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { TextSelection, type SelectionBookmark } from "@tiptap/pm/state";
+import type { Editor as TiptapEditor } from "@tiptap/react";
+import { blockTransaction, imageFileError, matchingSlashItems, slashRange, type SlashId } from "@/lib/blog/editor-actions";
 export function RichEditor({
   body,
   onChange,
   onImage,
+  onUploadImage,
+  onError,
 }: {
   body: RichNode;
   onChange: (b: RichNode) => void;
   onImage: () => Promise<string | null>;
+  onUploadImage: (file: File) => Promise<string>;
+  onError: (message: string) => void;
 }) {
   const [link, setLink] = useState<string | null>(null),
     [linkError, setLinkError] = useState("");
   const [image, setImage] = useState<{ src: string; alt: string } | null>(null);
+  const writingRoot = useRef<HTMLElement | null>(null);
+  const [activeBlock, setActiveBlock] = useState<{ top: number; left: number } | null>(null);
+  const [focusMode, setFocusMode] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [slash, setSlash] = useState<{ from: number; to: number; query: string; left: number; top: number } | null>(null);
+  const [commandIndex, setCommandIndex] = useState(0);
+  const selectedCommand = useRef(0);
+  const dismissedSlash = useRef<number | null>(null);
+  const imageBookmark = useRef<SelectionBookmark | null>(null);
+  const pendingUpload = useRef(false);
+  const alive = useRef(true);
+  const commands = useRef<(id: SlashId, instance: TiptapEditor) => void>(() => {});
+  const pickImage = useRef<() => void>(() => {});
+  const files = useRef<(file: File, instance: TiptapEditor, pos?: number) => void>(() => {});
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  useEffect(() => { selectedCommand.current = commandIndex; }, [commandIndex]);
+  useEffect(() => {
+    if (!focusMode) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const isolated: { element: HTMLElement; previous: boolean }[] = [];
+    let current: HTMLElement | null = writingRoot.current;
+    while (current?.parentElement && current.parentElement !== document.body) {
+      for (const sibling of current.parentElement.children) {
+        if (sibling !== current && sibling instanceof HTMLElement) { isolated.push({ element: sibling, previous: sibling.inert }); sibling.inert = true; }
+      }
+      current = current.parentElement;
+    }
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && !document.querySelector('dialog[open], [role="dialog"]')) setFocusMode(false); };
+    document.addEventListener('keydown', escape);
+    return () => { document.body.style.overflow = previous; isolated.forEach(({ element, previous }) => { element.inert = previous; }); document.removeEventListener('keydown', escape); };
+  }, [focusMode]);
+  const syncCommands = useCallback((instance: TiptapEditor) => {
+    const root = writingRoot.current;
+    const pos = instance.state.selection.$from.depth ? instance.state.selection.$from.before(1) : instance.state.selection.from;
+    const dom = instance.view.nodeDOM(pos);
+    if (root && dom instanceof HTMLElement) {
+      const blockRect = dom.getBoundingClientRect(), rootRect = root.getBoundingClientRect();
+      setActiveBlock({ top: blockRect.top - rootRect.top + root.scrollTop, left: Math.max(0, blockRect.left - rootRect.left + root.scrollLeft - 26) });
+    }
+    const range = slashRange(instance.state);
+    if (!range || !instance.isFocused) { dismissedSlash.current = null; setSlash(null); return; }
+    if (dismissedSlash.current === range.from) return;
+    const coords = instance.view.coordsAtPos(range.to);
+    selectedCommand.current = 0;
+    setCommandIndex(0);
+    setSlash({ ...range, left: Math.max(12, Math.min(coords.left, window.innerWidth - 260)), top: Math.max(12, Math.min(coords.bottom + 8, window.innerHeight - 340)) });
+  }, []);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -37,7 +92,39 @@ export function RichEditor({
     content: body,
     immediatelyRender: false,
     editorProps: {
+      handleKeyDown: (view, event) => {
+        if (event.isComposing) return false;
+        const range = slashRange(view.state);
+        if (!range || dismissedSlash.current === range.from) return false;
+        const options = matchingSlashItems(range.query);
+        if (event.key === 'Escape') { dismissedSlash.current = range.from; setSlash(null); return true; }
+        if (!options.length) return false;
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          selectedCommand.current = (selectedCommand.current + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
+          setCommandIndex(selectedCommand.current); return true;
+        }
+        if (event.key === 'Enter' && editor) { commands.current(options[Math.min(selectedCommand.current, options.length - 1)].id, editor); return true; }
+        return false;
+      },
+      handleDrop: (view, event, _slice, moved) => {
+        if (moved || !event.dataTransfer?.files.length || !editor) return false;
+        event.preventDefault();
+        if (event.dataTransfer.files.length !== 1) { onError('Thêm từng ảnh một nhé.'); return true; }
+        const pos = view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos;
+        files.current(event.dataTransfer.files[0], editor, pos);
+        return true;
+      },
       handlePaste: (view, event) => {
+        const pastedFiles = event.clipboardData?.files;
+        const clipboardText = event.clipboardData?.getData('text/plain').trim();
+        const clipboardHtml = event.clipboardData?.getData('text/html') ?? '';
+        const mixedText = clipboardHtml ? new DOMParser().parseFromString(clipboardHtml, 'text/html').body.textContent?.trim() : '';
+        if (pastedFiles?.length && editor && !clipboardText && !mixedText) {
+          event.preventDefault();
+          if (pastedFiles.length !== 1) onError('Thêm từng ảnh một nhé.');
+          else files.current(pastedFiles[0], editor);
+          return true;
+        }
         const source = pastedMermaid(event.clipboardData?.getData("text/plain") ?? "");
         if (!source) return false;
         const node = view.state.schema.nodes.codeBlock.create({ language: "mermaid" }, view.state.schema.text(source));
@@ -50,8 +137,67 @@ export function RichEditor({
         "aria-multiline": "true",
       },
     },
-    onUpdate: ({ editor }) => onChange(editor.getJSON() as RichNode),
+    onTransaction: ({ transaction }) => { if (imageBookmark.current) imageBookmark.current = imageBookmark.current.map(transaction.mapping); },
+    onSelectionUpdate: ({ editor }) => syncCommands(editor),
+    onFocus: ({ editor }) => syncCommands(editor),
+    onBlur: () => setSlash(null),
+    onUpdate: ({ editor }) => { onChange(editor.getJSON() as RichNode); syncCommands(editor); },
   });
+  useEffect(() => {
+    if (!editor) return;
+    async function chooseImage(file?: File, pos?: number) {
+      if (pendingUpload.current || imageBookmark.current) { onError('Hoàn tất ảnh đang chọn trước nhé.'); return; }
+      if (file) { const error = imageFileError(file); if (error) { onError(error); return; } }
+      if (!editor || editor.isDestroyed) return;
+      if (pos !== undefined) editor.view.dispatch(editor.state.tr.setSelection(TextSelection.near(editor.state.doc.resolve(pos))));
+      imageBookmark.current = editor.state.selection.getBookmark();
+      pendingUpload.current = true; setUploading(true);
+      try {
+        const src = file ? await onUploadImage(file) : await onImage();
+        if (!alive.current || editor.isDestroyed) return;
+        if (src) setImage({ src, alt: '' });
+        else imageBookmark.current = null;
+      } catch (error) {
+        imageBookmark.current = null;
+        if (alive.current) onError(error instanceof Error ? error.message : 'Không tải được ảnh. Thử lại nhé.');
+      } finally { pendingUpload.current = false; if (alive.current) setUploading(false); }
+    }
+    pickImage.current = () => { void chooseImage(); };
+    files.current = (file, _instance, pos) => { void chooseImage(file, pos); };
+    commands.current = (id, instance) => {
+      const range = slashRange(instance.state);
+      if (!range) return;
+      if (id === 'image' && (pendingUpload.current || imageBookmark.current)) { onError('Hoàn tất ảnh đang chọn trước nhé.'); return; }
+      instance.chain().focus().deleteRange({ from: range.from, to: range.to }).run();
+      setSlash(null);
+      if (id === 'image') { void chooseImage(); return; }
+      const chain = instance.chain().focus();
+      switch (id) {
+        case 'h2': chain.setHeading({ level: 2 }).run(); break;
+        case 'h3': chain.setHeading({ level: 3 }).run(); break;
+        case 'list': chain.toggleBulletList().run(); break;
+        case 'ordered': chain.toggleOrderedList().run(); break;
+        case 'quote': chain.toggleBlockquote().run(); break;
+        case 'code': chain.setCodeBlock().run(); break;
+        case 'table': chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); break;
+      }
+    };
+    const move = () => setSlash(null);
+    window.addEventListener('scroll', move, true);
+    window.addEventListener('resize', move);
+    return () => { window.removeEventListener('scroll', move, true); window.removeEventListener('resize', move); };
+  }, [editor, onImage, onUploadImage, onError]);
+  useEffect(() => {
+    if (!editor) return;
+    const frame = requestAnimationFrame(() => { if (focusMode) editor.commands.focus(); syncCommands(editor); });
+    return () => cancelAnimationFrame(frame);
+  }, [editor, focusMode, syncCommands]);
+  function editBlock(action: 'up' | 'down' | 'duplicate' | 'delete') {
+    if (!editor) return;
+    const transaction = blockTransaction(editor.state, action);
+    if (transaction) { editor.view.dispatch(transaction); editor.commands.focus(); }
+    writingRoot.current?.querySelector<HTMLDetailsElement>('.writing-block-menu')?.removeAttribute('open');
+  }
   if (!editor)
     return (
       <div className="state-card" role="status">
@@ -61,7 +207,8 @@ export function RichEditor({
       </div>
     );
   return (
-    <>
+    <section ref={writingRoot} className={`rich-writing ${focusMode ? 'rich-writing-focus' : ''}`} aria-label="Trình soạn thảo">
+      {focusMode && <div className="writing-focus-header"><strong>Đang viết</strong><span>Esc để quay lại</span><button type="button" onClick={() => setFocusMode(false)} aria-label="Thoát chế độ tập trung" title="Thoát (Esc)"><BlogIcon name="close" size={18} /></button></div>}
       <BubbleMenu editor={editor} className="editor-selection-tools" shouldShow={({ editor, state }) => !state.selection.empty && state.selection.$from.parent.inlineContent && !editor.isActive("codeBlock")}>
         <div role="toolbar" aria-label="Định dạng đoạn được chọn" onMouseDown={(e) => e.preventDefault()}>
           <button type="button" aria-label="In đậm" aria-pressed={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}><strong>B</strong></button>
@@ -153,12 +300,8 @@ export function RichEditor({
         <button
           type="button"
           aria-label="Chèn ảnh hoặc GIF"
-          onClick={async () => {
-            const src = await onImage();
-            if (src) {
-              setImage({ src, alt: "" });
-            }
-          }}
+          disabled={uploading}
+          onClick={() => pickImage.current()}
         >
           <BlogIcon name="image" size={16} />
         </button>
@@ -180,7 +323,23 @@ export function RichEditor({
             <BlogIcon name="history" size={16} />
           </span>
         </button>
+        <button type="button" className="writing-focus-toggle" aria-label={focusMode ? 'Thoát chế độ tập trung' : 'Chế độ tập trung'} title="Chế độ tập trung" aria-pressed={focusMode} onClick={() => setFocusMode(!focusMode)}>⛶</button>
       </div>
+      <div className="writing-context-row">
+        <span role="status">{uploading ? 'Đang tải ảnh…' : 'Gõ / ở dòng mới để chèn nhanh'}</span>
+      </div>
+      {activeBlock && <details className="writing-block-menu" style={activeBlock}>
+        <summary aria-label="Thao tác với khối hiện tại" title="Thao tác với khối hiện tại">⋮</summary><div role="group" aria-label="Thao tác khối">
+          <button type="button" onClick={() => editBlock('up')}>↑ Lên</button>
+          <button type="button" onClick={() => editBlock('down')}>↓ Xuống</button>
+          <button type="button" onClick={() => editBlock('duplicate')}>Nhân đôi</button>
+          <button type="button" onClick={() => editBlock('delete')}>Xóa</button>
+        </div></details>}
+      {slash && <div className="writing-slash-menu" role="group" aria-label="Chèn nội dung" style={{ left: slash.left, top: slash.top }}>
+        <span>Chèn nội dung</span>
+        {matchingSlashItems(slash.query).map((item, index) => <button type="button" key={item.id} aria-current={index === commandIndex ? 'true' : undefined} className={index === commandIndex ? 'selected' : ''} onMouseDown={event => event.preventDefault()} onClick={() => commands.current(item.id, editor)}>{item.label}</button>)}
+        {!matchingSlashItems(slash.query).length && <p>Không tìm thấy. Thử từ khác nhé.</p>}
+      </div>}
       {editor.isActive("table") && <div className="table-actions" role="toolbar" aria-label="Chỉnh bảng">
         <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()}>+ Hàng</button>
         <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()}>+ Cột</button>
@@ -195,7 +354,7 @@ export function RichEditor({
         <BlogDialog
           title="Thêm ảnh vào bài"
           iconClose
-          onClose={() => setImage(null)}
+          onClose={() => { setImage(null); imageBookmark.current = null; }}
         >
           {/* Uploaded image is private until the article is published. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -212,8 +371,13 @@ export function RichEditor({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              editor.chain().setImage(image).run();
-              setImage(null);
+              try {
+                const selection = imageBookmark.current?.resolve(editor.state.doc);
+                if (selection) editor.view.dispatch(editor.state.tr.setSelection(selection));
+                editor.chain().focus().setImage(image).run();
+                imageBookmark.current = null;
+                setImage(null);
+              } catch { onError('Vị trí chèn đã thay đổi. Chọn lại vị trí rồi thử nhé.'); }
             }}
           >
             <div className="field">
@@ -275,6 +439,6 @@ export function RichEditor({
           </form>
         </BlogDialog>
       )}
-    </>
+    </section>
   );
 }

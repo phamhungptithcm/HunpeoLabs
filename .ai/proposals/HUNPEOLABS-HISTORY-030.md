@@ -1,0 +1,2 @@
+# Revision timeline
+Direct request authorizes compact timeline and per-version restore icon. Replace member rows with semantic ordered timeline, date/time, version badge, compact restore button labelled/title. Preserve dirty/busy guard and restore request. No data/API changes. Intelligence degraded source fallback. Validate lint/types/diff. Rendered validation blocked by prior browser restriction.

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ProgressLink as Link } from "@/components/progress-link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowIcon } from "@/components/arrow-icon";

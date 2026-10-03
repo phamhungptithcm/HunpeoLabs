@@ -190,6 +190,7 @@ export type Post = Draft & {
   updatedAt: string;
   publishedSlug?: string;
 };
+export type WorkspacePost = Post & { schedule?: { dueAt: string; revision: number } };
 export type PublishedPost = Draft & {
   authorBio?: string;
   authorAvatarId?: string;

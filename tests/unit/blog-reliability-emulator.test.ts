@@ -38,12 +38,12 @@ it.skipIf(!enabled)("scheduled publication is atomic, idempotent and respects ca
  await expect(publish(other.id,actor,1,other.operationId,true)).rejects.toThrow("REVISION_CONFLICT");
  expect((await db!.doc(`blogPublished/${other.id}`).get()).exists).toBe(false);
 },30000);
-it.skipIf(!enabled)("comments stay private until approval and disappear after moderation hides them",async()=>{
+it.skipIf(!enabled)("safe comments publish automatically and disappear after moderation hides them",async()=>{
  const {id,operationId}=await fixture();await publish(id,actor,1,operationId);
- const reader={uid:"synthetic-reader",name:"Synthetic reader",verified:true};const op=randomUUID();
- const cid=createHash("sha256").update(`${reader.uid}:${op}`).digest("hex");touched.push(`blogComments/${cid}`);
+ const reader={uid:`synthetic-reader-${randomUUID()}`,name:"Synthetic reader",verified:true};const op=randomUUID();
+ const cid=createHash("sha256").update(`${reader.uid}:${op}`).digest("hex");touched.push(`blogComments/${cid}`,`blogCommentReputation/${createHash("sha256").update(reader.uid).digest("hex")}`);
  await createComment(reader,{postId:id,text:"Synthetic comment",operationId:op});await createComment(reader,{postId:id,text:"Synthetic comment",operationId:op});
- expect((await listComments(id)).items).toHaveLength(0);
+ expect((await listComments(id)).items).toHaveLength(1);
  await expect(changeComment(cid,reader,"approved",1)).rejects.toThrow("FORBIDDEN");
  await changeComment(cid,actor,"approved",1);expect((await listComments(id)).items).toHaveLength(1);
  await changeComment(cid,actor,"hidden",2);expect((await listComments(id)).items).toHaveLength(0);

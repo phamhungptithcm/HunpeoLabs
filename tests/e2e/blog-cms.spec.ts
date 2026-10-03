@@ -334,13 +334,14 @@ test("complete CMS, media, moderation, concurrency and anonymous publication bou
     await visitor.request.get(`${origin}/api/blog/comments?postId=${id}&mine=1`)
   ).json();
   const cid = own[0].id;
+  expect(own[0].status).toBe("approved");
   expect(
     (
       await (
         await page.request.get(`${origin}/api/blog/comments?postId=${id}`)
       ).json()
     ).items,
-  ).toHaveLength(0);
+  ).toHaveLength(1);
   expect(
     (
       await visitor.request.post(
@@ -584,7 +585,7 @@ test("comment threads, private projections, conflicting writes and revoked acces
     (
       await user.request.put(`${origin}/api/blog/comments/${root.id}`, {
         headers,
-        data: { revision: 2, text: "Revised parent" },
+        data: { revision: 2, text: "Revised parent https://example.com/a https://example.com/b" },
       })
     ).ok(),
   ).toBe(true);

@@ -13,6 +13,7 @@ type Item = {
   revision: number;
   createdAt?: string;
   status?: string;
+  moderationReasons?: string[];
 };
 export function Moderation({
   items,
@@ -229,6 +230,12 @@ export function Moderation({
               <blockquote style={{ whiteSpace: "pre-wrap" }}>
                 {c.text}
               </blockquote>
+              {c.moderationReasons?.length ? (
+                <div className="notice" role="note">
+                  <strong>Lý do kiểm tra tự động</strong>
+                  <ul>{c.moderationReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+                </div>
+              ) : null}
               <div className="mod-actions">
                 <button
                   className="button primary"

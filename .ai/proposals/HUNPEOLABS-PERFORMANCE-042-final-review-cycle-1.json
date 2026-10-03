@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-PERFORMANCE-042",
+  "status": "BLOCKED",
+  "dimensions": {
+    "requirement_match": {
+      "status": "FAILED",
+      "summary": "FAILED: loading fallback left streamed article hidden when JavaScript was disabled.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-PERFORMANCE-042.md",
+        "/private/tmp/hunpeolabs-performance-042/no-js-initial.png"
+      ]
+    },
+    "security": {
+      "status": "PASSED",
+      "summary": "Reviewed scoped source and local checks; validation findings require correction before handoff.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-PERFORMANCE-042.md",
+        "/private/tmp/hunpeolabs-performance-042/no-js-initial.png"
+      ]
+    },
+    "code_quality": {
+      "status": "PASSED",
+      "summary": "Reviewed scoped source and local checks; validation findings require correction before handoff.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-PERFORMANCE-042.md",
+        "/private/tmp/hunpeolabs-performance-042/no-js-initial.png"
+      ]
+    },
+    "failure_paths": {
+      "status": "FAILED",
+      "summary": "FAILED: loading fallback left streamed article hidden when JavaScript was disabled.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-PERFORMANCE-042.md",
+        "/private/tmp/hunpeolabs-performance-042/no-js-initial.png"
+      ]
+    },
+    "error_handling": {
+      "status": "PASSED",
+      "summary": "Reviewed scoped source and local checks; validation findings require correction before handoff.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-PERFORMANCE-042.md",
+        "/private/tmp/hunpeolabs-performance-042/no-js-initial.png"
+      ]
+    },
+    "production_readiness": {
+      "status": "PASSED",
+      "summary": "Reviewed scoped source and local checks; validation findings require correction before handoff.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-PERFORMANCE-042.md",
+        "/private/tmp/hunpeolabs-performance-042/no-js-initial.png"
+      ]
+    },
+    "trade_offs": {
+      "status": "PASSED",
+      "summary": "Reviewed scoped source and local checks; validation findings require correction before handoff.",
+      "evidence_refs": [
+        ".ai/proposals/HUNPEOLABS-PERFORMANCE-042.md",
+        "/private/tmp/hunpeolabs-performance-042/no-js-initial.png"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "id": "PERF-042-1",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "category": "readability",
+      "location": "components/blog-loading.tsx and app/resources/blog/layout.tsx",
+      "summary": "Without JavaScript, streamed article remained hidden behind the loading shell. A fallback-local stylesheet also missed fast category responses.",
+      "resolution": "Move semantic no-JavaScript reading rules to the public blog layout and verify direct article, listing, and category navigation.",
+      "evidence_refs": [
+        "/private/tmp/hunpeolabs-performance-042/no-js-initial.png",
+        "tests/e2e/blog-performance.spec.ts"
+      ]
+    },
+    {
+      "id": "PERF-042-2",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "category": "network",
+      "location": "components/google-one-tap.tsx",
+      "summary": "An unconditional shared-session subscription would add public session checks on ineligible admin routes.",
+      "resolution": "Allow disabled hook subscriptions; One Tap subscribes only when eligible. Verify admin login has zero public session checks.",
+      "evidence_refs": [
+        "components/google-one-tap.tsx",
+        "components/use-blog-session.ts",
+        "tests/e2e/blog-performance.spec.ts"
+      ]
+    }
+  ],
+  "residual_risks": [
+    "Persistent public media caching excluded; production provider behavior unverified."
+  ],
+  "limitations": [
+    "Self-review only; no authenticated independent reviewer.",
+    "CocoIndex unavailable after bounded refresh; native fallback used."
+  ]
+}

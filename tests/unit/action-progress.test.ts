@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { beginProgress, progressSnapshot, subscribeProgress, withProgress } from "@/lib/ui/action-progress";
+import { beginProgress, immediateProgressSnapshot, progressSnapshot, subscribeProgress, withProgress } from "@/lib/ui/action-progress";
 
 describe("shared action progress", () => {
   it("keeps concurrent actions pending until each finishes, with idempotent cleanup", () => {
@@ -8,6 +8,20 @@ describe("shared action progress", () => {
     first(); first();
     expect(progressSnapshot()).toBe(1);
     second();
+    expect(progressSnapshot()).toBe(0);
+  });
+  it("isolates immediate navigation signals from debounced actions", () => {
+    const action = beginProgress();
+    expect(immediateProgressSnapshot()).toBe(false);
+    const first = beginProgress({ immediate: true });
+    const second = beginProgress({ immediate: true });
+    expect(immediateProgressSnapshot()).toBe(true);
+    first(); first();
+    expect(immediateProgressSnapshot()).toBe(true);
+    second();
+    expect(immediateProgressSnapshot()).toBe(false);
+    expect(progressSnapshot()).toBe(1);
+    action();
     expect(progressSnapshot()).toBe(0);
   });
   it("cleans up rejected and synchronously throwing operations", async () => {

@@ -2,7 +2,8 @@
 import { openSavedPreview } from "@/lib/blog/open-preview";
 import { TaxonomyFields } from "./taxonomy-fields";
 import { parseRecovery, recoveryKey } from "@/lib/blog/draft-recovery";
-import { validScheduleTime } from "@/lib/blog/schedule-time";
+import { SchedulePicker } from "./schedule-picker";
+import { localScheduleInstant, validScheduleTime } from "@/lib/blog/schedule-time";
 import { BlogToast } from "@/components/blog-admin/toast";
 import { progressFetch } from "@/lib/ui/action-progress";
 import {
@@ -48,6 +49,24 @@ export function Editor({
   canCreateCategory: boolean;
 }) {
   const router = useRouter();
+  const [compactHeader, setCompactHeader] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        // Separate thresholds avoid flicker when the header's height changes.
+        setCompactHeader(previous => previous ? window.scrollY > 24 : window.scrollY > 64);
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
   const ready = useSyncExternalStore(
     subscribe,
     () => true,
@@ -66,25 +85,46 @@ export function Editor({
   const [taxonomyToastRevision, setTaxonomyToastRevision] = useState(0);
   const dismissNotice = useCallback(() => setNotice(""), []);
   const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleReady, setScheduleReady] = useState(false);
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   useEffect(() => {
     if (!publisher) return;
     void request<{ dueAt: string | null; error: string | null }>(`/api/admin/blog/posts/${initial.id}/schedule`).then(r => { setScheduledAt(r.dueAt); if (r.error) setNotice(`Bài chưa được đăng theo lịch. ${message(new Error(r.error))}`); }).catch(() => {});
   }, [initial.id, publisher]);
+  const [publicationAction, setPublicationAction] = useState<"publish" | "schedule" | null>(null);
+  const publicationLock = useRef(false);
+  const leavingEditor = useRef(false);
+  useEffect(() => {
+    const keepPublicationOpen = (event: Event) => { if (publicationLock.current) event.preventDefault(); };
+    document.addEventListener("cancel", keepPublicationOpen, true);
+    return () => document.removeEventListener("cancel", keepPublicationOpen, true);
+  }, []);
   async function schedulePublication() {
-    const time = new Date(scheduleDate).getTime();
-    if (!Number.isFinite(time) || !validScheduleTime(new Date(time).toISOString())) { setNotice("Chọn giờ đăng sau hiện tại ít nhất một phút."); return; }
-    const before = generation.current;
-    const saved = dirty ? await save() : current.current;
-    if (!saved || generation.current !== before) return;
-    setBusy(true);
+    if (publicationLock.current || busy) return;
+    const instant = localScheduleInstant(scheduleDate);
+    if (!instant || !validScheduleTime(instant)) { setNotice("Chọn giờ đăng sau hiện tại ít nhất một phút."); return; }
+    publicationLock.current = true;
+    setPublicationAction("schedule");
     try {
-      const r = await request<{ dueAt: string }>(`/api/admin/blog/posts/${post.id}/schedule`, "POST", { revision: saved.revision, dueAt: new Date(time).toISOString() });
-      setScheduledAt(r.dueAt); setModal(null); setNotice("Đã lên lịch đăng bài.");
-    } catch (e) { setNotice(message(e)); } finally { setBusy(false); }
+      const before = generation.current;
+      const saved = dirty ? await save() : current.current;
+      if (!saved || generation.current !== before) return;
+      setBusy(true);
+      await request(`/api/admin/blog/posts/${post.id}/schedule`, "POST", { revision: saved.revision, dueAt: instant });
+      if (generation.current !== before) { setNotice("Đã lên lịch. Lưu thay đổi vừa sửa trước khi rời bài viết."); return; }
+      leavingEditor.current = true;
+      router.push("/admin/blog");
+      router.refresh();
+    } catch (e) { setNotice(message(e)); }
+    finally { if (!leavingEditor.current) { setBusy(false); setPublicationAction(null); publicationLock.current = false; } }
   }
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
+  const publishTrigger = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (modal === null && !busy) { publishTrigger.current?.focus(); publishTrigger.current = null; }
+  }, [modal, busy]);
+
   const [history, setHistory] = useState<Post[]>([]);
   const current = useRef(post);
   const manualSlug = useRef(Boolean(initial.slug));
@@ -216,26 +256,27 @@ export function Editor({
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
   async function publish(action: "publish" | "unpublish") {
-    const before = generation.current;
-    const saved = dirty ? await save() : current.current;
-    if (!saved || generation.current !== before) {
-      setNotice("Bạn vừa sửa thêm nội dung. Lưu lại trước khi đăng.");
-      return;
-    }
-    setBusy(true);
+    if (publicationLock.current || busy) return;
+    publicationLock.current = true;
+    if (action === "publish") setPublicationAction("publish");
     try {
+      const before = generation.current;
+      const saved = dirty ? await save() : current.current;
+      if (!saved || generation.current !== before) {
+        setNotice("Bạn vừa sửa thêm nội dung. Lưu lại trước khi đăng.");
+        return;
+      }
+      setBusy(true);
       await request(`/api/admin/blog/posts/${post.id}/${action}`, "POST", {
         revision: saved.revision,
         operationId: crypto.randomUUID(),
       });
-      if (generation.current === before) window.location.reload();
-      else
-        setNotice("Đã cập nhật bài đăng. Phần vừa sửa thêm vẫn là bản nháp.");
-    } catch (e) {
-      setNotice(message(e));
-    } finally {
-      setBusy(false);
-    }
+      if (generation.current === before) {
+        if (action === "publish") { leavingEditor.current = true; router.push("/admin/blog"); router.refresh(); }
+        else window.location.reload();
+      } else setNotice("Đã cập nhật bài đăng. Phần vừa sửa thêm vẫn là bản nháp.");
+    } catch (e) { setNotice(message(e)); }
+    finally { if (!leavingEditor.current) { setBusy(false); setPublicationAction(null); publicationLock.current = false; } }
   }
   async function upload(f: File) {
     const r = await progressFetch(`/api/admin/blog/media?postId=${post.id}`, {
@@ -260,8 +301,8 @@ export function Editor({
   const authorName =
     authors.find((a) => a.id === post.authorId)?.name ?? "Chưa chọn tác giả";
   return (
-    <main className="editor-shell">
-      <fieldset className="editor-frame" disabled={!ready}>
+    <main className={`editor-shell${compactHeader ? " editor-shell--compact" : ""}`}>
+      <fieldset className="editor-frame" disabled={!ready || publicationAction !== null}>
         <header className="editor-top">
           <div className="flex">
             <Link
@@ -372,7 +413,7 @@ export function Editor({
               <button
                 className="button primary"
                 disabled={busy}
-                onClick={() => setModal("publish")}
+                onClick={(event) => { publishTrigger.current = event.currentTarget; setModal("publish"); }}
               >
                 {post.publishedAt ? "Cập nhật" : "Xuất bản"}
                 <BlogIcon name="arrow" size={14} />
@@ -467,6 +508,8 @@ export function Editor({
                 key={recoveryGeneration}
                 body={post.body}
                 onChange={(b) => update("body", b)}
+                onUploadImage={async (imageFile) => (await upload(imageFile)).url}
+                onError={(error) => setNotice(error)}
                 onImage={() =>
                   new Promise((resolve) => {
                     setCoverUpload(false);
@@ -641,9 +684,10 @@ export function Editor({
               />
             </label>
             <p className="private-note">
-              Bình luận chỉ hiện sau khi được duyệt.
+              Bình luận được kiểm tra spam tự động. Nội dung đáng ngờ sẽ chờ duyệt.
             </p>
             <div className="field-rule" />
+            <section className="editor-publish-check" aria-label="Chuẩn bị xuất bản">
             <div className="between small">
               <strong>Chuẩn bị xuất bản</strong>
               <span className="badge">
@@ -670,20 +714,20 @@ export function Editor({
               ))}
             </div>
             <button
-              className="button small"
-              style={{ width: "100%", marginTop: 20 }}
+              className="button small editor-seo-preview"
               onClick={() => setModal("seo")}
             >
               <BlogIcon name="search" size={13} />
               Xem trước SEO & chia sẻ
             </button>
-            <div className="field-rule" />
+            </section>
             <div className="editor-secondary-actions">
               <button
                 className="button small"
                 disabled={busy}
                 onClick={() => void save("review")}
               >
+                <BlogIcon name="check" size={14} />
                 Gửi duyệt
               </button>
               {post.coverId && (
@@ -704,11 +748,11 @@ export function Editor({
                 </button>
               )}
               <button
-                className="button small"
+                className="button small editor-archive-action"
                 disabled={busy}
                 onClick={() => setModal("archive")}
               >
-                Lưu trữ
+                Chuyển vào thùng rác
               </button>
             </div>
           </aside>
@@ -724,10 +768,10 @@ export function Editor({
                 : modal === "unpublish"
                   ? "Gỡ bài viết?"
                   : modal === "archive"
-                    ? "Lưu trữ bản nháp?"
+                    ? "Chuyển vào thùng rác?"
                     : "Xuất bản bài viết"
           }
-          onClose={() => setModal(null)}
+          onClose={() => { if (!publicationLock.current) setModal(null); }}
         >
           {modal === "history" ? (
             <>
@@ -797,32 +841,32 @@ export function Editor({
                 <strong>{post.seoTitle || post.title}</strong>
                 {post.seoDescription || post.summary}
               </div>
-              <p className="private-note">
-                Bố cục xem trước. Kết quả thực tế có thể khác theo nền tảng.
-              </p>
+              <div className="studio-social-preview" aria-label="Xem trước liên kết chia sẻ">
+                <div className="studio-social-image"><span>HUNPEO LABS / {post.category || 'JOURNAL'}</span><strong>{post.title || 'Tiêu đề bài viết'}</strong><small>{authorName} <span>hunpeolabs.com</span></small></div>
+                <div className="studio-social-copy"><small>HUNPEOLABS.COM</small><strong>{post.seoTitle || post.title || 'Tiêu đề bài viết'}</strong><p>{post.seoDescription || post.summary || 'Thêm tóm tắt để người đọc biết bài viết nói về điều gì.'}</p></div>
+              </div>
+              <p className="private-note">Thẻ dùng tiêu đề, mô tả và ảnh chia sẻ tạo từ bài viết. Hình trên mạng xã hội có thể khác tùy nền tảng; thay đổi có hiệu lực sau khi cập nhật bài đăng.</p>
             </>
           ) : (
             <>
-              <p>
-                {modal === "publish"
-                  ? "Bài viết sẽ xuất hiện trên blog. Bạn vẫn có thể sửa sau khi đăng."
-                  : modal === "unpublish"
-                    ? "Bài viết và bình luận sẽ được ẩn. Bạn vẫn giữ bản nháp."
-                    : "Gỡ bài khỏi blog trước khi lưu trữ."}
-              </p>
+              {modal !== "publish" && <>
+              <p>{modal === "unpublish"
+                ? "Bài viết và bình luận sẽ được ẩn. Bạn vẫn giữ bản nháp."
+                : "Bài được giữ trong thùng rác và có thể khôi phục. Bài đang công khai cần được gỡ trước."}</p>
               <div className="mod-context">
                 <strong>{post.title || "Bài chưa đặt tên"}</strong>
-                <div className="muted small">
-                  {authorName} · {post.category}
-                </div>
+                <div className="muted small">{authorName} · {post.category}</div>
               </div>
-              {modal === "publish" && <div className="field"><label>Lên lịch đăng <input type="datetime-local" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} /></label><small>Giờ địa phương của bạn. Lịch chỉ đăng phiên bản đã lưu này.</small><button type="button" className="button small" disabled={busy || !scheduleDate} onClick={() => void schedulePublication()}>Lên lịch</button></div>}
+              </>}
+              {modal === "publish" && <SchedulePicker value={scheduleDate} onChange={setScheduleDate} onValidityChange={setScheduleReady} disabled={busy || publicationAction !== null} />}
+              <div className={modal === "publish" ? "publish-actions" : undefined}>
               <button
-                className="button primary"
-                disabled={busy}
+                className="button primary publish-action"
+                disabled={busy || publicationAction !== null}
+                aria-busy={publicationAction === "publish"}
                 onClick={() => {
                   const action = modal;
-                  setModal(null);
+                  if (action !== "publish") setModal(null);
                   if (action === "archive") void save("archived");
                   else
                     void publish(
@@ -830,9 +874,12 @@ export function Editor({
                     );
                 }}
               >
-                {modal === "publish" ? "Xuất bản ngay" : "Xác nhận"}
                 <BlogIcon name="arrow" size={14} />
+                {modal === "publish" ? (publicationAction === "publish" ? "Đang xuất bản…" : "Xuất bản ngay") : "Xác nhận"}
+                {publicationAction === "publish" && <span className="publish-button-progress" aria-hidden="true" />}
               </button>
+              {modal === "publish" && <button type="button" className="button primary publish-action" aria-busy={publicationAction === "schedule"} disabled={busy || publicationAction !== null || !scheduleReady || !localScheduleInstant(scheduleDate) || !validScheduleTime(localScheduleInstant(scheduleDate)!)} onClick={() => void schedulePublication()}><BlogIcon name="clock" size={14} />{publicationAction === "schedule" ? "Đang lên lịch…" : "Lên lịch"}{publicationAction === "schedule" && <span className="publish-button-progress" aria-hidden="true" />}</button>}
+              </div>
             </>
           )}
         </BlogDialog>

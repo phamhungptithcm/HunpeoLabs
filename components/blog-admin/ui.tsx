@@ -167,7 +167,7 @@ export const stateNames: Record<string, string> = {
   draft: "Bản nháp",
   review: "Chờ duyệt",
   published: "Đã xuất bản",
-  archived: "Lưu trữ",
+  archived: "Thùng rác",
   pending: "Chờ duyệt",
   approved: "Đã duyệt",
   rejected: "Từ chối",
@@ -175,7 +175,7 @@ export const stateNames: Record<string, string> = {
   deleted: "Đã xóa",
 };
 export function StatusBadge({ state, language = "vi" }: { state: string; language?: "vi" | "en" }) {
-  const english: Record<string, string> = { draft: "Draft", review: "Pending review", published: "Published", archived: "Archived", pending: "Pending review", approved: "Approved", rejected: "Rejected", hidden: "Hidden", deleted: "Deleted" };
+  const english: Record<string, string> = { draft: "Draft", review: "Pending review", published: "Published", archived: "Trash", pending: "Pending review", approved: "Approved", rejected: "Rejected", hidden: "Hidden", deleted: "Deleted" };
   return (
     <span
       className={`badge ${["published", "approved"].includes(state) ? "green" : ["pending", "review"].includes(state) ? "amber" : ""}`}
