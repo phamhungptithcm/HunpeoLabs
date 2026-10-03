@@ -12,6 +12,7 @@ const required = [
   "BLOG_FIREBASE_PROJECT_ID",
   "BLOG_STORAGE_BUCKET",
   "BLOG_RATE_LIMIT_SECRET",
+  "BLOG_RATE_LIMIT_MODE",
   "NEXT_PUBLIC_BLOG_FIREBASE_PROJECT_ID",
   "NEXT_PUBLIC_BLOG_FIREBASE_API_KEY",
   "NEXT_PUBLIC_BLOG_FIREBASE_AUTH_DOMAIN",
@@ -20,7 +21,9 @@ if (process.env.BLOG_ENABLED !== "true") {
   console.log("Blog disabled");
   process.exit(0);
 }
-if (!process.env.BLOG_TRUSTED_IP_HEADER && process.env.BLOG_RATE_LIMIT_MODE !== "global") throw new Error("Configure verified trusted IP ingress or explicit global rate-limit mode");
+if (!["identity-global", "global", "trusted-ingress"].includes(process.env.BLOG_RATE_LIMIT_MODE))
+  throw new Error("Invalid rate-limit mode");
+if (process.env.BLOG_RATE_LIMIT_MODE === "trusted-ingress") required.push("BLOG_TRUSTED_IP_HEADER");
 const missing = required.filter((k) => !process.env[k]);
 if (missing.length)
   throw new Error(`Missing blog configuration: ${missing.join(", ")}`);

@@ -62,13 +62,58 @@ if (backends.error || backends.status !== 0) {
     if (!backend) {
       fail(`backend ${BACKEND_ID} does not exist. Create it in us-central1 after Blaze is enabled.`);
     } else {
-      process.stdout.write(`Firebase App Hosting backend ${BACKEND_ID} is ready.\n`);
+      process.stdout.write(`Firebase App Hosting backend ${BACKEND_ID} is accessible.\n`);
     }
   } catch {
     fail("Firebase App Hosting discovery returned invalid JSON.");
   }
 }
 
+// Opt in to the CMS runtime gate. Backend existence alone is not readiness.
+// Capture provider responses privately; never print environment or secret values.
+if (process.env.REQUIRE_BLOG_RELEASE === "true") {
+  const service = spawnSync("gcloud", [
+    "run", "services", "describe", BACKEND_ID,
+    "--project", PROJECT_ID, "--region", "us-central1", "--format=json",
+  ], { encoding: "utf8", env: process.env, shell: false });
+  if (service.error || service.status !== 0) {
+    fail("CMS runtime configuration could not be inspected.");
+  } else {
+    try {
+      const runtime = JSON.parse(service.stdout);
+      const env = runtime.spec?.template?.spec?.containers?.[0]?.env ?? [];
+      const values = Object.fromEntries(env.map((entry) => [entry.name, entry.value]));
+      const required = [
+        "BLOG_STORAGE_BUCKET", "BLOG_RATE_LIMIT_MODE",
+        "NEXT_PUBLIC_BLOG_FIREBASE_API_KEY", "NEXT_PUBLIC_BLOG_FIREBASE_AUTH_DOMAIN",
+      ];
+      if (!["identity-global", "global", "trusted-ingress"].includes(values.BLOG_RATE_LIMIT_MODE)) {
+        fail("CMS runtime rate-limit mode is invalid.");
+      }
+      if (values.BLOG_RATE_LIMIT_MODE === "trusted-ingress") required.push("BLOG_TRUSTED_IP_HEADER");
+      for (const name of required) {
+        if (!values[name]) fail(`CMS runtime configuration is missing ${name}.`);
+      }
+      if (values.BLOG_ENABLED !== "true") fail("CMS runtime flag is not enabled.");
+      for (const name of ["BLOG_FIREBASE_PROJECT_ID", "NEXT_PUBLIC_BLOG_FIREBASE_PROJECT_ID"]) {
+        if (values[name] !== PROJECT_ID) fail(`${name} does not match the approved project.`);
+      }
+      const secret = env.find((entry) => entry.name === "BLOG_RATE_LIMIT_SECRET");
+      if (!secret?.valueFrom?.secretKeyRef) {
+        fail("CMS rate-limit key must reference Secret Manager; no inline value is allowed.");
+      }
+      if (env.some((entry) => /EMULATOR|BLOG_ALLOW_EMULATORS/.test(entry.name))) {
+        fail("Production CMS must not contain emulator settings.");
+      }
+      if (!runtime.status?.conditions?.some((entry) => entry.type === "Ready" && entry.status === "True")) {
+        fail("CMS Cloud Run service is not Ready.");
+      }
+    } catch {
+      fail("CMS runtime discovery returned invalid JSON.");
+    }
+  }
+}
+
 if (!process.exitCode) {
-  process.stdout.write("Firebase production preflight passed.\n");
+  process.stdout.write("Firebase infrastructure preflight passed; live CMS/provider acceptance remains a separate gate.\n");
 }

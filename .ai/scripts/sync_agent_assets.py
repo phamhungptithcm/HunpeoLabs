@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -12,6 +13,45 @@ GENERATED_SUFFIX = ". DO NOT EDIT. -->"
 MAX_SKILL_RESOURCE_FILES = 512
 MAX_SKILL_RESOURCE_BYTES = 2 * 1024 * 1024
 MAX_SKILL_TOTAL_BYTES = 16 * 1024 * 1024
+
+ADAPTER_FILES = {
+    "codex": ["AGENTS.md", ".codex/config.toml", ".codex/hooks.json", ".codex/rules/default.rules"],
+    "claude": ["CLAUDE.md", ".claude/settings.json", ".claude/rules/shared-policy.md"],
+    "copilot": [".github/copilot-instructions.md"],
+    "cursor": [".cursor/rules/ai-agent-kit.mdc"],
+    "windsurf": [],
+    "gemini": ["GEMINI.md"],
+    "amazonq": [".amazonq/rules/ai-agent-kit.md"],
+    "junie": [".junie/AGENTS.md"],
+    "cline": [".clinerules/ai-agent-kit.md"],
+    "devin": [],
+    "aider": ["CONVENTIONS.md", ".aider.conf.yml"],
+    "continue": [".continue/rules/ai-agent-kit.md"],
+}
+
+
+def selected_adapters(root: Path) -> list[str]:
+    selection = root / ".ai/context/agent-adapters.json"
+    if not selection.exists():
+        return list(ADAPTER_FILES)  # Preserve the full-scaffold default.
+    data = json.loads(selection.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("invalid explicit agent adapter selection")
+    agents = data.get("agents")
+    if not isinstance(agents, list) or not agents or any(
+        not isinstance(agent, str) or agent not in ADAPTER_FILES for agent in agents
+    ) or len(set(agents)) != len(agents):
+        raise ValueError("invalid explicit agent adapter selection")
+    return agents
+
+
+def generated_skill_roots(root: Path) -> list[Path]:
+    agents = selected_adapters(root)
+    mappings = {"codex": ".agents", "claude": ".claude", "copilot": ".agents",
+                "devin": ".agents", "cursor": ".cursor", "windsurf": ".windsurf", "cline": ".cline"}
+    return [root / directory / "skills" for directory in dict.fromkeys(
+        mappings[agent] for agent in agents if agent in mappings
+    )]
 
 
 def repo_root() -> Path:
@@ -102,13 +142,7 @@ def sync(check: bool = False) -> int:
     except (OSError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
-    destinations = [
-        root / ".agents" / "skills",
-        root / ".claude" / "skills",
-        root / ".cursor" / "skills",
-        root / ".windsurf" / "skills",
-        root / ".cline" / "skills",
-    ]
+    destinations = generated_skill_roots(root)
     for dest_root in destinations:
         try:
             reject_symlink_components(root, dest_root, "write generated skill resources")

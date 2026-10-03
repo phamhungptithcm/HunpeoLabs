@@ -1,6 +1,6 @@
 {
   "name": "@hunpeolabs/website",
-  "version": "0.2.0",
+  "version": "3.2.0",
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "engines": {
@@ -32,20 +32,20 @@
   "dependencies": {
     "@tiptap/extension-code-block": "3.31.4",
     "@tiptap/extension-image": "3.31.4",
-    "@tiptap/extension-table": "3.31.4",
     "@tiptap/pm": "3.31.4",
     "@tiptap/react": "3.31.4",
     "@tiptap/starter-kit": "3.31.4",
     "firebase": "12.17.0",
     "firebase-admin": "14.5.0",
-    "google-auth-library": "^11.1.0",
     "mermaid": "^12.0.0",
     "next": "16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "0.0.1",
     "sharp": "0.35.5",
-    "zod": "4.6.5"
+    "zod": "4.6.5",
+    "@tiptap/extension-table": "3.31.4",
+    "google-auth-library": "^11.1.0"
   },
   "devDependencies": {
     "@playwright/test": "1.62.0",

@@ -195,16 +195,16 @@ test("shared navigation exposes Blog directly on desktop and mobile", async ({
   await expect(
     page.getByRole("heading", { level: 1, name: "Ideas into practice." }),
   ).toBeVisible();
-  await expect(page.locator(".journal-nav .brand")).toBeVisible();
-  await expect(page.locator(".journal-nav .brand")).toHaveAttribute(
+  await expect(page.locator(".site-header .brand")).toBeVisible();
+  await expect(page.locator(".site-header .brand")).toHaveAttribute(
     "href",
-    "/resources/blog",
+    "/",
   );
   const article = page.locator("a.feature");
   if (await article.count()) {
     await article.click();
     await expect(page).toHaveURL(/\/resources\/blog\/[^/]+$/);
-    await page.locator(".journal-nav .brand").click();
+    await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Blog", exact: true }).click();
     await expect(page).toHaveURL(/\/resources\/blog$/);
   }
   await expect(page.locator(".site-footer .brand")).toHaveCount(0);
@@ -542,27 +542,27 @@ test("blog journal indexes reviewed articles and preserves the empty-state bound
     await expect(
       page.getByRole("heading", {
         level: 2,
-        name: "Chưa có bài viết.",
+        name: "No posts yet.",
       }),
     ).toBeVisible();
     await expect(
-      page.getByText("Ghé lại sau hoặc theo dõi qua RSS nhé."),
+      page.getByText("Check back later or follow via RSS."),
     ).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       "content",
       /noindex, nofollow/,
     );
   }
-  const subscribe = page.getByRole("link", { name: /Theo dõi qua RSS/ });
+  const subscribe = page.getByRole("link", { name: /Follow via RSS/ });
   await expect(subscribe).toHaveAttribute("href", /\/resources\/blog\/feed.xml$/);
   await expect(subscribe).toHaveAttribute("aria-haspopup", "dialog");
   await subscribe.click();
-  const dialog = page.getByRole("dialog", { name: "Đọc bài mới qua RSS" });
+  const dialog = page.getByRole("dialog", { name: "Follow new posts via RSS" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByLabel("Địa chỉ RSS", { exact: true })).toHaveValue(
+  await expect(dialog.getByLabel("RSS link", { exact: true })).toHaveValue(
     /\/resources\/blog\/feed.xml$/,
   );
-  await expect(dialog.getByRole("link", { name: "Mở RSS gốc (XML)" })).toHaveAttribute(
+  await expect(dialog.getByRole("link", { name: "Open RSS feed (XML)" })).toHaveAttribute(
     "href", /\/resources\/blog\/feed.xml$/,
   );
   await page.keyboard.press("Escape");
@@ -581,7 +581,7 @@ test("about introduces the founder and keeps its existing layout", async ({
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "About Hunpeo Labs.",
+      name: /About\s+Hunpeo Labs\./,
     }),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Hung Pham — Founder" })).toBeVisible();

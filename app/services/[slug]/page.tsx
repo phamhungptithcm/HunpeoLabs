@@ -10,6 +10,10 @@ type ServicePageProps = {
   params: Promise<{ slug: string }>;
 };
 
+// The catalog is finite. Reject unknown routes before a loading boundary can
+// stream a successful response status.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return services.map(({ slug }) => ({ slug }));
 }

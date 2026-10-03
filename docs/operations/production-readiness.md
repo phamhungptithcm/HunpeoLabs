@@ -139,7 +139,7 @@ GitHub Actions runs:
 - frozen dependency installation;
 - lint, TypeScript, unit tests, and production build;
 - production-environment contract validation using a reserved example origin;
-- the 32-scenario Chromium desktop/mobile core suite;
+- the current Chromium desktop/mobile core suite;
 - Firefox and WebKit critical-route smoke tests;
 - Lighthouse CI for Home, Services, and Contact, with SEO enforced as a hard
   release gate at `0.90` or higher.
@@ -211,7 +211,7 @@ archive, production URL, checks, and rollback target.
 
 ## Rollback
 
-No database migration or persisted website state is introduced by this foundation.
+The website foundation needs no destructive migration. The integrated CMS persists drafts, access policy, revisions, media and reader records; preserve these through rollout and rollback.
 
 For a failed release:
 
@@ -232,3 +232,9 @@ Never roll back by weakening validation, CSP, rate limiting, privacy disclosure,
 ## Blog CMS addition
 
 The blog implementation is gated by `BLOG_ENABLED` and has its own server/client Firebase configuration. See `docs/operations/blog-runbook.md` for Auth, Firestore/Storage rules and indexes, IAM, trusted ingress, moderation, retention, backup/restore and rollout prerequisites. Local/emulator test results do not establish live provider or production readiness. Do not deploy the full dirty worktree.
+
+## CMS-008 readiness delta
+
+Owner approved identity-global throttling and the operational policy on 2026-10-02. The candidate requires `BLOG_RATE_LIMIT_MODE=identity-global` and the existing runtime Secret Manager reference. Quotas and availability trade-offs are documented in the blog runbook. No IP ingress contract is required for this mode.
+
+Daily Firestore backups (14-day retention), a three-region HTTPS uptime check and its email alert policy are configured. First backup completion, protected restore, Storage/Auth backup coverage, email delivery and live owner/outsider/revocation acceptance are still separate gates. No destructive cleanup is enabled. Source/emulator verification alone does not complete these gates or authorize a production-readiness PASS.

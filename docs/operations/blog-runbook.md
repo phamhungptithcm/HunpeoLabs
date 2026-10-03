@@ -14,7 +14,7 @@ Requests and discovery are dynamic; no shared content cache. Revisions use optim
 
 Use `.env.example` and `node scripts/validate-blog-env.mjs`. `BLOG_ENABLED` defaults off. Keep server and browser project IDs identical. Production uses runtime ADC, not committed service account keys. Confirm least-privilege service-account Firestore/Auth/Storage permissions, project/database location, bucket, Auth Google provider, exact authorized domains and Google OAuth consent configuration, indexes/rules, verified first owner, retention/backup and budget/alerts before launch.
 
-`BLOG_RATE_LIMIT_SECRET` is an operator-managed secret with at least 32 characters. `BLOG_TRUSTED_IP_HEADER` must name a header overwritten by the verified ingress. Never assume a user-supplied forwarded header is trustworthy. Missing rate-limit/ingress configuration denies mutations. Firebase Auth's direct registration/login endpoints also require provider abuse protection, email-enumeration protection and quotas reviewed in the console; application throttling is not a substitute.
+`BLOG_RATE_LIMIT_SECRET` is an operator-managed secret with at least 32 characters. Set `BLOG_RATE_LIMIT_MODE=identity-global` explicitly in production. Each action consumes UID and shared action budgets atomically in one Firestore transaction: comment creation/editing 5/10 minutes per UID and 30/hour site-wide; sessions and reports 30/10 minutes per UID and 100/hour site-wide for each action. Exhausting either budget consumes neither. These are fixed windows; boundary bursts remain possible. Changing request headers does not affect keys. Authorized deletion and logout retain their existing behavior without this limiter. Global exhaustion temporarily denies legitimate users; the owner accepted this availability trade-off under HUNPEOLABS-CMS-008-v1. Missing/unknown mode, invalid secret, corrupt counters and provider errors fail closed with 503; exhausted budgets return 429. Counters expire after 24 hours, although provider TTL deletion is asynchronous. `trusted-ingress` mode is available only with an explicitly verified overwritten `BLOG_TRUSTED_IP_HEADER`; never infer trust from forwarded headers. No verified production header contract exists, so production uses identity-global. Firebase Auth's direct registration/login endpoints also require provider abuse protection, email-enumeration protection and quotas reviewed in the console; application throttling is not a substitute.
 
 Auth cookies are HttpOnly/Secure/SameSite=strict, valid for one day and checked for revocation. Logout revokes refresh tokens. Session creation requires recent authentication. Production CSP allows only the required Google Auth origins; development may allow an explicit localhost emulator origin. Only `/admin/blog/login` and `/blog-account` use `same-origin-allow-popups`; other routes keep `same-origin`. Their CSP allows the exact configured Firebase auth domain and Google API loader.
 
@@ -22,7 +22,7 @@ Auth cookies are HttpOnly/Secure/SameSite=strict, valid for one day and checked 
 
 Run Firebase Auth, Firestore and Storage emulators using a `demo-*` project. Configure all three hosts, the demo Storage bucket, server project and browser project/API key, and `NEXT_PUBLIC_BLOG_AUTH_EMULATOR_URL`. Never mix a real project with emulator settings. Use dedicated ports if another task is running.
 
-The task's validation uses `/tmp/hunpeolabs-blog-003` as a source snapshot, origin `http://localhost:3107`, Auth `127.0.0.1:19099`, Firestore `127.0.0.1:18080`, Storage `127.0.0.1:19199`, project `demo-hunpeolabs-blog-001`. These addresses are local evidence, not staging or production.
+Historical BLOG-003 validation used `/tmp/hunpeolabs-blog-003` as a source snapshot, origin `http://localhost:3107`, Auth `127.0.0.1:19099`, Firestore `127.0.0.1:18080`, Storage `127.0.0.1:19199`, project `demo-hunpeolabs-blog-001`. These addresses are local evidence, not staging or production.
 
 Google sign-in initializes exactly `hunpeo@gmail.com` and `phamhung.pitit@gmail.com` once. `blogAccess` keyed by normalized-email SHA-256 is authoritative; legacy `blogMembers` does not grant rights. Other Google users remain readers. For operator-assisted binding of an initial Google identity only, run:
 
@@ -49,7 +49,7 @@ node scripts/blog-backup.mjs restore demo-EMPTY-PROJECT /tmp/blog-archive
 
 The script is emulator-only and refuses nonempty restore targets. Production backup must cover Firestore subcollections, Storage objects and Auth/membership under an operator-approved policy; the UI export is not a disaster recovery backup. Verify restoration before launch.
 
-Proposed retention awaits owner acceptance: revisions 90 days, moderation audit 180 days, orphan private media 30 days, rate-limit identifiers at most 24 hours. No destructive scheduled cleanup is activated. User comment deletion immediately removes public text/name; resolving an account erasure request also requires bounded private-record and backup-retention procedures. Do not promise completed production erasure from a UI tombstone.
+Owner-approved retention targets (CMS-008, 2026-10-02): revisions 90 days, moderation audit 180 days, orphan private media 30 days, rate-limit identifiers at most 24 hours. No destructive scheduled cleanup is activated. User comment deletion immediately removes public text/name; resolving an account erasure request also requires bounded private-record and backup-retention procedures. Do not promise completed production erasure from a UI tombstone.
 
 ## Operations and rollback
 
@@ -102,3 +102,13 @@ The official GIS prompt uses FedCM with automatic account selection disabled. Br
 Current local verification uses a stub Google GIS callback and real Firebase Emulator credential/session exchange; it does not verify a real Google account or client configuration. Live provider acceptance remains a separate gate. Setup readback on 2026-10-02 found Google Auth Platform not configured; CLI authentication also needs renewal. Do not infer an empty client list from a failed OAuth clients request.
 
 Official setup: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid . Firebase exchange: https://firebase.google.com/docs/auth/web/google-signin .
+
+## Approved operations policy (2026-10-02)
+
+Owner approved revisions 90 days, moderation audit 180 days, orphan private media 30 days, and rate-limit TTL 24 hours. No destructive cleanup job is activated. A production Firestore daily backup schedule now retains backups for 14 days. Target RPO/RTO is 24 hours; these are targets, not measured recovery guarantees. Firestore backups exclude Storage and Firebase Auth. A successful protected restore covering these dependencies remains required before full CMS production readiness. Never restore into the live database or download production identity/session data for testing.
+
+Production monitoring checks `https://hunpeolabs.com/api/health` every 300 seconds from Iowa, Europe and Asia Pacific, with 10-second timeout, valid TLS, HTTP 200 and JSON status `ok`. An enabled alert policy routes two-region failures lasting 300 seconds to `hunpeo97@gmail.com`. Configuration readback is not proof of email receipt or alert delivery. Monitoring health does not assert CMS/Firestore/Auth readiness. Provider format follows [Google's uptime alert policy example](https://docs.cloud.google.com/monitoring/alerts/policies-in-json).
+
+Direct anonymous Cloud Run health returned 403 during preflight; ingress `all` alone does not prove public bypass. Recheck after rollout. The currently served revision predates this source change.
+
+CMS-008 validation used a separate worktree, localhost3109, Auth29099, Firestore28080 and Storage29199, all in the guarded demo project. Twelve desktop/mobile CMS workflows and a dedicated concurrent limiter/TTL test passed on this candidate; these do not replace the live provider or recovery gates.

@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "task_id": "HUNPEOLABS-CMS-008",
+  "status": "BLOCKED",
+  "dimensions": {
+    "requirement_match": {
+      "status": "BLOCKED",
+      "summary": "Approved limiter/config/policy implemented; complete CMS production acceptance still incomplete.",
+      "evidence_refs": [
+        "HUNPEOLABS-CMS-008-approval.md",
+        "HUNPEOLABS-CMS-008-repository-intelligence-brief.md"
+      ]
+    },
+    "security": {
+      "status": "PASSED",
+      "summary": "Source retains verified Google identity, same-origin and role boundaries; no secrets/raw UID/IP logged. Live identity acceptance not established.",
+      "evidence_refs": [
+        "HUNPEOLABS-CMS-008-approval.md",
+        "HUNPEOLABS-CMS-008-repository-intelligence-brief.md"
+      ]
+    },
+    "code_quality": {
+      "status": "PASSED",
+      "summary": "103 unit tests, full lint zero errors (one existing proposal warning), TypeScript and 44-route production build pass. Profiles: universal, TS/JS, web-app, API, database, concurrency, infrastructure.",
+      "evidence_refs": [
+        "HUNPEOLABS-CMS-008-approval.md",
+        "HUNPEOLABS-CMS-008-repository-intelligence-brief.md"
+      ]
+    },
+    "failure_paths": {
+      "status": "PASSED",
+      "summary": "11 focused limiter/preflight tests and real emulator contention/TTL pass; denied budgets consume neither, malformed/provider failure closes mutations.",
+      "evidence_refs": [
+        "lib/blog/rate-limit.ts",
+        "apphosting.yaml",
+        ".env.example",
+        "scripts/validate-blog-env.mjs",
+        "scripts/validate-firebase-production.mjs",
+        "tests/unit/blog-rate-limit.test.ts",
+        "tests/unit/blog-rate-limit-emulator.test.ts",
+        "tests/unit/firebase-preflight.test.ts",
+        "tests/e2e/blog-cms.spec.ts",
+        "tests/e2e/blog-google.spec.ts"
+      ]
+    },
+    "error_handling": {
+      "status": "FAILED",
+      "summary": "Initial review found provider initialization outside the503 catch; fix required.",
+      "evidence_refs": [
+        "lib/blog/rate-limit.ts",
+        "apphosting.yaml",
+        ".env.example",
+        "scripts/validate-blog-env.mjs",
+        "scripts/validate-firebase-production.mjs",
+        "tests/unit/blog-rate-limit.test.ts",
+        "tests/unit/blog-rate-limit-emulator.test.ts",
+        "tests/unit/firebase-preflight.test.ts",
+        "tests/e2e/blog-cms.spec.ts",
+        "tests/e2e/blog-google.spec.ts"
+      ]
+    },
+    "production_readiness": {
+      "status": "BLOCKED",
+      "summary": "NOT_READY: first backup not yet produced; Storage/Auth recovery coverage, protected restore and live owner/outsider/revocation checks not tested. Production rollout not performed.",
+      "evidence_refs": [
+        "HUNPEOLABS-CMS-008-approval.md",
+        "HUNPEOLABS-CMS-008-repository-intelligence-brief.md"
+      ]
+    },
+    "trade_offs": {
+      "status": "PASSED",
+      "summary": "Owner explicitly accepted site-wide action exhaustion availability risk; fixed-window bursts and global-document contention remain bounded residual risks.",
+      "evidence_refs": [
+        "HUNPEOLABS-CMS-008-approval.md",
+        "HUNPEOLABS-CMS-008-repository-intelligence-brief.md"
+      ]
+    }
+  },
+  "findings": [
+    {
+      "id": "CMS008-01",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "Database initialization was outside fail-closed catch. Wrapped initialization and verified503 regression."
+    },
+    {
+      "id": "CMS008-02",
+      "severity": "LOW",
+      "status": "OPEN",
+      "summary": "Emulator fixture URLs and current UI selectors were stale. Guarded dedicated ports and current Share/settings-tab workflow; all12 CMS flows passed."
+    },
+    {
+      "id": "CMS008-03",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Production recovery and live identity acceptance evidence are incomplete. Do not merge/release/deploy this candidate as production-ready."
+    }
+  ],
+  "residual_risks": [
+    "Global action exhaustion temporarily blocks legitimate actions (owner accepted).",
+    "Fixed windows permit boundary bursts.",
+    "Firestore global bucket contention may fail closed503.",
+    "Existing generic Retry-After600 may precede hourly budget reset; server still denies until reset.",
+    "Health monitoring does not prove CMS dependency readiness; alert email receipt not verified."
+  ],
+  "limitations": [
+    "Repository intelligence DEGRADED; native fallback explicitly permitted.",
+    "Generated approval validator requires READY and rejects truthful DEGRADED record; no checker change or false READY claim.",
+    "Governed runtime CLI/task ledger unavailable; file-based report only.",
+    "Emulator Google flows are not live Google OAuth.",
+    "No production export/restore, cleanup, live CMS rollout or new release tag.",
+    "Historical intermediate working tree; not final candidate evidence."
+  ],
+  "source_manifest_sha256": null,
+  "base_commit": "cd2efa912b2f9be46d3e4d046270078bd53039bb",
+  "review_scope": "Approved CMS limiter delta and operational readiness; no production rollout",
+  "cycle": 1
+}

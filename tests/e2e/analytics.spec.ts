@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+// First-visit consent must not inherit the general navigation declined fixture.
+test.use({ storageState: { cookies: [], origins: [] } });
+
 const CONSENT_KEY = "hunpeolabs:analytics-consent:v1";
 const ANALYTICS_HOST_PATTERN =
   /(^|\.)(firebase\.googleapis\.com|firebaseinstallations\.googleapis\.com|googletagmanager\.com|google-analytics\.com|analytics\.google\.com)$/;
@@ -91,10 +94,10 @@ test("loads Firebase only after opt-in, initializes once, and supports revocatio
     )
     .toBe(true);
 
-  await page
-    .getByRole("link", { name: "Services", exact: true })
-    .first()
-    .click();
+  const menu = page.getByRole("button", { name: "Menu", exact: true });
+  if (await menu.isVisible()) await menu.click();
+  await page.getByRole("navigation", { name: "Primary navigation" })
+    .getByRole("link", { name: "Services", exact: true }).click();
   await expect(page).toHaveURL(/\/services$/);
   await page
     .getByRole("link", { name: "Privacy", exact: true })
