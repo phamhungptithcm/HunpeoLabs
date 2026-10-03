@@ -1,11 +1,14 @@
 "use client";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { DiagramCodeBlock } from "./diagram-code-block";
+import { pastedMermaid } from "@/lib/blog/mermaid-source";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import type { RichNode } from "@/lib/blog/schema";
 import { safeUrl } from "@/lib/blog/schema";
 import { BlogIcon } from "@/components/blog-admin/ui";
 import { BlogDialog } from "@/components/blog-admin/dialog";
+import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { useState } from "react";
 export function RichEditor({
   body,
@@ -19,17 +22,27 @@ export function RichEditor({
   const [link, setLink] = useState<string | null>(null),
     [linkError, setLinkError] = useState("");
   const [image, setImage] = useState<{ src: string; alt: string } | null>(null);
+  const [diagram, setDiagram] = useState<string | null>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3, 4] },
+        codeBlock: false,
         link: { openOnClick: false },
       }),
       Image,
+      DiagramCodeBlock,
     ],
     content: body,
     immediatelyRender: false,
     editorProps: {
+      handlePaste: (view, event) => {
+        const source = pastedMermaid(event.clipboardData?.getData("text/plain") ?? "");
+        if (!source) return false;
+        const node = view.state.schema.nodes.codeBlock.create({ language: "mermaid" }, view.state.schema.text(source));
+        view.dispatch(view.state.tr.replaceSelectionWith(node).scrollIntoView());
+        return true;
+      },
       attributes: {
         role: "textbox",
         "aria-label": "Nội dung bài viết",
@@ -128,7 +141,7 @@ export function RichEditor({
         <span className="divider" />
         <button
           type="button"
-          aria-label="Ảnh"
+          aria-label="Chèn ảnh hoặc GIF"
           onClick={async () => {
             const src = await onImage();
             if (src) {
@@ -157,6 +170,15 @@ export function RichEditor({
           </span>
         </button>
       </div>
+      <button type="button" className="button small" onClick={() => setDiagram("flowchart LR\n  A[Ý tưởng] --> B[Thực hiện] --> C[Kết quả]")}>Chèn sơ đồ Mermaid</button>
+      {diagram !== null && <BlogDialog title="Sơ đồ Mermaid" onClose={() => setDiagram(null)}>
+        <label>Mã sơ đồ<textarea value={diagram} maxLength={10000} rows={8} onChange={(e) => setDiagram(e.target.value)} /></label>
+        <MermaidDiagram source={diagram} />
+        <button type="button" className="button primary" disabled={!diagram.trim()} onClick={() => {
+          editor.chain().focus().insertContent({ type: "codeBlock", attrs: { language: "mermaid" }, content: [{ type: "text", text: diagram }] }).run();
+          setDiagram(null);
+        }}>Chèn sơ đồ</button>
+      </BlogDialog>}
       <div className="editor-prose">
         <EditorContent editor={editor} />
       </div>

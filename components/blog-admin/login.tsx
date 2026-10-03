@@ -83,12 +83,12 @@ export function Login({
     <div className={`auth-wrap google-auth-wrap${embedded ? " auth-embedded" : ""}`}>
       {!embedded && <BlogBrand />}
       <section className="auth-panel google-auth-panel" aria-busy={busy}>
-        <div className="google-auth-symbol">
+        {!embedded && <div className="google-auth-symbol">
           <BlogIcon name={admin ? "file" : "comment"} size={25} />
-        </div>
-        <p className="eyebrow muted">
+        </div>}
+        {!embedded && <p className="eyebrow muted">
           HUNPEOLABS / {admin ? "STUDIO" : "JOURNAL"}
-        </p>
+        </p>}
         <h1>{admin ? copy("Đăng nhập Studio", "Sign in to Studio") : copy("Đăng nhập", "Sign in")}</h1>
         <p>
           {admin
@@ -125,11 +125,11 @@ export function Login({
               ? copy("Tiếp tục với Google", "Continue with Google")
               : copy("Đang kết nối…", "Connecting\u2026")}
         </button>
-        <p className="google-auth-note">
+        {!embedded && <p className="google-auth-note">
           {admin
             ? copy("Chỉ dành cho thành viên được cấp quyền.", "For authorized team members only.")
             : copy("Email của bạn không hiển thị trong bình luận.", "Your email is never shown in comments.")}
-        </p>
+        </p>}
         <p role="status" className="auth-status">
           {notice}
         </p>

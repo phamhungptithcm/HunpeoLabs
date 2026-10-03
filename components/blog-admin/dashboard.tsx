@@ -1,4 +1,5 @@
 "use client";
+import { BlogToast } from "./toast";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { beginProgress } from "@/lib/ui/action-progress";
 import Link from "next/link";
@@ -99,11 +100,7 @@ export function Dashboard({
           )}
         </div>
       </div>
-      {notice && (
-        <p className="notice" role="status">
-          {notice}
-        </p>
-      )}
+      {notice && <BlogToast text={notice} onClose={() => setNotice("")} />}
       <section className="panel">
         <div className="panel-top">
           <nav className="panel-tabs" aria-label="Trạng thái bài">
