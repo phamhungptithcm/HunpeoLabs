@@ -11,13 +11,16 @@ test.skip(
 );
 const origin = process.env.BLOG_TEST_ORIGIN ?? "http://localhost:3107";
 const headers = { origin, "x-blog-request": "1" };
-// Repeatable local fixtures: reset only the shared synthetic ingress buckets.
+// Repeatable local fixtures: reset only the shared synthetic action buckets.
 // Production limiter behavior is unchanged and is asserted below.
 test.beforeEach(async () => {
   if (!enabled) return;
   if (
-    process.env.FIRESTORE_EMULATOR_HOST !== "127.0.0.1:18080" ||
-    process.env.FIREBASE_AUTH_EMULATOR_HOST !== "127.0.0.1:19099"
+    !((process.env.FIRESTORE_EMULATOR_HOST === "127.0.0.1:18080" &&
+       process.env.FIREBASE_AUTH_EMULATOR_HOST === "127.0.0.1:19099") ||
+      (process.env.BLOG_RELEASE_EMULATORS === "true" &&
+       process.env.FIRESTORE_EMULATOR_HOST === "127.0.0.1:28080" &&
+       process.env.FIREBASE_AUTH_EMULATOR_HOST === "127.0.0.1:29099"))
   )
     throw new Error("Refuse non-demo fixture reset");
   const a =
@@ -29,9 +32,6 @@ test.beforeEach(async () => {
   const db = getFirestore(a);
   const hash = (s: string) =>
     createHmac("sha256", "emulator-only").update(s).digest("hex");
-  const network = hash(
-    `${new Date().toISOString().slice(0, 10)}:local-emulator`,
-  );
   const batch = db.batch();
   for (const action of ["comment", "session", "report"])
     batch.delete(
@@ -39,7 +39,7 @@ test.beforeEach(async () => {
         .collection("blogRateLimits")
         .doc(
           hash(
-            `${action}:network:${network}:${Math.floor(Date.now() / 3600000)}`,
+            `${action}:global:${Math.floor(Date.now() / 3600000)}`,
           ),
         ),
     );
@@ -62,7 +62,7 @@ async function login(r: APIRequestContext, email: string) {
     "",
   ].join(".");
   const res = await r.post(
-    "http://127.0.0.1:19099/identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=demo-key",
+    `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=demo-key`,
     {
       data: {
         requestUri: origin,
@@ -270,17 +270,17 @@ test("complete CMS, media, moderation, concurrency and anonymous publication bou
     visitor.getByRole("heading", { name: `Local test ${key}`, exact: true }),
   ).toBeVisible();
   await visitor
-    .getByRole("button", { name: "Chia sẻ", exact: true })
+    .getByRole("button", { name: "Share", exact: true })
     .first()
     .click();
   await visitor
-    .getByRole("button", { name: "Sao chép liên kết", exact: true })
+    .getByRole("button", { name: "Copy link", exact: true })
     .first()
     .click();
   await expect(visitor.getByRole("dialog").getByRole("status")).toContainText(
-    /sao chép/,
+    /copied|copy/i,
   );
-  await visitor.getByRole("button", { name: "Đóng", exact: true }).click();
+  await visitor.getByRole("button", { name: "Close", exact: true }).click();
   expect((await visitor.request.get(`${origin}${media.url}`)).status()).toBe(
     200,
   );
@@ -420,7 +420,7 @@ test("complete CMS, media, moderation, concurrency and anonymous publication bou
     ).text(),
   ).not.toContain(`local-${key}`);
   const denied = await visitor.request.get(
-    `http://127.0.0.1:18080/v1/projects/${project}/databases/(default)/documents/blogPosts/${id}`,
+    `http://${process.env.FIRESTORE_EMULATOR_HOST}/v1/projects/${project}/databases/(default)/documents/blogPosts/${id}`,
   );
   expect(denied.status()).toBe(403);
   await anonymous.close();

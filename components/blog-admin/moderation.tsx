@@ -1,4 +1,5 @@
 "use client";
+import { BlogToast } from "./toast";
 import { useState } from "react";
 import Link from "next/link";
 import { request, message } from "./client";
@@ -60,11 +61,7 @@ export function Moderation({
         <h1>Giữ cuộc trò chuyện có giá trị.</h1>
         <p>Duyệt phản hồi, trao đổi và quản lý các báo cáo từ độc giả.</p>
       </div>
-      {notice && (
-        <p className="notice" role="status">
-          {notice}
-        </p>
-      )}
+      {notice && <BlogToast text={notice} onClose={() => setNotice("")} />}
       <section className="panel">
         <div className="panel-top">
           <nav className="panel-tabs" aria-label="Trạng thái bình luận">

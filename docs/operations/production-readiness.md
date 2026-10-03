@@ -232,3 +232,9 @@ Never roll back by weakening validation, CSP, rate limiting, privacy disclosure,
 ## Blog CMS addition
 
 The blog implementation is gated by `BLOG_ENABLED` and has its own server/client Firebase configuration. See `docs/operations/blog-runbook.md` for Auth, Firestore/Storage rules and indexes, IAM, trusted ingress, moderation, retention, backup/restore and rollout prerequisites. Local/emulator test results do not establish live provider or production readiness. Do not deploy the full dirty worktree.
+
+## CMS-008 readiness delta
+
+Owner approved identity-global throttling and the operational policy on 2026-10-02. The candidate requires `BLOG_RATE_LIMIT_MODE=identity-global` and the existing runtime Secret Manager reference. Quotas and availability trade-offs are documented in the blog runbook. No IP ingress contract is required for this mode.
+
+Daily Firestore backups (14-day retention), a three-region HTTPS uptime check and its email alert policy are configured. First backup completion, protected restore, Storage/Auth backup coverage, email delivery and live owner/outsider/revocation acceptance are still separate gates. No destructive cleanup is enabled. Source/emulator verification alone does not complete these gates or authorize a production-readiness PASS.
