@@ -11,16 +11,13 @@ test.skip(
 );
 const origin = process.env.BLOG_TEST_ORIGIN ?? "http://localhost:3107";
 const headers = { origin, "x-blog-request": "1" };
-// Repeatable local fixtures: reset only the shared synthetic action buckets.
+// Repeatable local fixtures: reset only the shared synthetic ingress buckets.
 // Production limiter behavior is unchanged and is asserted below.
 test.beforeEach(async () => {
   if (!enabled) return;
   if (
-    !((process.env.FIRESTORE_EMULATOR_HOST === "127.0.0.1:18080" &&
-       process.env.FIREBASE_AUTH_EMULATOR_HOST === "127.0.0.1:19099") ||
-      (process.env.BLOG_RELEASE_EMULATORS === "true" &&
-       process.env.FIRESTORE_EMULATOR_HOST === "127.0.0.1:28080" &&
-       process.env.FIREBASE_AUTH_EMULATOR_HOST === "127.0.0.1:29099"))
+    !["127.0.0.1:18080", "127.0.0.1:18082"].includes(process.env.FIRESTORE_EMULATOR_HOST ?? "") ||
+    process.env.FIREBASE_AUTH_EMULATOR_HOST !== "127.0.0.1:19099"
   )
     throw new Error("Refuse non-demo fixture reset");
   const a =
@@ -32,6 +29,9 @@ test.beforeEach(async () => {
   const db = getFirestore(a);
   const hash = (s: string) =>
     createHmac("sha256", "emulator-only").update(s).digest("hex");
+  const network = hash(
+    `${new Date().toISOString().slice(0, 10)}:local-emulator`,
+  );
   const batch = db.batch();
   for (const action of ["comment", "session", "report"])
     batch.delete(
@@ -39,10 +39,13 @@ test.beforeEach(async () => {
         .collection("blogRateLimits")
         .doc(
           hash(
-            `${action}:global:${Math.floor(Date.now() / 3600000)}`,
+            `${action}:network:${network}:${Math.floor(Date.now() / 3600000)}`,
           ),
         ),
     );
+  // Both supported site-budget labels share the atomic global bucket.
+  for (const action of ["comment", "session", "report"])
+    batch.delete(db.collection("blogRateLimits").doc(hash(`${action}:global:${Math.floor(Date.now() / 3600000)}`)));
   await batch.commit();
 });
 
@@ -62,7 +65,7 @@ async function login(r: APIRequestContext, email: string) {
     "",
   ].join(".");
   const res = await r.post(
-    `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=demo-key`,
+    "http://127.0.0.1:19099/identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=demo-key",
     {
       data: {
         requestUri: origin,
@@ -158,17 +161,19 @@ test("complete CMS, media, moderation, concurrency and anonymous publication bou
     .getByLabel("Nguồn tham khảo", { exact: false })
     .fill("Primary source | https://example.com/reference");
   await page.getByRole("button", { name: "Lưu bản nháp", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Đã lưu.");
+  await expect(page.getByRole("status").filter({ hasText: /Đã lưu\.|Giữ trang này mở|tab khác/ })).toContainText("Đã lưu.");
   console.info("Blog E2E: draft saved");
   const anonymous = await browser.newContext({
     viewport: page.viewportSize() ?? undefined,
   });
   const visitor = await anonymous.newPage();
-  expect(
-    (
-      await visitor.request.get(`${origin}/resources/blog/local-${key}`)
-    ).status(),
-  ).toBe(404);
+  // Next loading boundaries may stream200 before notFound resolves. Verify the
+  // actual privacy/SEO boundary: no manuscript and a fail-closed noindex page.
+  const missingArticle = await visitor.request.get(`${origin}/resources/blog/local-${key}`);
+  expect([200, 404]).toContain(missingArticle.status());
+  const missingHtml = await missingArticle.text();
+  expect(missingHtml).toContain("noindex");
+  expect(missingHtml).not.toContain(`Local test ${key}`);
   expect(
     (
       await visitor.request.get(`${origin}/api/admin/blog/posts/${id}`)
@@ -280,7 +285,7 @@ test("complete CMS, media, moderation, concurrency and anonymous publication bou
   await expect(visitor.getByRole("dialog").getByRole("status")).toContainText(
     /copied|copy/i,
   );
-  await visitor.getByRole("button", { name: "Close", exact: true }).click();
+  await visitor.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   expect((await visitor.request.get(`${origin}${media.url}`)).status()).toBe(
     200,
   );
@@ -309,7 +314,7 @@ test("complete CMS, media, moderation, concurrency and anonymous publication bou
   ).toBe(409);
   expect(
     await (
-      await visitor.request.get(`${origin}/resources/blog/local-${key}`)
+      await visitor.request.get(`${origin}/resources/blog/local-${key}`, { headers: { "user-agent": "Googlebot" } })
     ).text(),
   ).not.toContain("SECRET DRAFT TITLE");
   await login(visitor.request, readerEmail);
@@ -334,13 +339,14 @@ test("complete CMS, media, moderation, concurrency and anonymous publication bou
     await visitor.request.get(`${origin}/api/blog/comments?postId=${id}&mine=1`)
   ).json();
   const cid = own[0].id;
+  expect(own[0].status).toBe("approved");
   expect(
     (
       await (
         await page.request.get(`${origin}/api/blog/comments?postId=${id}`)
       ).json()
     ).items,
-  ).toHaveLength(0);
+  ).toHaveLength(1);
   expect(
     (
       await visitor.request.post(
@@ -397,11 +403,13 @@ test("complete CMS, media, moderation, concurrency and anonymous publication bou
       )
     ).ok(),
   ).toBe(true);
-  expect(
-    (
-      await visitor.request.get(`${origin}/resources/blog/local-${key}`)
-    ).status(),
-  ).toBe(404);
+  // Next loading boundaries may stream200 before notFound resolves. Verify the
+  // actual privacy/SEO boundary: no manuscript and a fail-closed noindex page.
+  const unpublishedArticle = await visitor.request.get(`${origin}/resources/blog/local-${key}`);
+  expect([200, 404]).toContain(unpublishedArticle.status());
+  const unpublishedHtml = await unpublishedArticle.text();
+  expect(unpublishedHtml).toContain("noindex");
+  expect(unpublishedHtml).not.toContain(`Local test ${key}`);
   expect((await visitor.request.get(`${origin}${media.url}`)).status()).toBe(
     404,
   );
@@ -420,7 +428,7 @@ test("complete CMS, media, moderation, concurrency and anonymous publication bou
     ).text(),
   ).not.toContain(`local-${key}`);
   const denied = await visitor.request.get(
-    `http://${process.env.FIRESTORE_EMULATOR_HOST}/v1/projects/${project}/databases/(default)/documents/blogPosts/${id}`,
+    `http://127.0.0.1:18080/v1/projects/${project}/databases/(default)/documents/blogPosts/${id}`,
   );
   expect(denied.status()).toBe(403);
   await anonymous.close();
@@ -584,7 +592,7 @@ test("comment threads, private projections, conflicting writes and revoked acces
     (
       await user.request.put(`${origin}/api/blog/comments/${root.id}`, {
         headers,
-        data: { revision: 2, text: "Revised parent" },
+        data: { revision: 2, text: "Revised parent https://example.com/a https://example.com/b" },
       })
     ).ok(),
   ).toBe(true);
@@ -726,7 +734,7 @@ test("approved editor design preserves offline work, publishes through confirmat
     .getByLabel("Tiêu đề", { exact: true })
     .fill(`Offline draft ${key}`);
   await page.getByRole("button", { name: "Lưu bản nháp", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.getByRole("status").filter({ hasText: /Đã lưu\.|Giữ trang này mở|tab khác/ })).toContainText(
     "Giữ trang này mở và thử lại",
   );
   await expect(page.getByLabel("Tiêu đề", { exact: true })).toHaveValue(
@@ -734,7 +742,7 @@ test("approved editor design preserves offline work, publishes through confirmat
   );
   await page.unroute(saveRoute);
   await page.getByRole("button", { name: "Lưu bản nháp", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Đã lưu.");
+  await expect(page.getByRole("status").filter({ hasText: /Đã lưu\.|Giữ trang này mở|tab khác/ })).toContainText("Đã lưu.");
   await page.getByRole("button", { name: "Xuất bản", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -770,7 +778,7 @@ test("approved editor design preserves offline work, publishes through confirmat
     .getByLabel("Tiêu đề", { exact: true })
     .fill(`Unsaved local ${key}`);
   await page.getByRole("button", { name: "Lưu bản nháp", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("tab khác");
+  await expect(page.getByRole("status").filter({ hasText: /Đã lưu\.|Giữ trang này mở|tab khác/ })).toContainText("tab khác");
   await expect(page.getByLabel("Tiêu đề", { exact: true })).toHaveValue(
     `Unsaved local ${key}`,
   );

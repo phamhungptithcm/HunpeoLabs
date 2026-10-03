@@ -1,0 +1,26 @@
+.loading { min-height: 75vh; }
+.lines { display: grid; gap: 12px; margin-block: 24px; }
+.lines span, .eyebrow, .title, .byline, .art, .thumb, .toolbar {
+  display: block;
+  background: var(--line, #e5e7eb);
+  border-radius: 4px;
+}
+.lines span { height: 14px; }
+.lines span:last-child { width: 72%; }
+.eyebrow { width: 160px; height: 12px; margin-bottom: 24px; }
+.title { width: 85%; height: 88px; }
+.byline { width: 210px; height: 42px; margin-top: 24px; }
+.heading { min-height: 320px; }
+.articleBody { max-width: 740px; margin: 48px auto; }
+.articleBody .lines { margin-bottom: 40px; }
+.feature { min-height: 380px; }
+.art { min-height: 300px; }
+.featureCopy { padding: 40px; }
+.toolbar { height: 44px; margin-block: 40px; }
+.thumb { aspect-ratio: 16 / 10; }
+.related { min-height: 130px; }
+@media (max-width: 700px) {
+  .title { height: 72px; }
+  .featureCopy { padding: 24px; }
+  .art { min-height: 240px; }
+}

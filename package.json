@@ -1,6 +1,6 @@
 {
   "name": "@hunpeolabs/website",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "engines": {
@@ -43,7 +43,9 @@
     "react-dom": "19.2.8",
     "server-only": "0.0.1",
     "sharp": "0.35.5",
-    "zod": "4.6.5"
+    "zod": "4.6.5",
+    "@tiptap/extension-table": "3.31.4",
+    "google-auth-library": "^11.1.0"
   },
   "devDependencies": {
     "@playwright/test": "1.62.0",

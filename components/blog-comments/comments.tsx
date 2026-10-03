@@ -81,7 +81,7 @@ export function Comments({ postId }: { postId: string }) {
     const operationId = nonce || crypto.randomUUID();
     setNonce(operationId);
     try {
-      await request("/api/blog/comments", "POST", {
+      const result = await request<{ status: string }>("/api/blog/comments", "POST", {
         postId,
         parentId: parent,
         text,
@@ -91,8 +91,8 @@ export function Comments({ postId }: { postId: string }) {
       setText("");
       setParent("");
       setNonce("");
-      setNotice("Comment submitted. It will appear after review.");
-      await loadOwn();
+      setNotice(result.status === "approved" ? "Your comment is published." : "Your comment was held for review by our spam checks.");
+      await Promise.all([loadOwn(), load()]);
     } catch (e) {
       setNotice(message(e, "en"));
     } finally {
@@ -181,7 +181,7 @@ export function Comments({ postId }: { postId: string }) {
           <div className="insight">Comments are closed for this post.</div>
         ))}
       <p className="private-note">
-        <BlogIcon name="shield" size={12} /> Comments appear after review.
+        <BlogIcon name="shield" size={12} /> Spam checks run automatically. Some comments may be held for review.
       </p>
       {signed && own.length > 0 && (
         <details
@@ -271,19 +271,19 @@ export function Comments({ postId }: { postId: string }) {
       )}
       {editing && (
         <BlogDialog closeLabel="Close" title="Edit comment" onClose={() => setEditing(null)}>
-          <p>Edited comments go through review again.</p>
+          <p>Edits are checked automatically for spam.</p>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
               setBusy(true);
               try {
-                await request(`/api/blog/comments/${editing.id}`, "PUT", {
+                const result = await request<{ status: string }>(`/api/blog/comments/${editing.id}`, "PUT", {
                   text: editText,
                   revision: editing.revision,
                 });
                 setEditing(null);
                 await Promise.all([loadOwn(), load()]);
-                setNotice("Your edit is awaiting review.");
+                setNotice(result.status === "approved" ? "Your edit is published." : "Your edit was held for review by our spam checks.");
               } catch (e) {
                 setNotice(message(e, "en"));
                 setEditing(null);

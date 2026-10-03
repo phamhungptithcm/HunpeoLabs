@@ -44,6 +44,10 @@ const types = new Set([
   "hardBreak",
   "horizontalRule",
   "image",
+  "table",
+  "tableRow",
+  "tableCell",
+  "tableHeader",
 ]);
 export function validateBody(input: unknown): RichNode {
   let count = 0;
@@ -75,6 +79,15 @@ export function validateBody(input: unknown): RichNode {
         typeof node.attrs?.language === "string"
           ? node.attrs.language.slice(0, 30)
           : "";
+    if (node.type === "tableCell" || node.type === "tableHeader") {
+      for (const key of ["colspan", "rowspan"]) {
+        const span = node.attrs?.[key] ?? 1;
+        if (!Number.isInteger(span) || Number(span) < 1 || Number(span) > 30) throw new BlogError(400, "INVALID_BODY");
+        attrs[key] = span;
+      }
+    }
+    if (node.type === "table" && (!node.content?.length || node.content.length > 100 || node.content.some(c => c.type !== "tableRow"))) throw new BlogError(400, "INVALID_BODY");
+    if (node.type === "tableRow" && (!node.content?.length || node.content.length > 30 || node.content.some(c => !["tableCell", "tableHeader"].includes(c.type)))) throw new BlogError(400, "INVALID_BODY");
     if (node.type === "image") {
       if (
         typeof node.attrs?.src !== "string" ||

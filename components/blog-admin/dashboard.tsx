@@ -23,6 +23,7 @@ export function Dashboard({
 }) {
   const router = useRouter();
   const [notice, setNotice] = useState("");
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   useEffect(() => {
     if (creating) return beginProgress();
@@ -109,7 +110,7 @@ export function Dashboard({
               ["draft", "Bản nháp"],
               ["review", "Chờ duyệt"],
               ["published", "Đã xuất bản"],
-              ["archived", "Lưu trữ"],
+              ["archived", "Thùng rác"],
             ].map(([state, label]) => (
               <Link
                 key={state}
@@ -194,12 +195,21 @@ export function Dashboard({
                   })}
                 </td>
                 <td>
-                  <Link
+                  {p.state === 'archived' ? <button type="button" className="icon-button" disabled={restoringId !== null} aria-label={`Khôi phục ${p.title || 'bài viết'}`} title="Khôi phục bản nháp" onClick={async () => {
+                    setRestoringId(p.id);
+                    try {
+                      const current = await request<Post>(`/api/admin/blog/posts/${p.id}`);
+                      if (current.state !== 'archived') { setNotice('Bài này đã được khôi phục.'); router.refresh(); return; }
+                      await request(`/api/admin/blog/posts/${p.id}`, 'PUT', { draft:current, revision:current.revision });
+                      setNotice('Đã khôi phục bản nháp.'); router.refresh();
+                    } catch (error) { setNotice(message(error)); }
+                    finally { setRestoringId(null); }
+                  }}><BlogIcon name={restoringId === p.id ? 'clock' : 'history'} size={16} /></button> : <Link
                     aria-label={`Sửa ${p.title || "bài viết"}`}
                     href={`/admin/blog/${p.id}`}
                   >
                     <BlogIcon name="more" />
-                  </Link>
+                  </Link>}
                 </td>
               </tr>
             ))}

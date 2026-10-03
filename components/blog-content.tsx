@@ -1,5 +1,10 @@
-/* eslint-disable @next/next/no-img-element -- Media authorization must run per request; images are resized on upload. */
+import { BlogCodeBlock } from "./blog-code-block";
+import { BlogHeading } from "./blog-heading";
+import { codeSource } from "@/lib/blog/discovery";
 import { isMermaidBlock } from "@/lib/blog/mermaid-source";
+import { readingHeadings } from "@/lib/blog/reading-layout";
+import { BlogReadingToc } from "./blog-reading-toc";
+import { BlogImageViewer } from "./blog-image-viewer";
 import { MermaidDiagram } from "./mermaid-diagram";
 import type { ReactNode } from "react";
 import type { RichNode, PublishedPost } from "@/lib/blog/schema";
@@ -35,19 +40,7 @@ function render(n: RichNode, key: string): ReactNode {
     case "paragraph":
       return <p key={key}>{children}</p>;
     case "heading":
-      return n.attrs?.level === 3 ? (
-        <h3 id={`section-${key}`} key={key}>
-          {children}
-        </h3>
-      ) : n.attrs?.level === 4 ? (
-        <h4 id={`section-${key}`} key={key}>
-          {children}
-        </h4>
-      ) : (
-        <h2 id={`section-${key}`} key={key}>
-          {children}
-        </h2>
-      );
+      return <BlogHeading id={`section-${key}`} key={key} level={n.attrs?.level === 3 ? 3 : n.attrs?.level === 4 ? 4 : 2}>{children}</BlogHeading>;
     case "bulletList":
       return <ul key={key}>{children}</ul>;
     case "orderedList":
@@ -57,12 +50,16 @@ function render(n: RichNode, key: string): ReactNode {
     case "blockquote":
       return <blockquote key={key}>{children}</blockquote>;
     case "codeBlock":
-      if (isMermaidBlock(n.attrs?.language, (n.content ?? []).map((c) => c.text ?? "").join(""))) return <MermaidDiagram key={key} source={(n.content ?? []).map((c) => c.text ?? "").join("")} />;
-      return (
-        <pre key={key}>
-          <code>{children}</code>
-        </pre>
-      );
+      if (isMermaidBlock(n.attrs?.language, (n.content ?? []).map((c) => c.text ?? "").join(""))) return <MermaidDiagram key={key} source={(n.content ?? []).map((c) => c.text ?? "").join("")} enlarge />;
+      return <BlogCodeBlock key={key} source={codeSource(n)} language={typeof n.attrs?.language === 'string' ? n.attrs.language : undefined} />;
+    case "table":
+      return <div className="blog-table-scroll" key={key}><table><tbody>{children}</tbody></table></div>;
+    case "tableRow":
+      return <tr key={key}>{children}</tr>;
+    case "tableHeader":
+      return <th key={key} colSpan={Number(n.attrs?.colspan ?? 1)} rowSpan={Number(n.attrs?.rowspan ?? 1)}>{children}</th>;
+    case "tableCell":
+      return <td key={key} colSpan={Number(n.attrs?.colspan ?? 1)} rowSpan={Number(n.attrs?.rowspan ?? 1)}>{children}</td>;
     case "hardBreak":
       return <br key={key} />;
     case "horizontalRule":
@@ -71,7 +68,8 @@ function render(n: RichNode, key: string): ReactNode {
       return (
         <figure key={key}>
           {/* Auth-checked media cannot use a public optimization cache. */}
-          <img
+          <BlogImageViewer
+            vi={false}
             src={String(n.attrs?.src)}
             alt={String(n.attrs?.alt ?? "")}
             loading="lazy"
@@ -99,17 +97,7 @@ export function BlogContent({
     new Intl.DateTimeFormat(preview ? post.language : "en", { dateStyle: "long" }).format(
       new Date(v),
     );
-  const headings =
-    post.body.content?.flatMap((n, i) =>
-      n.type === "heading"
-        ? [
-            {
-              id: `section-0-${i}`,
-              text: n.content?.map((c) => c.text ?? "").join(""),
-            },
-          ]
-        : [],
-    ) ?? [];
+  const headings = readingHeadings(post.body);
   return (
     <main className="container" lang={preview ? post.language : "en"}>
       <header className="article-heading">
@@ -169,20 +157,7 @@ export function BlogContent({
         {post.category} · {post.author}
       </div>
       <div className="reading-layout">
-        <aside className="toc" aria-label={copy("Mục lục", "Contents")}>
-          <div className="eyebrow">{copy("Trong bài viết", "In this post")}</div>
-          {headings.map((h, i) => (
-            <a
-              key={h.id}
-              className={i === 0 ? "current" : ""}
-              href={`#${h.id}`}
-            >
-              {h.text}
-            </a>
-          ))}
-          <a href="#sources">{copy("Nguồn tham khảo", "Sources")}</a>
-          {!preview && <a href="#comments">{copy("Tham gia thảo luận", "Join the discussion")}</a>}
-        </aside>
+        <BlogReadingToc headings={headings} sources={post.sources.length > 0} discussion={!preview} vi={preview} />
         <article className="article-body">
           {post.answer && (
             <div className="insight">

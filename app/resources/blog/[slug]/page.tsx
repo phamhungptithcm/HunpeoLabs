@@ -1,9 +1,15 @@
 import Link from "next/link";
+import { relatedPublicPosts } from "@/lib/blog/discovery";
+import type { PublishedPost } from "@/lib/blog/schema";
+import { Cover } from "@/components/blog-admin/ui";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createPageMetadata, getSiteUrl, SITE_NAME } from "@/app/seo";
 import { BlogContent } from "@/components/blog-content";
-import { getPublished, listPublished } from "@/lib/blog/repository";
+import { Suspense } from "react";
+import { RelatedPostsLoading } from "@/components/blog-loading";
+import { listPublished } from "@/lib/blog/repository";
+import { getPublishedForRender } from "@/lib/blog/public-read";
 export const dynamic = "force-dynamic";
 
 type BlogArticlePageProps = {
@@ -14,7 +20,7 @@ export async function generateMetadata({
   params,
 }: BlogArticlePageProps): Promise<Metadata> {
   const slug = (await params).slug;
-  const post = await getPublished(slug);
+  const post = await getPublishedForRender(slug);
   if (!post) {
     return {
       title: "Article not found",
@@ -58,14 +64,9 @@ export async function generateMetadata({
 export default async function BlogArticlePage({
   params,
 }: BlogArticlePageProps) {
-  const post = await getPublished((await params).slug);
+  const post = await getPublishedForRender((await params).slug);
   if (!post) notFound();
 
-  const related = (
-    await listPublished({ category: post.category, limit: 4 })
-  ).items
-    .filter((p) => p.id !== post.id)
-    .slice(0, 3);
   const siteUrl = getSiteUrl();
   const articleUrl = new URL(
     `/resources/blog/${post.slug}`,
@@ -121,26 +122,9 @@ export default async function BlogArticlePage({
   return (
     <>
       <BlogContent post={post} url={articleUrl} />
-      {related.length > 0 && (
-        <section
-          className="container related-stories"
-          aria-label="Related articles"
-        >
-          <h2>Related posts</h2>
-          <div className="story-grid">
-            {related.map((p) => (
-              <Link
-                className="story"
-                href={`/resources/blog/${p.slug}`}
-                key={p.id}
-              >
-                <h3>{p.title}</h3>
-                <p>{p.summary}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      <Suspense fallback={<RelatedPostsLoading />}>
+        <RelatedPosts current={post} />
+      </Suspense>
       <script
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
@@ -148,5 +132,34 @@ export default async function BlogArticlePage({
         type="application/ld+json"
       />
     </>
+  );
+}
+
+async function RelatedPosts({ current }: { current: PublishedPost }) {
+  let related;
+  try {
+    const [sameTopic, recent] = await Promise.all([listPublished({ category: current.category, limit:20 }), listPublished({ limit:20 })]);
+    related = relatedPublicPosts(current, [...sameTopic.items, ...recent.items]);
+  } catch {
+    // Optional recommendations must not replace a readable article with an error.
+    return (
+      <section className="container related-stories" aria-label="Related articles">
+        <h2>Related posts</h2>
+        <p>Related posts are unavailable right now. <Link href="/resources/blog">Browse the blog</Link></p>
+      </section>
+    );
+  }
+  if (related.length === 0) return null;
+  return (
+    <section className="container related-stories" aria-label="Related articles">
+      <h2>Related posts</h2>
+      <div className="story-grid">
+        {related.map((post) => (
+          <Link className="story" href={`/resources/blog/${post.slug}`} key={post.id}>
+            <div className="thumb"><Cover id={post.coverId} title={post.title} language="en" /></div><div className="story-copy"><span className="small">{post.category} · {post.readingMinutes} min read</span><h3>{post.title}</h3><p>{post.summary}</p></div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }

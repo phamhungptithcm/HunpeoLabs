@@ -87,7 +87,7 @@ if (process.env.REQUIRE_BLOG_RELEASE === "true") {
         "BLOG_STORAGE_BUCKET", "BLOG_RATE_LIMIT_MODE",
         "NEXT_PUBLIC_BLOG_FIREBASE_API_KEY", "NEXT_PUBLIC_BLOG_FIREBASE_AUTH_DOMAIN",
       ];
-      if (!["identity-global", "trusted-ingress"].includes(values.BLOG_RATE_LIMIT_MODE)) {
+      if (!["identity-global", "global", "trusted-ingress"].includes(values.BLOG_RATE_LIMIT_MODE)) {
         fail("CMS runtime rate-limit mode is invalid.");
       }
       if (values.BLOG_RATE_LIMIT_MODE === "trusted-ingress") required.push("BLOG_TRUSTED_IP_HEADER");

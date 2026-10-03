@@ -1,0 +1,2 @@
+# Render legacy fenced Mermaid code on article pages
+User screenshot shows literal fenced Mermaid inside existing codeBlock. Normalize complete Mermaid fences for detection and renderer source, preserving stored content and ordinary code language behavior. Apply shared normalization to editor/public previews. No live data migration. Regression for fenced Vietnamese diagram and non-Mermaid code. Source fallback intelligence degraded; lint/types/unit validation; rendered verification limited.

@@ -1,8 +1,10 @@
 "use client";
+import { BlogImageViewer } from "./blog-image-viewer";
+import { mermaidSource } from "@/lib/blog/mermaid-source";
 import { useEffect, useId, useState } from "react";
 
 let rendering = Promise.resolve();
-export function MermaidDiagram({ source }: { source: string }) {
+export function MermaidDiagram({ source, showSource = true, enlarge = false }: { source: string; showSource?: boolean; enlarge?: boolean }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, "");
   const [result, setResult] = useState<{ source: string; url?: string; error?: boolean } | null>(null);
   useEffect(() => {
@@ -15,7 +17,7 @@ export function MermaidDiagram({ source }: { source: string }) {
           const { default: mermaid } = await import("mermaid");
           if (cancelled) return;
           mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "neutral", htmlLabels: false, flowchart: { htmlLabels: false }, maxTextSize: 10000, maxEdges: 200, suppressErrorRendering: true });
-          const { svg } = await mermaid.render(`diagram${id}`, source);
+          const { svg } = await mermaid.render(`diagram${id}`, mermaidSource(source));
           if (cancelled) return;
           url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
           setResult({ source, url });
@@ -29,8 +31,8 @@ export function MermaidDiagram({ source }: { source: string }) {
   return <figure className="mermaid-diagram">
     {result?.source === source && result.url ? (
       // eslint-disable-next-line @next/next/no-img-element -- Isolated SVG blob generated locally with strict Mermaid security.
-      <img src={result.url} alt="Sơ đồ Mermaid" />
+      enlarge ? <BlogImageViewer src={result.url} alt="Mermaid diagram" vi={false} loading="eager" /> : <img src={result.url} alt="Sơ đồ Mermaid" />
     ) : <p role="status">{result?.source === source && result.error ? "Chưa vẽ được sơ đồ. Kiểm tra lại cú pháp Mermaid." : "Đang vẽ sơ đồ…"}</p>}
-    <details><summary>Xem mã sơ đồ</summary><pre><code>{source}</code></pre></details>
+    {showSource && <details><summary>Xem mã sơ đồ</summary><pre><code>{source}</code></pre></details>}
   </figure>;
 }

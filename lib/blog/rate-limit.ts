@@ -60,7 +60,7 @@ export async function requestLimits(request: Request, uid: string, action = "com
     const hash = createHmac("sha256", secret())
       .update(`${new Date().toISOString().slice(0, 10)}:${address}`).digest("hex");
     shared = `${action}:network:${hash}`;
-  } else if (mode !== "identity-global") {
+  } else if (mode !== "identity-global" && mode !== "global") {
     throw new BlogError(503, "RATE_LIMIT_NOT_CONFIGURED");
   }
   await consume([

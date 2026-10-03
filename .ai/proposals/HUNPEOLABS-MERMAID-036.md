@@ -1,0 +1,2 @@
+# In-block Mermaid mode switch
+Direct user clarification requests diagram inside same code block. Replace editor details with in-block Diagram/Code toggle default diagram; keep NodeViewContent mounted hidden in diagram mode to preserve editor content and selection. Renderer source unchanged; buttons noneditable/accessibly pressed. Scope presentation only, no schema/API changes. Validate ESLint/types/diff; rendered E2E unavailable.

@@ -1,6 +1,7 @@
 "use client";
 import { openSavedPreview } from "@/lib/blog/open-preview";
 import { TaxonomyFields } from "./taxonomy-fields";
+import { parseRecovery, recoveryKey } from "@/lib/blog/draft-recovery";
 import { validScheduleTime } from "@/lib/blog/schedule-time";
 import { BlogToast } from "@/components/blog-admin/toast";
 import { progressFetch } from "@/lib/ui/action-progress";
@@ -31,6 +32,7 @@ const RichEditor = dynamic(
 const subscribe = () => () => {};
 export function Editor({
   initial,
+  viewerUid,
   authors,
   publisher,
   members,
@@ -38,6 +40,7 @@ export function Editor({
   canCreateCategory,
 }: {
   initial: Post;
+  viewerUid: string;
   authors: { id: string; name: string }[];
   publisher: boolean;
   members: { id: string; name: string }[];
@@ -45,6 +48,24 @@ export function Editor({
   canCreateCategory: boolean;
 }) {
   const router = useRouter();
+  const [compactHeader, setCompactHeader] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        // Separate thresholds avoid flicker when the header's height changes.
+        setCompactHeader(previous => previous ? window.scrollY > 24 : window.scrollY > 64);
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
   const ready = useSyncExternalStore(
     subscribe,
     () => true,
@@ -54,6 +75,8 @@ export function Editor({
     "history" | "seo" | "publish" | "unpublish" | "archive" | null
   >(null);
   const [post, setPost] = useState(initial);
+  const [recovery, setRecovery] = useState<ReturnType<typeof parseRecovery>>(null);
+  const [recoveryGeneration, setRecoveryGeneration] = useState(0);
   const [sourceText, setSourceText] = useState(
     initial.sources.map((s) => `${s.title} | ${s.url}`).join("\n"),
   );
@@ -64,7 +87,7 @@ export function Editor({
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   useEffect(() => {
     if (!publisher) return;
-    void request<{ dueAt: string | null }>(`/api/admin/blog/posts/${initial.id}/schedule`).then(r => setScheduledAt(r.dueAt)).catch(() => {});
+    void request<{ dueAt: string | null; error: string | null }>(`/api/admin/blog/posts/${initial.id}/schedule`).then(r => { setScheduledAt(r.dueAt); if (r.error) setNotice(`Bài chưa được đăng theo lịch. ${message(new Error(r.error))}`); }).catch(() => {});
   }, [initial.id, publisher]);
   async function schedulePublication() {
     const time = new Date(scheduleDate).getTime();
@@ -95,6 +118,23 @@ export function Editor({
   const resolveUpload = useRef<((value: string | null) => void) | null>(null);
   const [coverUpload, setCoverUpload] = useState(false);
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (dirty) return;
+      try {
+        const key = recoveryKey(viewerUid, initial.id);
+        const backup = parseRecovery(localStorage.getItem(key), viewerUid, initial.id);
+        if (backup && JSON.stringify(backup.draft) !== JSON.stringify(parseRecovery(JSON.stringify({ uid: viewerUid, postId: initial.id, revision: initial.revision, at: backup.at, draft: initial }), viewerUid, initial.id)?.draft)) setRecovery(backup);
+        else localStorage.removeItem(key);
+      } catch { /* Storage may be disabled; server autosave still works. */ }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [viewerUid, initial, dirty]);
+  useEffect(() => {
+    if (!dirty) return;
+    try { localStorage.setItem(recoveryKey(viewerUid, initial.id), JSON.stringify({ uid: viewerUid, postId: initial.id, revision: post.revision, at: Date.now(), draft: post })); }
+    catch { /* A private/full storage must never interrupt editing. */ }
+  }, [dirty, post, viewerUid, initial.id]);
+  useEffect(() => {
     const input = file.current;
     const cancel = () => {
       resolveUpload.current?.(null);
@@ -118,6 +158,17 @@ export function Editor({
       return n;
     });
     setDirty(true);
+  }
+  function restoreRecovery() {
+    if (!recovery) return;
+    manualSlug.current = true;
+    for (const key of Object.keys(recovery.draft) as (keyof Draft)[]) update(key, recovery.draft[key]);
+    setSourceText(recovery.draft.sources.map(s => `${s.title} | ${s.url}`).join("\n"));
+    setRecovery(null); setRecoveryGeneration(n => n + 1);
+    if (recovery.revision !== initial.revision) {
+      conflicted.current = true;
+      setNotice("Bản trên máy chủ đã thay đổi. Sao chép nội dung phục hồi trước khi tải lại để đối chiếu.");
+    }
   }
   const save = useCallback(
     async (state?: "review" | "archived") => {
@@ -145,7 +196,10 @@ export function Editor({
           state: saved.state,
         }));
         savedGeneration.current = start;
-        if (start === generation.current) setDirty(false);
+        if (start === generation.current) {
+          setDirty(false);
+          try { localStorage.removeItem(recoveryKey(viewerUid, initial.id)); } catch { /* Optional local backup. */ }
+        }
         setNotice("Đã lưu.");
         return saved;
       } catch (e) {
@@ -160,7 +214,7 @@ export function Editor({
         setBusy(false);
       }
     },
-    [initial.id],
+    [initial.id, viewerUid],
   );
   useEffect(() => {
     if (!dirty) return;
@@ -224,7 +278,7 @@ export function Editor({
   const authorName =
     authors.find((a) => a.id === post.authorId)?.name ?? "Chưa chọn tác giả";
   return (
-    <main className="editor-shell">
+    <main className={`editor-shell${compactHeader ? " editor-shell--compact" : ""}`}>
       <fieldset className="editor-frame" disabled={!ready}>
         <header className="editor-top">
           <div className="flex">
@@ -354,6 +408,11 @@ export function Editor({
         </header>
         {notice && <BlogToast key={taxonomyToastRevision} text={notice} onClose={dismissNotice} />}
         {scheduledAt && <div className="notice">Đăng lúc {new Date(scheduledAt).toLocaleString("vi")} <button type="button" disabled={busy} onClick={async () => { setBusy(true); try { await request(`/api/admin/blog/posts/${post.id}/schedule`, "DELETE"); setScheduledAt(null); setNotice("Đã hủy lịch đăng."); } catch(e) { setNotice(message(e)); } finally { setBusy(false); } }}>Hủy lịch</button></div>}
+        {recovery && <div className="notice" role="status">
+          Có nội dung chưa lưu trên thiết bị này.{recovery.revision !== initial.revision ? " Bản trên máy chủ đã thay đổi; kiểm tra kỹ trước khi lưu." : ""}
+          <button type="button" disabled={dirty || busy} onClick={restoreRecovery}>Phục hồi</button>
+          <button type="button" onClick={() => { try { localStorage.removeItem(recoveryKey(viewerUid, initial.id)); } catch {} setRecovery(null); }}>Bỏ bản tạm</button>
+        </div>}
         <div className="editor-layout">
           <section className="editor-canvas">
             <div className="editor-page">
@@ -423,8 +482,11 @@ export function Editor({
                 </span>
               </div>
               <RichEditor
-                body={initial.body}
+                key={recoveryGeneration}
+                body={post.body}
                 onChange={(b) => update("body", b)}
+                onUploadImage={async (imageFile) => (await upload(imageFile)).url}
+                onError={(error) => setNotice(error)}
                 onImage={() =>
                   new Promise((resolve) => {
                     setCoverUpload(false);
@@ -599,9 +661,10 @@ export function Editor({
               />
             </label>
             <p className="private-note">
-              Bình luận chỉ hiện sau khi được duyệt.
+              Bình luận được kiểm tra spam tự động. Nội dung đáng ngờ sẽ chờ duyệt.
             </p>
             <div className="field-rule" />
+            <section className="editor-publish-check" aria-label="Chuẩn bị xuất bản">
             <div className="between small">
               <strong>Chuẩn bị xuất bản</strong>
               <span className="badge">
@@ -628,20 +691,20 @@ export function Editor({
               ))}
             </div>
             <button
-              className="button small"
-              style={{ width: "100%", marginTop: 20 }}
+              className="button small editor-seo-preview"
               onClick={() => setModal("seo")}
             >
               <BlogIcon name="search" size={13} />
               Xem trước SEO & chia sẻ
             </button>
-            <div className="field-rule" />
+            </section>
             <div className="editor-secondary-actions">
               <button
                 className="button small"
                 disabled={busy}
                 onClick={() => void save("review")}
               >
+                <BlogIcon name="check" size={14} />
                 Gửi duyệt
               </button>
               {post.coverId && (
@@ -662,11 +725,11 @@ export function Editor({
                 </button>
               )}
               <button
-                className="button small"
+                className="button small editor-archive-action"
                 disabled={busy}
                 onClick={() => setModal("archive")}
               >
-                Lưu trữ
+                Chuyển vào thùng rác
               </button>
             </div>
           </aside>
@@ -682,7 +745,7 @@ export function Editor({
                 : modal === "unpublish"
                   ? "Gỡ bài viết?"
                   : modal === "archive"
-                    ? "Lưu trữ bản nháp?"
+                    ? "Chuyển vào thùng rác?"
                     : "Xuất bản bài viết"
           }
           onClose={() => setModal(null)}
@@ -755,9 +818,11 @@ export function Editor({
                 <strong>{post.seoTitle || post.title}</strong>
                 {post.seoDescription || post.summary}
               </div>
-              <p className="private-note">
-                Bố cục xem trước. Kết quả thực tế có thể khác theo nền tảng.
-              </p>
+              <div className="studio-social-preview" aria-label="Xem trước liên kết chia sẻ">
+                <div className="studio-social-image"><span>HUNPEO LABS / {post.category || 'JOURNAL'}</span><strong>{post.title || 'Tiêu đề bài viết'}</strong><small>{authorName} <span>hunpeolabs.com</span></small></div>
+                <div className="studio-social-copy"><small>HUNPEOLABS.COM</small><strong>{post.seoTitle || post.title || 'Tiêu đề bài viết'}</strong><p>{post.seoDescription || post.summary || 'Thêm tóm tắt để người đọc biết bài viết nói về điều gì.'}</p></div>
+              </div>
+              <p className="private-note">Thẻ dùng tiêu đề, mô tả và ảnh chia sẻ tạo từ bài viết. Hình trên mạng xã hội có thể khác tùy nền tảng; thay đổi có hiệu lực sau khi cập nhật bài đăng.</p>
             </>
           ) : (
             <>
@@ -766,7 +831,7 @@ export function Editor({
                   ? "Bài viết sẽ xuất hiện trên blog. Bạn vẫn có thể sửa sau khi đăng."
                   : modal === "unpublish"
                     ? "Bài viết và bình luận sẽ được ẩn. Bạn vẫn giữ bản nháp."
-                    : "Gỡ bài khỏi blog trước khi lưu trữ."}
+                    : "Bài được giữ trong thùng rác và có thể khôi phục. Bài đang công khai cần được gỡ trước."}
               </p>
               <div className="mod-context">
                 <strong>{post.title || "Bài chưa đặt tên"}</strong>

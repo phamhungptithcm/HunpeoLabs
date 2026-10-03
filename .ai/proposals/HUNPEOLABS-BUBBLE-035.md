@@ -1,0 +1,2 @@
+# Selection formatting toolbar
+Direct user requests nearby text formatting on selection. Use existing Tiptap React BubbleMenu with bold/italic/strike/inline code/link; show only nonempty text selection outside code blocks. Preserve top toolbar and selection while button press, use existing link dialog. Scoped styling compact white rounded floating tools. No new contracts/dependencies. Validate lint/types/diff; rendered selection validation unavailable.

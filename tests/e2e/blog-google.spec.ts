@@ -7,7 +7,7 @@ import {
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomUUID, createHmac } from "node:crypto";
 import sharp from "sharp";
 const enabled = process.env.BLOG_E2E === "true";
 test.skip(!enabled, "Explicit local Firebase emulators required");
@@ -18,7 +18,7 @@ const key = (email: string) =>
   createHash("sha256").update(email.toLowerCase()).digest("hex");
 function fixture() {
   if (
-    !((process.env.FIRESTORE_EMULATOR_HOST === "127.0.0.1:18080" &&
+    !((["127.0.0.1:18080", "127.0.0.1:18082"].includes(process.env.FIRESTORE_EMULATOR_HOST ?? "") &&
        process.env.FIREBASE_AUTH_EMULATOR_HOST === "127.0.0.1:19099") ||
       (process.env.BLOG_RELEASE_EMULATORS === "true" &&
        process.env.FIRESTORE_EMULATOR_HOST === "127.0.0.1:28080" &&
@@ -100,11 +100,15 @@ async function googlePopup(page: Page, email: string) {
     .last()
     .click();
   await expect(page).toHaveURL(/\/admin\/blog$/, { timeout: 60000 });
+  await expect(page.getByRole("heading", { name: "Bài viết của bạn", exact: true })).toBeVisible();
 }
 test.beforeEach(async () => {
   const db = getFirestore(fixture());
   // Isolated policy reset only in the explicitly guarded demo project, never in preview/production.
   const batch = db.batch();
+  const budgetHash = (key: string) => createHmac("sha256", "emulator-only").update(key).digest("hex");
+  for (const action of ["comment", "session", "report"])
+    batch.delete(db.collection("blogRateLimits").doc(budgetHash(`${action}:global:${Math.floor(Date.now() / 3600000)}`)));
   for (const d of (await db.collection("blogAccess").get()).docs)
     batch.delete(d.ref);
   for (const d of (await db.collection("blogRateLimits").get()).docs)
@@ -349,7 +353,7 @@ test("natural editor workflow: automatic slug, formatting, image, preview and pu
     .png()
     .toBuffer();
   const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Ảnh", exact: true }).click();
+  await page.getByRole("button", { name: "Chèn ảnh hoặc GIF", exact: true }).click();
   await (
     await chooser
   ).setFiles({ name: "test.png", mimeType: "image/png", buffer: image });

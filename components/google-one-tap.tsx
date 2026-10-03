@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { beginProgress } from "@/lib/ui/action-progress";
+import { useBlogSession } from "./use-blog-session";
 
 type GoogleIdentity = {
   initialize: (options: {
@@ -34,27 +35,12 @@ export function GoogleOneTap() {
     /^\d+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/.test(clientId) &&
     !path.startsWith("/admin/") &&
     path !== "/blog-account";
-  const [load, setLoad] = useState(false);
+  const { status, refreshing } = useBlogSession(eligible);
+  const load = eligible && status === "anonymous" && !refreshing && !signedOut();
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
   const busy = useRef(false);
   const attempted = useRef(false);
-
-  useEffect(() => {
-    if (!eligible) return;
-    try {
-      if (sessionStorage.getItem("hl-one-tap-signed-out")) return;
-    } catch {}
-    const controller = new AbortController();
-    fetch("/api/blog/session", { cache: "no-store", signal: controller.signal })
-      .then((response) => {
-        // A provider outage must not be mistaken for an anonymous session.
-        if (!controller.signal.aborted && response.status === 401)
-          setLoad(true);
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [eligible]);
 
   useEffect(() => {
     const google = identity();
@@ -117,4 +103,12 @@ export function GoogleOneTap() {
       )}
     </>
   );
+}
+
+function signedOut() {
+  try {
+    return Boolean(sessionStorage.getItem("hl-one-tap-signed-out"));
+  } catch {
+    return false;
+  }
 }

@@ -1,0 +1,2 @@
+# Blog table support
+User requests tables in editor. Add matching Tiptap table extension, compact insert/row/column/delete controls, safe schema whitelist with bounded spans, article semantic table rendering and horizontal scrolling. Preserve existing body and media/security constraints. Dependency scope explicit feature. Validate lint/types/schema regression/unit. No live writes/deployment. Intelligence degraded source fallback; rendered editor/table E2E remains unavailable.

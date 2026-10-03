@@ -145,7 +145,9 @@ export default async function BlogPage({
             {query.category && (
               <input type="hidden" name="category" value={query.category} />
             )}
+            {query.tag && <input type="hidden" name="tag" value={query.tag} />}
             <input
+              maxLength={160}
               aria-label="Search posts"
               name="q"
               defaultValue={query.q}
@@ -159,7 +161,7 @@ export default async function BlogPage({
         {(query.q || query.tag) && (
           <p className="private-note">
             Results {query.q ? `for “${query.q}”` : ""}{" "}
-            {query.tag ? `tagged #${query.tag}` : ""}. Search uses a word from the title, summary or tags.{" "}
+            {query.tag ? `tagged #${query.tag}` : ""}. Matching titles, topics and article content.{" "}
             <Link href="/resources/blog">Clear filters</Link>
           </p>
         )}
@@ -192,12 +194,12 @@ export default async function BlogPage({
             </div>
             <h2>
               {query.q || query.category || query.tag
-                ? "No matching posts."
+                ? (next && query.q ? "Keep searching older posts." : "No matching posts.")
                 : "No posts yet."}
             </h2>
             <p>
               {query.q || query.category || query.tag
-                ? "Try another topic or search term."
+                ? (next && query.q ? "Continue below, or try another search term." : "Try another topic or search term.")
                 : "Check back later or follow via RSS."}
             </p>
             {query.q || query.category || query.tag ? (
@@ -217,7 +219,7 @@ export default async function BlogPage({
             className="button"
             href={`/resources/blog?${new URLSearchParams({ ...rawQuery, ...(query.category ? { category: query.category } : {}), cursor: next })}`}
           >
-            More posts <BlogIcon name="arrow" size={14} />
+            {query.q ? "Continue search" : "More posts"} <BlogIcon name="arrow" size={14} />
           </Link>
         )}
         </div>

@@ -18,10 +18,10 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  # Preserve the reviewed live consent-only Analytics activation.
-  # Visitors must still opt in; advertising consent remains denied.
+  # Preserve the current live Analytics activation flag.
+  # Analytics remains disabled; any later activation still requires visitor consent.
   - variable: NEXT_PUBLIC_FIREBASE_ANALYTICS_ENABLED
-    value: "true"
+    value: "false"
     availability:
       - BUILD
       - RUNTIME
@@ -61,7 +61,7 @@ env:
     value: hunpeolabs-prod.firebasestorage.app
     availability: [RUNTIME]
   - variable: BLOG_RATE_LIMIT_MODE
-    value: identity-global
+    value: "global"
     availability: [RUNTIME]
   - variable: BLOG_RATE_LIMIT_SECRET
     secret: hunpeolabs-blog-rate-limit@1
@@ -79,6 +79,13 @@ env:
     value: 91549992622-llbeq0jidte2j539j7qiasi8b8jj79ad.apps.googleusercontent.com
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED
-    value: "true"
+    value: "false"
     availability: [BUILD, RUNTIME]
 # identity-global does not depend on client IP headers.
+
+  - variable: BLOG_SCHEDULER_SERVICE_ACCOUNT
+    value: blog-publisher-scheduler@hunpeolabs-prod.iam.gserviceaccount.com
+    availability: [RUNTIME]
+  - variable: BLOG_SCHEDULER_AUDIENCE
+    value: https://hunpeolabs.com/api/internal/blog/scheduled
+    availability: [RUNTIME]

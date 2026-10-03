@@ -1,0 +1,38 @@
+{
+  "commit": "b2779cf64f6a3df7a3ac1498ae3b67f267628fb6",
+  "buildId": "Baj9BL0R27F8EJPiUfzoE",
+  "sourceHashes": {
+    "app/resources/blog/[slug]/page.tsx": "5532cd5504de552eecd542f3eea819362e9e1db9a553db872da9ccfd917e48f2",
+    "app/resources/blog/layout.tsx": "7a7ce0377b6abb679f006b3907c4dbed3eb53f2e5509fef32b99678d12aabbff",
+    "app/resources/blog/loading.tsx": "85b55cbe7621ca151107c625148d02f94f5fab15810b6de816fc852aed7cc2f1",
+    "app/resources/blog/[slug]/loading.tsx": "1d3b95588c66ac185978dc3fa2adffc1f60c3454882bfefbe13a1e6f284e5465",
+    "components/blog-loading.tsx": "a6023ef13c80f30cef9d44021e6f0b945ea041c4838b6abf13ca9638fc4a3435",
+    "components/blog-loading.module.css": "3b8c479bc08795117a44156aa1424f0ae67bd9a714e1595c522d41d7d15d0f2b",
+    "components/use-blog-session.ts": "4067d34bab6e1c3fa70db5a6bd1b3c9c2aa9a745cb782d1fd52cdfb0044467ba",
+    "components/google-one-tap.tsx": "8604f443ee66a397db5baecb0787364313e411591ef185c3d49402db8962f49b",
+    "lib/blog/public-read.ts": "f350e0fa6ca4faf6e67992da8445c56010677e557c4cd5f59ffa419e50504b91",
+    "lib/blog/session-store.ts": "ca61ff984ff30afaca8393f6d1b69c5c737438b5660c6f20bfb38adeaa960a6f",
+    "tests/unit/blog-session-store.test.ts": "35558de9eceb6a97f93bd022b75b4a3dd6cdb2c911602d3686590cbda5a0f0ea",
+    "tests/unit/blog-streaming.test.ts": "ad31c7cea95af6999be9b74d517c7556cb53e0fe3eda135f0ac146b1d4cef0e5",
+    "tests/e2e/blog-performance.spec.ts": "18b95e5b7d27fbf80698c0d528f8d1baae4b65266918a0bd18d3001582793232"
+  },
+  "benchmarkProfile": "390x844; configured CDP latency150ms, down1.6Mbps, up0.75Mbps, CPU4x; 5 cold and warm samples per route",
+  "revalidatedBuildId": "EgZDN5pJGW_iIzD9PP3zQ",
+  "measurementBoundary": "Measured build and measuredSourceHashes precede concurrent discovery/comment edits. Current sourceHashes include preserved discovery edits in article page and adapted streaming fixture. Benchmarks must not be attributed to the full current worktree.",
+  "measuredSourceHashes": {
+    "app/resources/blog/[slug]/page.tsx": "87db9d8ff61367046004b15debf1ed63dc1b1643086b4fca498dd0d2b2b2675e",
+    "app/resources/blog/layout.tsx": "7a7ce0377b6abb679f006b3907c4dbed3eb53f2e5509fef32b99678d12aabbff",
+    "app/resources/blog/loading.tsx": "85b55cbe7621ca151107c625148d02f94f5fab15810b6de816fc852aed7cc2f1",
+    "app/resources/blog/[slug]/loading.tsx": "1d3b95588c66ac185978dc3fa2adffc1f60c3454882bfefbe13a1e6f284e5465",
+    "components/blog-loading.tsx": "a6023ef13c80f30cef9d44021e6f0b945ea041c4838b6abf13ca9638fc4a3435",
+    "components/blog-loading.module.css": "3b8c479bc08795117a44156aa1424f0ae67bd9a714e1595c522d41d7d15d0f2b",
+    "components/use-blog-session.ts": "4067d34bab6e1c3fa70db5a6bd1b3c9c2aa9a745cb782d1fd52cdfb0044467ba",
+    "components/google-one-tap.tsx": "8604f443ee66a397db5baecb0787364313e411591ef185c3d49402db8962f49b",
+    "lib/blog/public-read.ts": "f350e0fa6ca4faf6e67992da8445c56010677e557c4cd5f59ffa419e50504b91",
+    "lib/blog/session-store.ts": "ca61ff984ff30afaca8393f6d1b69c5c737438b5660c6f20bfb38adeaa960a6f",
+    "tests/unit/blog-session-store.test.ts": "35558de9eceb6a97f93bd022b75b4a3dd6cdb2c911602d3686590cbda5a0f0ea",
+    "tests/unit/blog-streaming.test.ts": "c3eb28868b5c5aefbc6b1da3639d1e34ed6b36ae75531fc1e5444f9e0f246fa3",
+    "tests/e2e/blog-performance.spec.ts": "18b95e5b7d27fbf80698c0d528f8d1baae4b65266918a0bd18d3001582793232"
+  },
+  "revalidationWorkspace": "/private/tmp/hunpeolabs-performance-042/final-workspace"
+}

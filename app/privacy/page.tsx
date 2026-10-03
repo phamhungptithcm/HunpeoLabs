@@ -1,4 +1,5 @@
 import { createPageMetadata, SITE_CONTACT_EMAIL } from "@/app/seo";
+import { satsunicPrivacy } from "@/content/satsunic-privacy";
 import { PrivacySignal } from "@/components/privacy-signal";
 import { readContactDeliveryConfig } from "@/lib/contact";
 
@@ -89,7 +90,21 @@ export default function PrivacyPage() {
           </p>
         </div>
       </section>
-      {process.env.BLOG_ENABLED === 'true' && <section className="privacy-analytics" aria-labelledby="blog-privacy-title"><p className="mono">Blog accounts and discussion</p><h2 id="blog-privacy-title">Your public words, your private account.</h2><div><p>Firebase Authentication processes your email and sign-in details. A necessary session cookie keeps you signed in for up to one day. Your display name and approved comments are public; your email, account identifiers and reports are not included in public comment responses.</p><p>Comments are reviewed before publication. Editing a comment sends it back for review. Deleting a comment removes its public text and name; a placeholder may remain to preserve replies. Moderation records and backups follow our operational retention process. Contact us for account or data deletion requests.</p><p>Rate limits use short-lived hashed network identifiers to reduce spam. Sharing buttons open the service you choose only when clicked; that service handles what you choose to publish. Article view counts use a random, tab-scoped session identifier to avoid counting reloads twice. The server stores only a keyed hash with a 24-hour expiry and an aggregate count; raw network addresses and account identities are not stored in view statistics. Separately opened tabs may count as separate views. Share totals count sharing actions from this website, including copied links; they do not verify publication on social networks. Random action identifiers are stored only as keyed hashes with a 24-hour expiry to avoid duplicate requests. We do not send comment text or account identity to traffic analytics.</p></div></section>}
+      <section className="privacy-analytics" id="satsunic-extension" aria-labelledby="satsunic-privacy-title">
+        <p className="mono">Chrome extension</p>
+        <h2 id="satsunic-privacy-title">{satsunicPrivacy.title}</h2>
+        <div style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
+        <p>{satsunicPrivacy.introduction}</p>
+        {satsunicPrivacy.sections.map((section) => (
+          <article key={section.title}>
+            <h3>{section.title}</h3>
+            {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          </article>
+        ))}
+        <p>For privacy questions or deletion requests, email <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>.</p>
+        </div>
+      </section>
+      {process.env.BLOG_ENABLED === 'true' && <section className="privacy-analytics" aria-labelledby="blog-privacy-title"><p className="mono">Blog accounts and discussion</p><h2 id="blog-privacy-title">Your public words, your private account.</h2><div><p>Firebase Authentication processes your email and sign-in details. A necessary session cookie keeps you signed in for up to one day. Your display name and approved comments are public; your email, account identifiers and reports are not included in public comment responses.</p><p>Comments and edits pass automatic spam checks. Ordinary comments can appear immediately; suspicious content is held for moderator review. Deleting a comment removes its public text and name; a placeholder may remain to preserve replies. Server-only anti-spam records contain account-linked moderation counters and up to 20 recent comment fingerprints and submission times. Fingerprints older than 24 hours are ignored and pruned on the next submission or edit; inactive records remain until the account erasure process removes them. Moderation records and backups follow our operational retention process. Contact us for account or data deletion requests.</p><p>Rate limits use per-account and shared site budgets to reduce spam; verified network identifiers may be hashed when trusted ingress is configured. Sharing buttons open the service you choose only when clicked; that service handles what you choose to publish. Article view counts use a random, tab-scoped session identifier to avoid counting reloads twice. The server stores only a keyed hash with a 24-hour expiry and an aggregate count; raw network addresses and account identities are not stored in view statistics. Separately opened tabs may count as separate views. Share totals count sharing actions from this website, including copied links; they do not verify publication on social networks. Random action identifiers are stored only as keyed hashes with a 24-hour expiry to avoid duplicate requests. We do not send comment text or account identity to traffic analytics.</p><p>For Studio editors, unsaved drafts may be kept in local storage on this device, separately for each account and article. A successful save clears the local copy. Recovery copies older than seven days are ignored and cleared when that article is opened again. They are not shared across devices.</p></div></section>}
     </main>
   );
 }

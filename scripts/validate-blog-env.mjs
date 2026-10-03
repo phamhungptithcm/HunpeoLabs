@@ -21,7 +21,7 @@ if (process.env.BLOG_ENABLED !== "true") {
   console.log("Blog disabled");
   process.exit(0);
 }
-if (!["identity-global", "trusted-ingress"].includes(process.env.BLOG_RATE_LIMIT_MODE))
+if (!["identity-global", "global", "trusted-ingress"].includes(process.env.BLOG_RATE_LIMIT_MODE))
   throw new Error("Invalid rate-limit mode");
 if (process.env.BLOG_RATE_LIMIT_MODE === "trusted-ingress") required.push("BLOG_TRUSTED_IP_HEADER");
 const missing = required.filter((k) => !process.env[k]);
