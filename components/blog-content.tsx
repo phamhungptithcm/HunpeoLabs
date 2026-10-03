@@ -1,3 +1,4 @@
+import { imageDimension } from "@/lib/blog/editor-image";
 import { BlogCodeBlock } from "./blog-code-block";
 import { BlogHeading } from "./blog-heading";
 import { codeSource } from "@/lib/blog/discovery";
@@ -66,7 +67,7 @@ function render(n: RichNode, key: string): ReactNode {
       return <hr key={key} />;
     case "image":
       return (
-        <figure key={key}>
+        <figure key={key} className="article-image" style={imageDimension(n.attrs?.width) ? {width: imageDimension(n.attrs?.width)!, maxWidth: "100%", marginLeft: "auto", marginRight: "auto"} : undefined}>
           {/* Auth-checked media cannot use a public optimization cache. */}
           <BlogImageViewer
             vi={false}

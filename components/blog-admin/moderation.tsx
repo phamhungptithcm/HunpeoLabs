@@ -1,5 +1,5 @@
 "use client";
-import { BlogToast } from "./toast";
+import { BlogToast, useToastNotice } from "./toast";
 import { useState } from "react";
 import Link from "next/link";
 import { request, message } from "./client";
@@ -32,7 +32,8 @@ export function Moderation({
   status?: string;
   postTitles: Record<string, string>;
 }) {
-  const [notice, setNotice] = useState(""),
+  const { notice, noticeKind, setNotice } = useToastNotice();
+  const
     [selected, setSelected] = useState(0),
     [busy, setBusy] = useState(false),
     [confirm, setConfirm] = useState<"rejected" | "hidden" | null>(null);
@@ -47,7 +48,7 @@ export function Moderation({
       });
       window.location.reload();
     } catch (e) {
-      setNotice(message(e));
+      setNotice(message(e), "error");
     } finally {
       setBusy(false);
       setConfirm(null);
@@ -62,7 +63,7 @@ export function Moderation({
         <h1>Giữ cuộc trò chuyện có giá trị.</h1>
         <p>Duyệt phản hồi, trao đổi và quản lý các báo cáo từ độc giả.</p>
       </div>
-      {notice && <BlogToast text={notice} onClose={() => setNotice("")} />}
+      {notice && <BlogToast text={notice} kind={noticeKind} onClose={() => setNotice("")} />}
       <section className="panel">
         <div className="panel-top">
           <nav className="panel-tabs" aria-label="Trạng thái bình luận">
@@ -120,7 +121,7 @@ export function Moderation({
                             );
                             window.location.reload();
                           } catch (e) {
-                            setNotice(message(e));
+                            setNotice(message(e), "error");
                           } finally {
                             setBusy(false);
                           }
@@ -142,7 +143,7 @@ export function Moderation({
                           );
                           window.location.reload();
                         } catch (e) {
-                          setNotice(message(e));
+                          setNotice(message(e), "error");
                         } finally {
                           setBusy(false);
                         }

@@ -1,0 +1,5 @@
+# Semantic toast colors — v1
+Human direct request 2026-10-03: error red border, success green, info blue and corresponding other states. Approved delta to TOAST050.
+Intelligence DEGRADED: stale indexes; bounded source confirms four shared toast consumers and taxonomy callbacks.
+Plan: explicit typed kind (info/success/error/warning), matching border/icon/progress colors and glyph; default info preserves compatibility. Add shared notice hook to atomically store text and kind. Classify success/catch/validation at actual event call sites; never infer severity from message text. Extend taxonomy notify callback to carry kind. Countdown pause/resume unchanged. Errors use alert; others status. No auth/API/storage/dependency/deploy changes. Preserve concurrent image work.
+Paths: toast.tsx, dashboard.tsx, moderation.tsx, settings.tsx, editor.tsx, taxonomy-fields.tsx, styles/blog-design.css. Checks: focused lint, typecheck, existing timer regressions, CSS parse, final review; rendered acceptance remains blocked due prior browser restriction.

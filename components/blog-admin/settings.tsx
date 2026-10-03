@@ -1,5 +1,5 @@
 "use client";
-import { BlogToast } from "./toast";
+import { BlogToast, useToastNotice } from "./toast";
 import { googleAvatar } from "@/lib/blog/profile";
 import { progressFetch } from "@/lib/ui/action-progress";
 import { useState, useRef, useSyncExternalStore } from "react";
@@ -48,7 +48,8 @@ export function Settings({
   const [failedPhoto, setFailedPhoto] = useState("");
   const googlePhoto = googleAvatar(viewerAvatar);
   const photo = useRef<HTMLInputElement>(null);
-  const [notice, setNotice] = useState(""),
+  const { notice, noticeKind, setNotice } = useToastNotice();
+  const
     [busy, setBusy] = useState(false),
     [selected, setSelected] = useState(authors[0]?.id ?? ""),
     [name, setName] = useState(authors[0]?.name ?? ""),
@@ -73,10 +74,10 @@ export function Settings({
       const saved = updated.find((a) => a.id === authorId);
       setName(saved?.name ?? name.trim());
       setBio(saved?.bio ?? bio.trim());
-      setNotice("Đã lưu hồ sơ tác giả.");
+      setNotice("Đã lưu hồ sơ tác giả.", "success");
       router.refresh();
     } catch (e) {
-      setNotice(message(e));
+      setNotice(message(e), "error");
     } finally {
       setBusy(false);
     }
@@ -91,7 +92,7 @@ export function Settings({
           <span className="settings-heading__email">{viewerEmail}</span>
         </div>
       </div>
-      {notice && <BlogToast text={notice} onClose={() => setNotice("")} />}
+      {notice && <BlogToast text={notice} kind={noticeKind} onClose={() => setNotice("")} />}
       <nav className="settings-sections" aria-label="Các mục cài đặt">
         {[["authors", "Tác giả"], ["taxonomy", "Chuyên mục"], ["members", "Thành viên"], ["export", "Xuất nội dung"]].map(([id, label]) => (
           <button key={id} type="button" aria-pressed={section === id} onClick={() => { setSection(id); setNotice(""); }}>{label}</button>
@@ -152,10 +153,10 @@ export function Settings({
                   const body = await r.json();
                   if (!r.ok) throw new Error(body.error);
                   setAuthorList(await request<Entry[]>("/api/admin/blog/authors"));
-                  setNotice("Đã đổi ảnh đại diện.");
+                  setNotice("Đã đổi ảnh đại diện.", "success");
                   router.refresh();
                 } catch (e) {
-                  setNotice(message(e));
+                  setNotice(message(e), "error");
                 } finally {
                   setBusy(false);
                   e.target.value = "";
@@ -354,7 +355,7 @@ export function Settings({
                 setDialog(null);
                 router.refresh();
               } catch (e) {
-                setNotice(message(e));
+                setNotice(message(e), "error");
                 setRemoving(null);
               } finally {
                 setBusy(false);

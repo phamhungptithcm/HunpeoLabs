@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import { request, message } from "@/components/blog-admin/client";
+import type { ToastKind } from "@/components/blog-admin/toast";
 import { addTag, MAX_TAGS, taxonomyKey } from "@/lib/blog/taxonomy-input";
 
 export function TaxonomyFields({ category, categories, canCreate, tags, onCategory, onTags, notify, onPending }: {
@@ -10,7 +11,7 @@ export function TaxonomyFields({ category, categories, canCreate, tags, onCatego
   tags: string[];
   onCategory: (name: string) => void;
   onTags: (tags: string[]) => void;
-  notify: (text: string) => void;
+  notify: (text: string, kind: ToastKind) => void;
   onPending: (pending: boolean) => void;
 }) {
   const id = useId();
@@ -36,14 +37,14 @@ export function TaxonomyFields({ category, categories, canCreate, tags, onCatego
     if (pending.current) return;
     const name = value.trim();
     if (!name) { setCategoryText(category); setOpen(false); return; }
-    if (name.length > 80) { notify("Tên chuyên mục tối đa 80 ký tự."); return; }
+    if (name.length > 80) { notify("Tên chuyên mục tối đa 80 ký tự.", "warning"); return; }
     const existing = options.find((option) => taxonomyKey(option) === taxonomyKey(name));
     if (existing || taxonomyKey(name) === taxonomyKey(category)) {
       const selected = existing ?? category;
       setCategoryText(selected); if (selected !== category) onCategory(selected); setOpen(false); return;
     }
     if (!canCreate) {
-      notify("Chỉ admin được tạo chuyên mục mới. Hãy chọn chuyên mục có sẵn.");
+      notify("Chỉ admin được tạo chuyên mục mới. Hãy chọn chuyên mục có sẵn.", "warning");
       setOpen(false); return;
     }
     pending.current = true; onPending(true); setCreating(true); setOpen(false);
@@ -51,16 +52,16 @@ export function TaxonomyFields({ category, categories, canCreate, tags, onCatego
       const result = await request<{ name: string }>("/api/admin/blog/taxonomy", "POST", { name, createOnly: true });
       setOptions((current) => current.some((option) => taxonomyKey(option) === taxonomyKey(result.name)) ? current : [...current, result.name]);
       setCategoryText(result.name); onCategory(result.name);
-      notify("Đã chọn chuyên mục.");
+      notify("Đã chọn chuyên mục.", "success");
     } catch (error) {
       notify(error instanceof Error && error.message === "CATEGORY_LIMIT"
         ? "Danh sách chuyên mục đã đạt giới hạn. Hãy chọn mục có sẵn."
-        : message(error));
+        : message(error), "error");
     } finally { pending.current = false; onPending(false); setCreating(false); }
   }
   function commitTag() {
     const result = addTag(tags, tagText);
-    if (result.error) { notify(result.error); return; }
+    if (result.error) { notify(result.error, "warning"); return; }
     if (result.tags && result.tags !== tags) onTags(result.tags);
     setTagText("");
   }

@@ -1,4 +1,5 @@
 "use client";
+import { fetchImageFile, imageDimension, singleImageUrl, transferFiles } from "@/lib/blog/editor-image";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { DiagramCodeBlock } from "./diagram-code-block";
@@ -11,9 +12,19 @@ import { safeUrl } from "@/lib/blog/schema";
 import { BlogIcon } from "@/components/blog-admin/ui";
 import { BlogDialog } from "@/components/blog-admin/dialog";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { TextSelection, type SelectionBookmark } from "@tiptap/pm/state";
+import { closeHistory } from "@tiptap/pm/history";
+import { NodeSelection, TextSelection, type SelectionBookmark } from "@tiptap/pm/state";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import { blockTransaction, imageFileError, matchingSlashItems, slashRange, type SlashId } from "@/lib/blog/editor-actions";
+const EditorImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {default:null, parseHTML:element => imageDimension(Number(element.getAttribute('width')))},
+      height: {default:null, parseHTML:element => imageDimension(Number(element.getAttribute('height')))},
+    };
+  },
+});
 export function RichEditor({
   body,
   onChange,
@@ -40,11 +51,13 @@ export function RichEditor({
   const dismissedSlash = useRef<number | null>(null);
   const imageBookmark = useRef<SelectionBookmark | null>(null);
   const pendingUpload = useRef(false);
+  const [editingImage, setEditingImage] = useState(false);
   const alive = useRef(true);
+  const imageDownload = useRef<AbortController | null>(null);
   const commands = useRef<(id: SlashId, instance: TiptapEditor) => void>(() => {});
   const pickImage = useRef<() => void>(() => {});
-  const files = useRef<(file: File, instance: TiptapEditor, pos?: number) => void>(() => {});
-  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  const files = useRef<(file: File | string, instance: TiptapEditor, pos?: number) => void>(() => {});
+  useEffect(() => { alive.current = true; return () => { alive.current = false; imageDownload.current?.abort(); }; }, []);
   useEffect(() => { selectedCommand.current = commandIndex; }, [commandIndex]);
   useEffect(() => {
     if (!focusMode) return;
@@ -85,13 +98,20 @@ export function RichEditor({
         codeBlock: false,
         link: { openOnClick: false },
       }),
-      Image,
+      EditorImage.configure({ resize: { enabled: true, directions: ["bottom-left", "bottom-right"], minWidth: 48, minHeight: 24, alwaysPreserveAspectRatio: true } }),
       DiagramCodeBlock,
       TableKit.configure({ table: { resizable: false } }),
     ],
     content: body,
     immediatelyRender: false,
     editorProps: {
+      transformPastedHTML: html => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        doc.querySelectorAll('img').forEach(img => {
+          if (!/^\/api\/blog\/media\/[a-zA-Z0-9_-]+$/.test(img.getAttribute('src') ?? '')) img.remove();
+        });
+        return doc.body.innerHTML;
+      },
       handleKeyDown: (view, event) => {
         if (event.isComposing) return false;
         const range = slashRange(view.state);
@@ -107,23 +127,32 @@ export function RichEditor({
         return false;
       },
       handleDrop: (view, event, _slice, moved) => {
-        if (moved || !event.dataTransfer?.files.length || !editor) return false;
+        if (moved || !event.dataTransfer || !editor) return false;
+        const dropped = transferFiles(event.dataTransfer);
+        const src = singleImageUrl(event.dataTransfer.getData('text/html'), event.dataTransfer.getData('text/uri-list') || event.dataTransfer.getData('text/plain'));
+        if (!dropped.length && !src) {
+          if (event.dataTransfer.getData('text/html').includes('<img')) { event.preventDefault(); onError('Kéo từng ảnh hoặc file ảnh vào bài nhé.'); return true; }
+          return false;
+        }
         event.preventDefault();
-        if (event.dataTransfer.files.length !== 1) { onError('Thêm từng ảnh một nhé.'); return true; }
+        if (dropped.length > 1) { onError('Thêm từng ảnh một nhé.'); return true; }
         const pos = view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos;
-        files.current(event.dataTransfer.files[0], editor, pos);
+        files.current(dropped[0] || src!, editor, pos);
         return true;
       },
       handlePaste: (view, event) => {
-        const pastedFiles = event.clipboardData?.files;
-        const clipboardText = event.clipboardData?.getData('text/plain').trim();
-        const clipboardHtml = event.clipboardData?.getData('text/html') ?? '';
-        const mixedText = clipboardHtml ? new DOMParser().parseFromString(clipboardHtml, 'text/html').body.textContent?.trim() : '';
-        if (pastedFiles?.length && editor && !clipboardText && !mixedText) {
+        const data = event.clipboardData;
+        const pasted = data ? transferFiles(data) : [];
+        const src = singleImageUrl(data?.getData('text/html') ?? '', data?.getData('text/plain')?.trim() ?? '');
+        if (editor && (pasted.length || src)) {
           event.preventDefault();
-          if (pastedFiles.length !== 1) onError('Thêm từng ảnh một nhé.');
-          else files.current(pastedFiles[0], editor);
+          if (pasted.length > 1) onError('Thêm từng ảnh một nhé.');
+          else files.current(pasted[0] || src!, editor);
           return true;
+        }
+        if (data?.getData('text/html').includes('<img')) {
+          const doc = new DOMParser().parseFromString(data.getData('text/html'), 'text/html');
+          if (Array.from(doc.querySelectorAll('img')).some(img => !/^\/api\/blog\/media\/[a-zA-Z0-9_-]+$/.test(img.getAttribute('src') ?? ''))) onError('Ảnh từ trang khác cần dán riêng hoặc kéo file vào bài.');
         }
         const source = pastedMermaid(event.clipboardData?.getData("text/plain") ?? "");
         if (!source) return false;
@@ -145,22 +174,34 @@ export function RichEditor({
   });
   useEffect(() => {
     if (!editor) return;
-    async function chooseImage(file?: File, pos?: number) {
+    async function chooseImage(input?: File | string, pos?: number) {
       if (pendingUpload.current || imageBookmark.current) { onError('Hoàn tất ảnh đang chọn trước nhé.'); return; }
-      if (file) { const error = imageFileError(file); if (error) { onError(error); return; } }
+      if (input instanceof File) { const error = imageFileError(input); if (error) { onError(error); return; } }
       if (!editor || editor.isDestroyed) return;
       if (pos !== undefined) editor.view.dispatch(editor.state.tr.setSelection(TextSelection.near(editor.state.doc.resolve(pos))));
       imageBookmark.current = editor.state.selection.getBookmark();
+      setEditingImage(false);
       pendingUpload.current = true; setUploading(true);
       try {
+        imageDownload.current = new AbortController();
+        const file = typeof input === 'string' ? await fetchImageFile(input, imageDownload.current.signal) : input;
+        if (file) { const error = imageFileError(file); if (error) throw new Error(error); }
+        if (!alive.current || editor.isDestroyed) return;
         const src = file ? await onUploadImage(file) : await onImage();
         if (!alive.current || editor.isDestroyed) return;
-        if (src) setImage({ src, alt: '' });
+        if (src && input) {
+          const selection = imageBookmark.current?.resolve(editor.state.doc);
+          if (selection) editor.view.dispatch(editor.state.tr.setSelection(selection));
+          editor.view.dispatch(closeHistory(editor.state.tr));
+          if (selection instanceof NodeSelection) editor.chain().focus().insertContentAt(selection.to, {type:'image',attrs:{src,alt:''}}).run();
+          else editor.chain().focus().setImage({src, alt: ''}).run();
+          imageBookmark.current = null;
+        } else if (src) setImage({ src, alt: '' });
         else imageBookmark.current = null;
       } catch (error) {
         imageBookmark.current = null;
         if (alive.current) onError(error instanceof Error ? error.message : 'Không tải được ảnh. Thử lại nhé.');
-      } finally { pendingUpload.current = false; if (alive.current) setUploading(false); }
+      } finally { imageDownload.current = null; pendingUpload.current = false; if (alive.current) setUploading(false); }
     }
     pickImage.current = () => { void chooseImage(); };
     files.current = (file, _instance, pos) => { void chooseImage(file, pos); };
@@ -182,7 +223,7 @@ export function RichEditor({
         case 'table': chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); break;
       }
     };
-    const move = () => setSlash(null);
+    const move = () => { setSlash(null); if (!editor.isDestroyed) editor.view.dispatch(editor.state.tr.setMeta("editorImageMenu", "updatePosition")); };
     window.addEventListener('scroll', move, true);
     window.addEventListener('resize', move);
     return () => { window.removeEventListener('scroll', move, true); window.removeEventListener('resize', move); };
@@ -216,6 +257,20 @@ export function RichEditor({
           <button type="button" aria-label="Gạch ngang" aria-pressed={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}><s>S</s></button>
           <button type="button" aria-label="Mã nội dòng" aria-pressed={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()}><BlogIcon name="code" size={15} /></button>
           <button type="button" aria-label="Chèn liên kết" aria-pressed={editor.isActive("link")} onClick={() => { setLinkError(""); setLink(String(editor.getAttributes("link").href ?? "")); }}><BlogIcon name="link" size={15} /></button>
+        </div>
+      </BubbleMenu>
+      <BubbleMenu editor={editor} pluginKey="editorImageMenu" className="editor-image-tools" options={{strategy:"fixed",placement:"top",shift:{padding:8},flip:true}} shouldShow={({editor}) => editor.isActive('image')}>
+        <div role="toolbar" aria-label="Chỉnh ảnh" onMouseDown={event => event.preventDefault()}>
+          {[50,75,100].map(percent => <button type="button" key={percent} aria-label={`Chiều rộng ảnh ${percent}%`} onClick={() => {
+            const node = editor.view.nodeDOM(editor.state.selection.from);
+            const img = node instanceof HTMLElement ? (node instanceof HTMLImageElement ? node : node.querySelector('img')) : null;
+            const available = writingRoot.current?.querySelector('.tiptap')?.clientWidth ?? 600;
+            const width = Math.round(available * percent / 100);
+            const ratio = img?.naturalWidth && img.naturalHeight ? img.naturalHeight / img.naturalWidth : Number(editor.getAttributes('image').height) / Number(editor.getAttributes('image').width);
+            editor.chain().focus().updateAttributes('image', {width, height: Number.isFinite(ratio) && ratio > 0 ? Math.max(1, Math.round(width * ratio)) : null}).run();
+          }}>{percent}%</button>)}
+          <button type="button" onClick={() => editor.chain().focus().updateAttributes('image', {width:null,height:null}).run()}>Tự cân</button>
+          <button type="button" onClick={() => { setEditingImage(true); imageBookmark.current = editor.state.selection.getBookmark(); setImage({src:String(editor.getAttributes('image').src),alt:String(editor.getAttributes('image').alt ?? '')}); }}>Mô tả</button>
         </div>
       </BubbleMenu>
       <div className="formatbar" role="toolbar" aria-label="Định dạng nội dung">
@@ -352,7 +407,7 @@ export function RichEditor({
       </div>
       {image && (
         <BlogDialog
-          title="Thêm ảnh vào bài"
+          title={editingImage ? "Mô tả ảnh" : "Thêm ảnh vào bài"}
           iconClose
           onClose={() => { setImage(null); imageBookmark.current = null; }}
         >
@@ -374,7 +429,8 @@ export function RichEditor({
               try {
                 const selection = imageBookmark.current?.resolve(editor.state.doc);
                 if (selection) editor.view.dispatch(editor.state.tr.setSelection(selection));
-                editor.chain().focus().setImage(image).run();
+                if (editingImage) editor.chain().focus().updateAttributes("image", {alt:image.alt}).run();
+                else editor.chain().focus().setImage(image).run();
                 imageBookmark.current = null;
                 setImage(null);
               } catch { onError('Vị trí chèn đã thay đổi. Chọn lại vị trí rồi thử nhé.'); }
@@ -395,7 +451,7 @@ export function RichEditor({
             <p className="private-note">
               Mô tả giúp người dùng trình đọc màn hình hiểu nội dung ảnh.
             </p>
-            <button className="button primary">Chèn ảnh</button>
+            <button className="button primary">{editingImage ? "Lưu" : "Chèn ảnh"}</button>
           </form>
         </BlogDialog>
       )}

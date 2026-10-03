@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { imageDimension } from "./editor-image";
 
 export class BlogError extends Error {
   constructor(
@@ -97,6 +98,12 @@ export function validateBody(input: unknown): RichNode {
       attrs.src = node.attrs.src;
       attrs.alt = String(node.attrs.alt ?? "").slice(0, 300);
       attrs.title = String(node.attrs.title ?? "").slice(0, 300);
+      for (const key of ["width", "height"]) {
+        if (node.attrs[key] === undefined || node.attrs[key] === null) continue;
+        const dimension = imageDimension(node.attrs[key]);
+        if (dimension === null) throw new BlogError(400, "INVALID_IMAGE_SIZE");
+        attrs[key] = dimension;
+      }
     }
     const marks = (node.marks ?? []).map((m) => {
       if (!m || typeof m !== "object") throw new BlogError(400, "INVALID_MARK");

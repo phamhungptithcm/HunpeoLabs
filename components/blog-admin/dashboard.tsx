@@ -1,5 +1,5 @@
 "use client";
-import { BlogToast } from "./toast";
+import { BlogToast, useToastNotice } from "./toast";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { beginProgress } from "@/lib/ui/action-progress";
 import Link from "next/link";
@@ -23,7 +23,7 @@ export function Dashboard({
   authors: Record<string, string>;
 }) {
   const router = useRouter();
-  const [notice, setNotice] = useState("");
+  const { notice, noticeKind, setNotice } = useToastNotice();
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   useEffect(() => {
@@ -53,7 +53,7 @@ export function Dashboard({
               const p = await request<Post>("/api/admin/blog/posts", "POST");
               router.push(`/admin/blog/${p.id}`);
             } catch (e) {
-              setNotice(message(e));
+              setNotice(message(e), "error");
               setCreating(false);
             }
           }}
@@ -102,7 +102,7 @@ export function Dashboard({
           )}
         </div>
       </div>
-      {notice && <BlogToast text={notice} onClose={() => setNotice("")} />}
+      {notice && <BlogToast text={notice} kind={noticeKind} onClose={() => setNotice("")} />}
       <section className="panel">
         <div className="panel-top">
           <nav className="panel-tabs" aria-label="Trạng thái bài">
@@ -204,8 +204,8 @@ export function Dashboard({
                       const current = await request<Post>(`/api/admin/blog/posts/${p.id}`);
                       if (current.state !== 'archived') { setNotice('Bài này đã được khôi phục.'); router.refresh(); return; }
                       await request(`/api/admin/blog/posts/${p.id}`, 'PUT', { draft:current, revision:current.revision });
-                      setNotice('Đã khôi phục bản nháp.'); router.refresh();
-                    } catch (error) { setNotice(message(error)); }
+                      setNotice('Đã khôi phục bản nháp.', 'success'); router.refresh();
+                    } catch (error) { setNotice(message(error), "error"); }
                     finally { setRestoringId(null); }
                   }}><BlogIcon name={restoringId === p.id ? 'clock' : 'history'} size={16} /></button> : <Link
                     aria-label={`Sửa ${p.title || "bài viết"}`}

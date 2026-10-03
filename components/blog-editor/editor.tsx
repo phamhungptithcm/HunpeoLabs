@@ -4,7 +4,7 @@ import { TaxonomyFields } from "./taxonomy-fields";
 import { parseRecovery, recoveryKey } from "@/lib/blog/draft-recovery";
 import { SchedulePicker } from "./schedule-picker";
 import { localScheduleInstant, validScheduleTime } from "@/lib/blog/schedule-time";
-import { BlogToast } from "@/components/blog-admin/toast";
+import { BlogToast, useToastNotice } from "@/components/blog-admin/toast";
 import { progressFetch } from "@/lib/ui/action-progress";
 import {
   useCallback,
@@ -81,16 +81,16 @@ export function Editor({
   const [sourceText, setSourceText] = useState(
     initial.sources.map((s) => `${s.title} | ${s.url}`).join("\n"),
   );
-  const [notice, setNotice] = useState("");
+  const { notice, noticeKind, setNotice } = useToastNotice();
   const [taxonomyToastRevision, setTaxonomyToastRevision] = useState(0);
-  const dismissNotice = useCallback(() => setNotice(""), []);
+  const dismissNotice = useCallback(() => setNotice(""), [setNotice]);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleReady, setScheduleReady] = useState(false);
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   useEffect(() => {
     if (!publisher) return;
-    void request<{ dueAt: string | null; error: string | null }>(`/api/admin/blog/posts/${initial.id}/schedule`).then(r => { setScheduledAt(r.dueAt); if (r.error) setNotice(`Bài chưa được đăng theo lịch. ${message(new Error(r.error))}`); }).catch(() => {});
-  }, [initial.id, publisher]);
+    void request<{ dueAt: string | null; error: string | null }>(`/api/admin/blog/posts/${initial.id}/schedule`).then(r => { setScheduledAt(r.dueAt); if (r.error) setNotice(`Bài chưa được đăng theo lịch. ${message(new Error(r.error))}`, "error"); }).catch(() => {});
+  }, [initial.id, publisher, setNotice]);
   const [publicationAction, setPublicationAction] = useState<"publish" | "schedule" | null>(null);
   const publicationLock = useRef(false);
   const leavingEditor = useRef(false);
@@ -102,7 +102,7 @@ export function Editor({
   async function schedulePublication() {
     if (publicationLock.current || busy) return;
     const instant = localScheduleInstant(scheduleDate);
-    if (!instant || !validScheduleTime(instant)) { setNotice("Chọn giờ đăng sau hiện tại ít nhất một phút."); return; }
+    if (!instant || !validScheduleTime(instant)) { setNotice("Chọn giờ đăng sau hiện tại ít nhất một phút.", "warning"); return; }
     publicationLock.current = true;
     setPublicationAction("schedule");
     try {
@@ -111,11 +111,11 @@ export function Editor({
       if (!saved || generation.current !== before) return;
       setBusy(true);
       await request(`/api/admin/blog/posts/${post.id}/schedule`, "POST", { revision: saved.revision, dueAt: instant });
-      if (generation.current !== before) { setNotice("Đã lên lịch. Lưu thay đổi vừa sửa trước khi rời bài viết."); return; }
+      if (generation.current !== before) { setNotice("Đã lên lịch. Lưu thay đổi vừa sửa trước khi rời bài viết.", "warning"); return; }
       leavingEditor.current = true;
       router.push("/admin/blog");
       router.refresh();
-    } catch (e) { setNotice(message(e)); }
+    } catch (e) { setNotice(message(e), "error"); }
     finally { if (!leavingEditor.current) { setBusy(false); setPublicationAction(null); publicationLock.current = false; } }
   }
   const [dirty, setDirty] = useState(false);
@@ -189,7 +189,7 @@ export function Editor({
     setRecovery(null); setRecoveryGeneration(n => n + 1);
     if (recovery.revision !== initial.revision) {
       conflicted.current = true;
-      setNotice("Bản trên máy chủ đã thay đổi. Sao chép nội dung phục hồi trước khi tải lại để đối chiếu.");
+      setNotice("Bản trên máy chủ đã thay đổi. Sao chép nội dung phục hồi trước khi tải lại để đối chiếu.", "warning");
     }
   }
   const save = useCallback(
@@ -222,12 +222,12 @@ export function Editor({
           setDirty(false);
           try { localStorage.removeItem(recoveryKey(viewerUid, initial.id)); } catch { /* Optional local backup. */ }
         }
-        setNotice("Đã lưu.");
+        setNotice("Đã lưu.", "success");
         return saved;
       } catch (e) {
         if (e instanceof Error && e.message === "REVISION_CONFLICT")
           conflicted.current = true;
-        setNotice(message(e));
+        setNotice(message(e), "error");
         return null;
       } finally {
         saving.current = false;
@@ -236,7 +236,7 @@ export function Editor({
         setBusy(false);
       }
     },
-    [initial.id, viewerUid],
+    [initial.id, viewerUid, setNotice],
   );
   useEffect(() => {
     if (!dirty) return;
@@ -263,7 +263,7 @@ export function Editor({
       const before = generation.current;
       const saved = dirty ? await save() : current.current;
       if (!saved || generation.current !== before) {
-        setNotice("Bạn vừa sửa thêm nội dung. Lưu lại trước khi đăng.");
+        setNotice("Bạn vừa sửa thêm nội dung. Lưu lại trước khi đăng.", "warning");
         return;
       }
       setBusy(true);
@@ -274,8 +274,8 @@ export function Editor({
       if (generation.current === before) {
         if (action === "publish") { leavingEditor.current = true; router.push("/admin/blog"); router.refresh(); }
         else window.location.reload();
-      } else setNotice("Đã cập nhật bài đăng. Phần vừa sửa thêm vẫn là bản nháp.");
-    } catch (e) { setNotice(message(e)); }
+      } else setNotice("Đã cập nhật bài đăng. Phần vừa sửa thêm vẫn là bản nháp.", "warning");
+    } catch (e) { setNotice(message(e), "error"); }
     finally { if (!leavingEditor.current) { setBusy(false); setPublicationAction(null); publicationLock.current = false; } }
   }
   async function upload(f: File) {
@@ -295,7 +295,7 @@ export function Editor({
       );
       setModal("history");
     } catch (e) {
-      setNotice(message(e));
+      setNotice(message(e), "error");
     }
   }
   const authorName =
@@ -385,20 +385,20 @@ export function Editor({
                     prepare: async () => {
                       await pendingSave.current;
                       if (conflicted.current) {
-                        setNotice("Bài đã thay đổi ở nơi khác. Lưu bản đang sửa trước khi xem trước.");
+                        setNotice("Bài đã thay đổi ở nơi khác. Lưu bản đang sửa trước khi xem trước.", "warning");
                         return false;
                       }
                       const before = generation.current;
                       const saved = savedGeneration.current === before ? current.current : await save();
                       if (!saved) return false;
                       if (generation.current !== before) {
-                        setNotice("Bạn vừa sửa thêm nội dung. Mở xem trước lại nhé.");
+                        setNotice("Bạn vừa sửa thêm nội dung. Mở xem trước lại nhé.", "warning");
                         return false;
                       }
                       return true;
                     },
                     navigate: (url) => router.push(url),
-                    onError: (error) => setNotice(message(error)),
+                    onError: (error) => setNotice(message(error), "error"),
                   });
                 } finally {
                   previewLock.current = false;
@@ -429,8 +429,8 @@ export function Editor({
             )}
           </div>
         </header>
-        {notice && <BlogToast key={taxonomyToastRevision} text={notice} onClose={dismissNotice} />}
-        {scheduledAt && <div className="notice">Đăng lúc {new Date(scheduledAt).toLocaleString("vi")} <button type="button" disabled={busy} onClick={async () => { setBusy(true); try { await request(`/api/admin/blog/posts/${post.id}/schedule`, "DELETE"); setScheduledAt(null); setNotice("Đã hủy lịch đăng."); } catch(e) { setNotice(message(e)); } finally { setBusy(false); } }}>Hủy lịch</button></div>}
+        {notice && <BlogToast key={taxonomyToastRevision} text={notice} kind={noticeKind} onClose={dismissNotice} />}
+        {scheduledAt && <div className="notice">Đăng lúc {new Date(scheduledAt).toLocaleString("vi")} <button type="button" disabled={busy} onClick={async () => { setBusy(true); try { await request(`/api/admin/blog/posts/${post.id}/schedule`, "DELETE"); setScheduledAt(null); setNotice("Đã hủy lịch đăng.", "success"); } catch(e) { setNotice(message(e), "error"); } finally { setBusy(false); } }}>Hủy lịch</button></div>}
         {recovery && <div className="notice" role="status">
           Có nội dung chưa lưu trên thiết bị này.{recovery.revision !== initial.revision ? " Bản trên máy chủ đã thay đổi; kiểm tra kỹ trước khi lưu." : ""}
           <button type="button" disabled={dirty || busy} onClick={restoreRecovery}>Phục hồi</button>
@@ -509,7 +509,7 @@ export function Editor({
                 body={post.body}
                 onChange={(b) => update("body", b)}
                 onUploadImage={async (imageFile) => (await upload(imageFile)).url}
-                onError={(error) => setNotice(error)}
+                onError={(error) => setNotice(error, "error")}
                 onImage={() =>
                   new Promise((resolve) => {
                     setCoverUpload(false);
@@ -530,9 +530,9 @@ export function Editor({
                     const m = await upload(f);
                     if (coverUpload) update("coverId", m.id);
                     else resolveUpload.current?.(m.url);
-                    setNotice("Đã tải ảnh lên.");
+                    setNotice("Đã tải ảnh lên.", "success");
                   } catch (e) {
-                    setNotice(message(e));
+                    setNotice(message(e), "error");
                     resolveUpload.current?.(null);
                   } finally {
                     e.target.value = "";
@@ -638,7 +638,7 @@ export function Editor({
               tags={post.tags}
               onCategory={(name) => update("category", name)}
               onTags={(tags) => update("tags", tags)}
-              notify={(text) => { setNotice(text); setTaxonomyToastRevision((value) => value + 1); }}
+              notify={(text, kind) => { setNotice(text, kind); setTaxonomyToastRevision((value) => value + 1); }}
               onPending={(pending) => { categoryPending.current = pending; }}
             />
             <div className="field-rule" />
@@ -802,7 +802,7 @@ export function Editor({
                         );
                         window.location.reload();
                       } catch (e) {
-                        setNotice(message(e));
+                        setNotice(message(e), "error");
                         setModal(null);
                       } finally {
                         setBusy(false);
