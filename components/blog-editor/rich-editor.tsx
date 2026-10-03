@@ -1,6 +1,10 @@
 "use client";
+import { BubbleMenu } from "@tiptap/react/menus";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { DiagramCodeBlock } from "./diagram-code-block";
+import { pastedMermaid } from "@/lib/blog/mermaid-source";
 import StarterKit from "@tiptap/starter-kit";
+import { TableKit } from "@tiptap/extension-table";
 import Image from "@tiptap/extension-image";
 import type { RichNode } from "@/lib/blog/schema";
 import { safeUrl } from "@/lib/blog/schema";
@@ -23,13 +27,23 @@ export function RichEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3, 4] },
+        codeBlock: false,
         link: { openOnClick: false },
       }),
       Image,
+      DiagramCodeBlock,
+      TableKit.configure({ table: { resizable: false } }),
     ],
     content: body,
     immediatelyRender: false,
     editorProps: {
+      handlePaste: (view, event) => {
+        const source = pastedMermaid(event.clipboardData?.getData("text/plain") ?? "");
+        if (!source) return false;
+        const node = view.state.schema.nodes.codeBlock.create({ language: "mermaid" }, view.state.schema.text(source));
+        view.dispatch(view.state.tr.replaceSelectionWith(node).scrollIntoView());
+        return true;
+      },
       attributes: {
         role: "textbox",
         "aria-label": "Nội dung bài viết",
@@ -48,6 +62,15 @@ export function RichEditor({
     );
   return (
     <>
+      <BubbleMenu editor={editor} className="editor-selection-tools" shouldShow={({ editor, state }) => !state.selection.empty && state.selection.$from.parent.inlineContent && !editor.isActive("codeBlock")}>
+        <div role="toolbar" aria-label="Định dạng đoạn được chọn" onMouseDown={(e) => e.preventDefault()}>
+          <button type="button" aria-label="In đậm" aria-pressed={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}><strong>B</strong></button>
+          <button type="button" aria-label="In nghiêng" aria-pressed={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}><em>I</em></button>
+          <button type="button" aria-label="Gạch ngang" aria-pressed={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}><s>S</s></button>
+          <button type="button" aria-label="Mã nội dòng" aria-pressed={editor.isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()}><BlogIcon name="code" size={15} /></button>
+          <button type="button" aria-label="Chèn liên kết" aria-pressed={editor.isActive("link")} onClick={() => { setLinkError(""); setLink(String(editor.getAttributes("link").href ?? "")); }}><BlogIcon name="link" size={15} /></button>
+        </div>
+      </BubbleMenu>
       <div className="formatbar" role="toolbar" aria-label="Định dạng nội dung">
         <select
           aria-label="Kiểu đoạn văn"
@@ -73,6 +96,7 @@ export function RichEditor({
           <option value="2">Tiêu đề H2</option>
           <option value="3">Tiêu đề H3</option>
         </select>
+        <button type="button" aria-label="Chèn bảng" title="Chèn bảng 3 × 3" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><BlogIcon name="grid" size={16} /></button>
         <span className="divider" />
         <button
           type="button"
@@ -128,7 +152,7 @@ export function RichEditor({
         <span className="divider" />
         <button
           type="button"
-          aria-label="Ảnh"
+          aria-label="Chèn ảnh hoặc GIF"
           onClick={async () => {
             const src = await onImage();
             if (src) {
@@ -157,6 +181,13 @@ export function RichEditor({
           </span>
         </button>
       </div>
+      {editor.isActive("table") && <div className="table-actions" role="toolbar" aria-label="Chỉnh bảng">
+        <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()}>+ Hàng</button>
+        <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()}>+ Cột</button>
+        <button type="button" onClick={() => editor.chain().focus().deleteRow().run()}>Xóa hàng</button>
+        <button type="button" onClick={() => editor.chain().focus().deleteColumn().run()}>Xóa cột</button>
+        <button type="button" onClick={() => editor.chain().focus().deleteTable().run()}>Xóa bảng</button>
+      </div>}
       <div className="editor-prose">
         <EditorContent editor={editor} />
       </div>

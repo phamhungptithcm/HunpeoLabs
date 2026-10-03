@@ -1,0 +1,17 @@
+# Article view counters
+
+Approved in the current Codex chat on 2026-10-02, following the researched plan to display views after reading time. No production deployment is authorized.
+
+Public articles mount BlogViews; previews, metadata, social images and feed cards do not. The browser sends POST only when visible. A random sessionStorage UUID persists across reloads within a tab; independently opened tabs may count separately. If storage is unavailable, GET displays the count without recording. A view means a displayed article, not completion or a unique person. Counts begin at rollout; no historical counts are fabricated.
+
+GET /api/blog/views?postId=ID reads stats for published posts only. POST accepts exactly postId and session (UUID), requires existing same-origin/custom-header checks, and limits bodies to 1 KiB. Production recording requires BLOG_RATE_LIMIT_SECRET and BLOG_TRUSTED_IP_HEADER overwritten by trusted ingress. A network HMAC limiter permits 120 requests per ten minutes; clients cannot write Firestore directly. This bounds but does not eliminate deliberate count manipulation, and shared networks may undercount.
+
+blogPostStats/{postId} stores only views, independently of draft/publication snapshots. blogViewSessions uses HMAC(postId:session) as document ID with expiresAt. The transaction reads the published post, receipt and stats before writing, deduplicates unexpired receipts and serializes counter updates. Expiry is checked in application logic even when physical TTL deletion is delayed. A tab open longer than 24 hours may count again on reload. Do not change Firestore rules or existing publication flows.
+
+Production prerequisite: configure and verify Firestore TTL on blogViewSessions.expiresAt under operator authorization. Without TTL cleanup, expired receipt documents accumulate. Existing blogRateLimits TTL remains required. Each recorded view incurs Firestore reads/writes, including limiter writes on duplicates. Verify budgets, ingress, privacy policy and retention before launch. Single-document contention can limit a popular article; use distributed counters only with separately reviewed scope and measured traffic.
+
+The counter hides on API failure or after a ten-second timeout; the article remains readable. Public API error logging uses the existing sanitized blog_request_failed event; there is no additional PII logging. No real-time listeners or polling. Rollback by removing BlogViews from BlogContent; preserve counts unless separately authorized to delete them.
+
+Validation: unit tests cover repeat requests, sessions, expiry, republish, unknown posts, malformed input, missing configuration, throttling and database failure. Browser tests use synthetic local responses; emulator transaction concurrency requires separate local emulator evidence. Neither proves live production readiness.
+
+Current local evidence (2026-10-02): 114 unit tests passed, one existing test skipped; two browser/emulator scenarios passed, including six concurrent identical POSTs incrementing once, a new session incrementing separately, refresh, rejected foreign origin and unknown post, 390px mobile layout, and safe rendering on a 503 response. Typecheck, full ESLint (one pre-existing warning), and production compilation passed. Emulator fixture uses the isolated demo-hunpeolabs-blog-views-030 namespace; no production account or database was accessed.

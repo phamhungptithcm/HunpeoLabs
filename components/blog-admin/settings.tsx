@@ -1,4 +1,5 @@
 "use client";
+import { BlogToast } from "./toast";
 import { googleAvatar } from "@/lib/blog/profile";
 import { progressFetch } from "@/lib/ui/action-progress";
 import { useState, useRef, useSyncExternalStore } from "react";
@@ -90,11 +91,7 @@ export function Settings({
           <span className="settings-heading__email">{viewerEmail}</span>
         </div>
       </div>
-      {notice && (
-        <p className="notice" role="status">
-          {notice}
-        </p>
-      )}
+      {notice && <BlogToast text={notice} onClose={() => setNotice("")} />}
       <nav className="settings-sections" aria-label="Các mục cài đặt">
         {[["authors", "Tác giả"], ["taxonomy", "Chuyên mục"], ["members", "Thành viên"], ["export", "Xuất nội dung"]].map(([id, label]) => (
           <button key={id} type="button" aria-pressed={section === id} onClick={() => { setSection(id); setNotice(""); }}>{label}</button>

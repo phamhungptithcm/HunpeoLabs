@@ -1,7 +1,11 @@
 /* eslint-disable @next/next/no-img-element -- Media authorization must run per request; images are resized on upload. */
+import { isMermaidBlock } from "@/lib/blog/mermaid-source";
+import { MermaidDiagram } from "./mermaid-diagram";
 import type { ReactNode } from "react";
 import type { RichNode, PublishedPost } from "@/lib/blog/schema";
 import { safeUrl } from "@/lib/blog/schema";
+import { BlogShares } from "./blog-shares";
+import { BlogViews } from "./blog-views";
 import { BlogShare } from "./blog-share";
 import { Comments } from "./blog-comments/comments";
 import Link from "next/link";
@@ -53,11 +57,20 @@ function render(n: RichNode, key: string): ReactNode {
     case "blockquote":
       return <blockquote key={key}>{children}</blockquote>;
     case "codeBlock":
+      if (isMermaidBlock(n.attrs?.language, (n.content ?? []).map((c) => c.text ?? "").join(""))) return <MermaidDiagram key={key} source={(n.content ?? []).map((c) => c.text ?? "").join("")} />;
       return (
         <pre key={key}>
           <code>{children}</code>
         </pre>
       );
+    case "table":
+      return <div className="blog-table-scroll" key={key}><table><tbody>{children}</tbody></table></div>;
+    case "tableRow":
+      return <tr key={key}>{children}</tr>;
+    case "tableHeader":
+      return <th key={key} colSpan={Number(n.attrs?.colspan ?? 1)} rowSpan={Number(n.attrs?.rowspan ?? 1)}>{children}</th>;
+    case "tableCell":
+      return <td key={key} colSpan={Number(n.attrs?.colspan ?? 1)} rowSpan={Number(n.attrs?.rowspan ?? 1)}>{children}</td>;
     case "hardBreak":
       return <br key={key} />;
     case "horizontalRule":
@@ -136,6 +149,8 @@ export function BlogContent({
               <br />
               <span className="small">
                 {date(post.publishedAt)} · {post.readingMinutes} {copy("phút đọc", "min read")}
+                {!preview && <BlogViews postId={post.id} />}
+                {!preview && <BlogShares postId={post.id} />}
               </span>
               {post.updatedAt !== post.publishedAt && (
                 <span className="small" style={{ display: "block" }}>
@@ -150,7 +165,7 @@ export function BlogContent({
                 <BlogIcon name="comment" size={15} />
                 {copy("Bình luận", "Comments")}
               </a>
-              <BlogShare url={url} title={post.title} />
+              <BlogShare postId={preview ? undefined : post.id} url={url} title={post.title} />
             </div>
           )}
         </div>
@@ -208,7 +223,7 @@ export function BlogContent({
                 </Link>
               ))}
             </div>
-            {!preview && <BlogShare url={url} title={post.title} />}
+            {!preview && <BlogShare postId={preview ? undefined : post.id} url={url} title={post.title} />}
           </div>
           <div className="author-card">
             <Avatar
@@ -232,7 +247,7 @@ export function BlogContent({
         {!preview && (
           <aside className="side-share" aria-label={copy("Chia sẻ bài", "Share post")}>
             <span className="small">{copy("CHIA SẺ", "SHARE")}</span>
-            <BlogShare url={url} title={post.title} compact />
+            <BlogShare postId={preview ? undefined : post.id} url={url} title={post.title} compact />
             <a
               className="icon-button"
               href="#comments"

@@ -13,7 +13,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${oneTapEnabled ? " https://accounts.google.com/gsi/client" : ""}${isProduction ? "" : " 'unsafe-eval'"}`,
   `style-src 'self' 'unsafe-inline'${oneTapEnabled ? " https://accounts.google.com/gsi/style" : ""}`,
-  "img-src 'self' data: https://*.google-analytics.com https://www.googletagmanager.com https://*.googleusercontent.com",
+  "img-src 'self' data: blob: https://*.google-analytics.com https://www.googletagmanager.com https://*.googleusercontent.com",
   "font-src 'self' data:",
   `connect-src 'self'${oneTapEnabled ? " https://accounts.google.com/gsi/" : ""} https://firebase.googleapis.com https://firebaseinstallations.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${isProduction ? "" : ` ws: wss: ${blogAuthEmulatorOrigin}`}`,
   ...(oneTapEnabled

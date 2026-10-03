@@ -19,6 +19,7 @@ export default async function Page({
       initial={p}
       authors={authors as { id: string; name: string }[]}
       publisher={publisher}
+      canCreateCategory={a.role === "admin"}
       members={members}
       categories={categories
         .map((c) => ("name" in c ? String(c.name) : ""))

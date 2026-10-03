@@ -1,6 +1,7 @@
 "use client";
 import { useState, useId, useSyncExternalStore } from "react";
 const subscribe = () => () => {};
+import { countShare, type ShareChannel } from "@/lib/blog/share-count";
 import { shareLinks } from "@/lib/blog/share";
 import { BlogIcon } from "./blog-admin/ui";
 import { BlogDialog } from "./blog-admin/dialog";
@@ -23,10 +24,12 @@ export function BlogShare({
   url,
   title,
   compact = false,
+  postId,
 }: {
   url: string;
   title: string;
   compact?: boolean;
+  postId?: string;
 }) {
   const ready = useSyncExternalStore(
     subscribe,
@@ -37,10 +40,14 @@ export function BlogShare({
     [notice, setNotice] = useState("");
   const links = shareLinks(url, title);
   const urlId = useId();
+  function record(channel: ShareChannel) {
+    if (postId) void countShare(postId, channel);
+  }
   async function copy() {
     try {
       await navigator.clipboard.writeText(links.canonical);
       setNotice("Link copied.");
+      record("copy");
     } catch {
       setNotice("Select and copy the link directly from the field.");
       setOpen(true);
@@ -63,6 +70,7 @@ export function BlogShare({
             href={links.linkedin}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => record("linkedin")}
             aria-label="Share on LinkedIn"
           >
             <strong>in</strong>
@@ -107,6 +115,7 @@ export function BlogShare({
                 key={k}
                 target={k === "email" ? undefined : "_blank"}
                 rel="noopener noreferrer"
+                onClick={() => record(k)}
                 aria-label={`Share via ${networks[k].label}`}
                 title={networks[k].label}
               >
@@ -136,6 +145,7 @@ export function BlogShare({
                 }
                 try {
                   await navigator.share({ title, url: links.canonical });
+                  record("device");
                 } catch (e) {
                   if (!(e instanceof DOMException && e.name === "AbortError"))
                     setNotice(

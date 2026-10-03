@@ -5,7 +5,7 @@ export function BlogDialog({
   title,
   children,
   onClose,
-  iconClose = false,
+  iconClose = true,
   closeLabel = "Đóng",
   className,
 }: {

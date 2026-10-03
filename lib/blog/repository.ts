@@ -1,7 +1,8 @@
 import "server-only";
 import { categoryAliases, categoryLabel } from "./categories";
 import { listAccess, changeAccess, assignableAccess } from "./access";
-import { randomUUID } from "node:crypto";
+import { taxonomyKey } from "./taxonomy-input";
+import { createHash, randomUUID } from "node:crypto";
 import { FieldPath, Filter, type Query } from "firebase-admin/firestore";
 import { blogDb, blogEnabled } from "@/lib/firebase-admin";
 import {
@@ -211,6 +212,7 @@ export async function publish(
   actor: Actor,
   revision: number,
   operationId: string,
+  scheduled = false,
 ) {
   requirePublisher(actor);
   idSchema.parse(operationId);
@@ -220,6 +222,11 @@ export async function publish(
   return db.runTransaction(async (tx) => {
     const [doc, done] = await Promise.all([tx.get(ref), tx.get(receipt)]);
     if (done.exists) return { ok: true };
+    const scheduleRef = db.collection("blogSchedules").doc(id);
+    if (scheduled) {
+      const job = await tx.get(scheduleRef);
+      if (!job.exists || job.get("operationId") !== operationId || job.get("dueAt") > new Date().toISOString()) throw new BlogError(409, "SCHEDULE_CHANGED");
+    }
     if (!doc.exists) throw new BlogError(404, "NOT_FOUND");
     const p = doc.data() as Post;
     if (p.revision !== revision) throw new BlogError(409, "REVISION_CONFLICT");
@@ -290,6 +297,7 @@ export async function publish(
       revision: p.revision,
       at: now,
     });
+    if (scheduled) tx.delete(scheduleRef);
     return { ok: true };
   });
 }
@@ -364,6 +372,39 @@ export async function catalog(
     ...d.data(),
   }));
 }
+/** Create-only path; deterministic identity makes concurrent retries idempotent. */
+export async function createCategory(actor: Actor, value: string) {
+  if (actor.role !== "admin") throw new BlogError(403, "FORBIDDEN");
+  const name = value.trim();
+  if (!name || name.length > 80) throw new BlogError(400, "NAME_REQUIRED");
+  const key = taxonomyKey(name);
+  const collection = blogDb().collection("blogCategories");
+  const ref = collection.doc(`category-${createHash("sha256").update(key).digest("hex")}`);
+  return blogDb().runTransaction(async (tx) => {
+    const target = await tx.get(ref);
+    if (target.exists && taxonomyKey(String(target.get("name") ?? "")) === key)
+      return { name: String(target.get("name")) };
+    // Also match legacy catalog records, which have randomly generated IDs.
+    const existing = await tx.get(collection.limit(101));
+    const match = existing.docs.find((doc) => taxonomyKey(String(doc.get("name") ?? "")) === key);
+    if (match) return { name: String(match.get("name")) };
+    // Catalog readers expose 100 records; never create an invisible entry.
+    if (existing.size >= 100) throw new BlogError(409, "CATEGORY_LIMIT");
+    let destination = ref;
+    if (target.exists) {
+      // Catalog editing can rename a deterministic record. Preserve that entry.
+      const occupied = new Set(existing.docs.map((doc) => doc.id));
+      for (let suffix = 1; suffix <= 100; suffix++) {
+        const id = `${ref.id}-${suffix}`;
+        if (!occupied.has(id)) { destination = collection.doc(id); break; }
+      }
+      await tx.get(destination);
+    }
+    tx.create(destination, { name });
+    return { name };
+  });
+}
+
 export async function updateCatalog(
   kind: "authors" | "taxonomy" | "members",
   actor: Actor,

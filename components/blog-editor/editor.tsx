@@ -1,4 +1,8 @@
 "use client";
+import { openSavedPreview } from "@/lib/blog/open-preview";
+import { TaxonomyFields } from "./taxonomy-fields";
+import { validScheduleTime } from "@/lib/blog/schedule-time";
+import { BlogToast } from "@/components/blog-admin/toast";
 import { progressFetch } from "@/lib/ui/action-progress";
 import {
   useCallback,
@@ -31,12 +35,14 @@ export function Editor({
   publisher,
   members,
   categories,
+  canCreateCategory,
 }: {
   initial: Post;
   authors: { id: string; name: string }[];
   publisher: boolean;
   members: { id: string; name: string }[];
   categories: string[];
+  canCreateCategory: boolean;
 }) {
   const router = useRouter();
   const ready = useSyncExternalStore(
@@ -51,14 +57,38 @@ export function Editor({
   const [sourceText, setSourceText] = useState(
     initial.sources.map((s) => `${s.title} | ${s.url}`).join("\n"),
   );
-  const [tagText, setTagText] = useState(initial.tags.join(", "));
   const [notice, setNotice] = useState("");
+  const [taxonomyToastRevision, setTaxonomyToastRevision] = useState(0);
+  const dismissNotice = useCallback(() => setNotice(""), []);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduledAt, setScheduledAt] = useState<string | null>(null);
+  useEffect(() => {
+    if (!publisher) return;
+    void request<{ dueAt: string | null }>(`/api/admin/blog/posts/${initial.id}/schedule`).then(r => setScheduledAt(r.dueAt)).catch(() => {});
+  }, [initial.id, publisher]);
+  async function schedulePublication() {
+    const time = new Date(scheduleDate).getTime();
+    if (!Number.isFinite(time) || !validScheduleTime(new Date(time).toISOString())) { setNotice("Chọn giờ đăng sau hiện tại ít nhất một phút."); return; }
+    const before = generation.current;
+    const saved = dirty ? await save() : current.current;
+    if (!saved || generation.current !== before) return;
+    setBusy(true);
+    try {
+      const r = await request<{ dueAt: string }>(`/api/admin/blog/posts/${post.id}/schedule`, "POST", { revision: saved.revision, dueAt: new Date(time).toISOString() });
+      setScheduledAt(r.dueAt); setModal(null); setNotice("Đã lên lịch đăng bài.");
+    } catch (e) { setNotice(message(e)); } finally { setBusy(false); }
+  }
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState<Post[]>([]);
   const current = useRef(post);
   const manualSlug = useRef(Boolean(initial.slug));
   const saving = useRef(false);
+  const pendingSave = useRef<Promise<void> | null>(null);
+  const savedGeneration = useRef(0);
+  const previewLock = useRef(false);
+  const [openingPreview, setOpeningPreview] = useState(false);
+  const categoryPending = useRef(false);
   const generation = useRef(0);
   const conflicted = useRef(false);
   const file = useRef<HTMLInputElement>(null);
@@ -91,8 +121,10 @@ export function Editor({
   }
   const save = useCallback(
     async (state?: "review" | "archived") => {
-      if (saving.current || conflicted.current) return null;
+      if (saving.current || conflicted.current || categoryPending.current) return null;
       saving.current = true;
+      let finishSave!: () => void;
+      pendingSave.current = new Promise<void>((resolve) => { finishSave = resolve; });
       setBusy(true);
       const start = generation.current;
       setNotice("Đang lưu…");
@@ -112,6 +144,7 @@ export function Editor({
           revision: saved.revision,
           state: saved.state,
         }));
+        savedGeneration.current = start;
         if (start === generation.current) setDirty(false);
         setNotice("Đã lưu.");
         return saved;
@@ -122,6 +155,8 @@ export function Editor({
         return null;
       } finally {
         saving.current = false;
+        pendingSave.current = null;
+        finishSave();
         setBusy(false);
       }
     },
@@ -244,33 +279,58 @@ export function Editor({
               href={`/admin/blog/${post.id}/preview`}
               target="_blank"
               rel="noopener"
-              aria-disabled={busy}
+              aria-busy={openingPreview}
               onClick={async (e) => {
                 e.preventDefault();
-                if (busy) return;
-                const preview = window.open("about:blank", "_blank");
-                if (!preview) {
-                  setNotice(
-                    "Hãy cho phép cửa sổ bật lên để xem trước bài viết.",
-                  );
+                if (previewLock.current) return;
+                if ((busy && !saving.current) || categoryPending.current) {
+                  setNotice("Đang xử lý thay đổi. Bạn thử xem trước sau ít giây nhé.");
                   return;
                 }
-                preview.opener = null;
-                const before = generation.current;
-                const saved = dirty ? await save() : current.current;
-                if (!saved || generation.current !== before) {
-                  preview.close();
-                  if (saved)
-                    setNotice(
-                      "Bạn vừa sửa thêm nội dung. Mở xem trước lại nhé.",
-                    );
-                  return;
+                previewLock.current = true;
+                setOpeningPreview(true);
+                try {
+                  await openSavedPreview({
+                    url: `/admin/blog/${post.id}/preview`,
+                    open: () => {
+                      const tab = window.open("about:blank", "_blank");
+                      if (tab) {
+                        tab.opener = null;
+                        try {
+                          tab.document.title = "Đang mở bản xem trước…";
+                          const text = tab.document.createElement("p");
+                          text.textContent = "Đang chuẩn bị bản xem trước…";
+                          tab.document.body.append(text);
+                        } catch { /* The browser may restrict placeholder access. */ }
+                      }
+                      return tab;
+                    },
+                    prepare: async () => {
+                      await pendingSave.current;
+                      if (conflicted.current) {
+                        setNotice("Bài đã thay đổi ở nơi khác. Lưu bản đang sửa trước khi xem trước.");
+                        return false;
+                      }
+                      const before = generation.current;
+                      const saved = savedGeneration.current === before ? current.current : await save();
+                      if (!saved) return false;
+                      if (generation.current !== before) {
+                        setNotice("Bạn vừa sửa thêm nội dung. Mở xem trước lại nhé.");
+                        return false;
+                      }
+                      return true;
+                    },
+                    navigate: (url) => router.push(url),
+                    onError: (error) => setNotice(message(error)),
+                  });
+                } finally {
+                  previewLock.current = false;
+                  setOpeningPreview(false);
                 }
-                preview.location.href = `/admin/blog/${post.id}/preview`;
               }}
             >
               <BlogIcon name="eye" size={15} />
-              Xem trước
+              {openingPreview ? "Đang mở…" : "Xem trước"}
             </a>
             {publisher ? (
               <button
@@ -292,14 +352,8 @@ export function Editor({
             )}
           </div>
         </header>
-        {notice && (
-          <p
-            className={`save-notice ${notice === "Đã lưu." ? "success" : ""}`}
-            role="status"
-          >
-            {notice} {dirty ? "Có thay đổi chưa lưu." : ""}
-          </p>
-        )}
+        {notice && <BlogToast key={taxonomyToastRevision} text={notice} onClose={dismissNotice} />}
+        {scheduledAt && <div className="notice">Đăng lúc {new Date(scheduledAt).toLocaleString("vi")} <button type="button" disabled={busy} onClick={async () => { setBusy(true); try { await request(`/api/admin/blog/posts/${post.id}/schedule`, "DELETE"); setScheduledAt(null); setNotice("Đã hủy lịch đăng."); } catch(e) { setNotice(message(e)); } finally { setBusy(false); } }}>Hủy lịch</button></div>}
         <div className="editor-layout">
           <section className="editor-canvas">
             <div className="editor-page">
@@ -383,7 +437,7 @@ export function Editor({
                 ref={file}
                 type="file"
                 hidden
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/gif"
                 onChange={async (e) => {
                   const f = e.target.files?.[0];
                   if (!f) return;
@@ -492,39 +546,16 @@ export function Editor({
                 </select>
               </label>
             </div>
-            <div className="field">
-              <label>
-                Chuyên mục
-                <input
-                  list="blog-categories"
-                  value={post.category}
-                  onChange={(e) => update("category", e.target.value)}
-                />
-              </label>
-            </div>
-            <div className="field">
-              <datalist id="blog-categories">
-                {categories.map((c) => (
-                  <option value={c} key={c} />
-                ))}
-              </datalist>
-              <label>
-                Tags (phân cách bằng dấu phẩy)
-                <input
-                  value={tagText}
-                  onChange={(e) => {
-                    setTagText(e.target.value);
-                    update(
-                      "tags",
-                      e.target.value
-                        .split(",")
-                        .map((t) => t.trim())
-                        .filter(Boolean),
-                    );
-                  }}
-                />
-              </label>
-            </div>
+            <TaxonomyFields
+              category={post.category}
+              categories={categories}
+              canCreate={canCreateCategory}
+              tags={post.tags}
+              onCategory={(name) => update("category", name)}
+              onTags={(tags) => update("tags", tags)}
+              notify={(text) => { setNotice(text); setTaxonomyToastRevision((value) => value + 1); }}
+              onPending={(pending) => { categoryPending.current = pending; }}
+            />
             <div className="field-rule" />
             <div className="field">
               <label>
@@ -663,16 +694,17 @@ export function Editor({
                 khôi phục.
               </p>
               {history.length === 0 && <p>Chưa có phiên bản trước đó.</p>}
-              {history.map((h) => (
-                <div className="member" key={h.revision}>
+              <ol className="revision-timeline">
+              {[...history].sort((a, b) => b.revision - a.revision).map((h) => (
+                <li className="revision-timeline__item" key={h.revision}>
                   <span>
-                    Phiên bản {h.revision}
-                    <small className="muted" style={{ display: "block" }}>
-                      {new Date(h.updatedAt).toLocaleString("vi")}
-                    </small>
+                    <strong>Phiên bản {h.revision}</strong>
+                    <time dateTime={h.updatedAt}>{new Date(h.updatedAt).toLocaleString("vi")}</time>
                   </span>
                   <button
-                    className="button small"
+                    className="revision-restore"
+                    aria-label={`Khôi phục phiên bản ${h.revision}`}
+                    title={dirty ? "Lưu thay đổi hiện tại trước khi khôi phục" : `Khôi phục phiên bản ${h.revision}`}
                     disabled={dirty || busy}
                     onClick={async () => {
                       setBusy(true);
@@ -691,10 +723,11 @@ export function Editor({
                       }
                     }}
                   >
-                    Khôi phục
+                    <BlogIcon name="history" size={15} />
                   </button>
-                </div>
+                </li>
               ))}
+              </ol>
             </>
           ) : modal === "seo" ? (
             <>
@@ -741,6 +774,7 @@ export function Editor({
                   {authorName} · {post.category}
                 </div>
               </div>
+              {modal === "publish" && <div className="field"><label>Lên lịch đăng <input type="datetime-local" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} /></label><small>Giờ địa phương của bạn. Lịch chỉ đăng phiên bản đã lưu này.</small><button type="button" className="button small" disabled={busy || !scheduleDate} onClick={() => void schedulePublication()}>Lên lịch</button></div>}
               <button
                 className="button primary"
                 disabled={busy}

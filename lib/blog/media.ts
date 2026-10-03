@@ -39,11 +39,12 @@ export async function uploadMedia(request: Request, actor: Actor) {
     const bytes = Buffer.concat(chunks);
     const meta = await sharp(bytes, { limitInputPixels: 20000000 }).metadata();
     if (
-      !["jpeg", "png", "webp"].includes(meta.format ?? "") ||
-      (meta.pages ?? 1) > 1
+      !["jpeg", "png", "webp", "gif"].includes(meta.format ?? "") ||
+      (meta.pages ?? 1) > 100 ||
+      (meta.width ?? 0) * (meta.pageHeight ?? meta.height ?? 0) * (meta.pages ?? 1) > 20000000
     )
       throw new Error("format");
-    const result = await sharp(bytes, { limitInputPixels: 20000000 })
+    const result = await sharp(bytes, { limitInputPixels: 20000000, animated: true })
       .rotate()
       .resize({
         width: 2400,
