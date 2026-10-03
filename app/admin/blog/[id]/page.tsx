@@ -17,6 +17,7 @@ export default async function Page({
   return (
     <Editor
       initial={p}
+      viewerUid={a.uid}
       authors={authors as { id: string; name: string }[]}
       publisher={publisher}
       canCreateCategory={a.role === "admin"}

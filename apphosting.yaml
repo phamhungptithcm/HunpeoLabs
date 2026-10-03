@@ -77,3 +77,14 @@ env:
     value: "false"
     availability: [BUILD, RUNTIME]
 # BLOG_TRUSTED_IP_HEADER deliberately absent until verified spoof-resistant.
+
+  # Conservative shared site quota plus per-account limits; no unverified IP trust.
+  - variable: BLOG_RATE_LIMIT_MODE
+    value: global
+    availability: [RUNTIME]
+  - variable: BLOG_SCHEDULER_SERVICE_ACCOUNT
+    value: blog-publisher-scheduler@hunpeolabs-prod.iam.gserviceaccount.com
+    availability: [RUNTIME]
+  - variable: BLOG_SCHEDULER_AUDIENCE
+    value: https://hunpeolabs.com/api/internal/blog/scheduled
+    availability: [RUNTIME]

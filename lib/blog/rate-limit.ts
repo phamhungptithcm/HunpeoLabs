@@ -42,6 +42,12 @@ export async function requestLimits(
   );
   // Only explicitly configured trusted ingress headers are used; never guess trust from X-Forwarded-For.
   const header = process.env.BLOG_TRUSTED_IP_HEADER;
+  // Explicit site-wide budget is stricter than the same per-network budget:
+  // all networks share the cap, while per-user limits remain enforced.
+  if (process.env.BLOG_RATE_LIMIT_MODE === "global") {
+    await rateLimit(`${action}:site-budget`, action === "comment" ? 30 : 100, 3600000);
+    return;
+  }
   if (!header && !process.env.FIRESTORE_EMULATOR_HOST)
     throw new BlogError(503, "INGRESS_NOT_CONFIGURED");
   const address = header ? request.headers.get(header) : "local-emulator";

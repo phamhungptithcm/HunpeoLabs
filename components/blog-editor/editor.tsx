@@ -1,6 +1,7 @@
 "use client";
 import { openSavedPreview } from "@/lib/blog/open-preview";
 import { TaxonomyFields } from "./taxonomy-fields";
+import { parseRecovery, recoveryKey } from "@/lib/blog/draft-recovery";
 import { validScheduleTime } from "@/lib/blog/schedule-time";
 import { BlogToast } from "@/components/blog-admin/toast";
 import { progressFetch } from "@/lib/ui/action-progress";
@@ -31,6 +32,7 @@ const RichEditor = dynamic(
 const subscribe = () => () => {};
 export function Editor({
   initial,
+  viewerUid,
   authors,
   publisher,
   members,
@@ -38,6 +40,7 @@ export function Editor({
   canCreateCategory,
 }: {
   initial: Post;
+  viewerUid: string;
   authors: { id: string; name: string }[];
   publisher: boolean;
   members: { id: string; name: string }[];
@@ -54,6 +57,8 @@ export function Editor({
     "history" | "seo" | "publish" | "unpublish" | "archive" | null
   >(null);
   const [post, setPost] = useState(initial);
+  const [recovery, setRecovery] = useState<ReturnType<typeof parseRecovery>>(null);
+  const [recoveryGeneration, setRecoveryGeneration] = useState(0);
   const [sourceText, setSourceText] = useState(
     initial.sources.map((s) => `${s.title} | ${s.url}`).join("\n"),
   );
@@ -64,7 +69,7 @@ export function Editor({
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   useEffect(() => {
     if (!publisher) return;
-    void request<{ dueAt: string | null }>(`/api/admin/blog/posts/${initial.id}/schedule`).then(r => setScheduledAt(r.dueAt)).catch(() => {});
+    void request<{ dueAt: string | null; error: string | null }>(`/api/admin/blog/posts/${initial.id}/schedule`).then(r => { setScheduledAt(r.dueAt); if (r.error) setNotice(`Bài chưa được đăng theo lịch. ${message(new Error(r.error))}`); }).catch(() => {});
   }, [initial.id, publisher]);
   async function schedulePublication() {
     const time = new Date(scheduleDate).getTime();
@@ -95,6 +100,23 @@ export function Editor({
   const resolveUpload = useRef<((value: string | null) => void) | null>(null);
   const [coverUpload, setCoverUpload] = useState(false);
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (dirty) return;
+      try {
+        const key = recoveryKey(viewerUid, initial.id);
+        const backup = parseRecovery(localStorage.getItem(key), viewerUid, initial.id);
+        if (backup && JSON.stringify(backup.draft) !== JSON.stringify(parseRecovery(JSON.stringify({ uid: viewerUid, postId: initial.id, revision: initial.revision, at: backup.at, draft: initial }), viewerUid, initial.id)?.draft)) setRecovery(backup);
+        else localStorage.removeItem(key);
+      } catch { /* Storage may be disabled; server autosave still works. */ }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [viewerUid, initial, dirty]);
+  useEffect(() => {
+    if (!dirty) return;
+    try { localStorage.setItem(recoveryKey(viewerUid, initial.id), JSON.stringify({ uid: viewerUid, postId: initial.id, revision: post.revision, at: Date.now(), draft: post })); }
+    catch { /* A private/full storage must never interrupt editing. */ }
+  }, [dirty, post, viewerUid, initial.id]);
+  useEffect(() => {
     const input = file.current;
     const cancel = () => {
       resolveUpload.current?.(null);
@@ -118,6 +140,17 @@ export function Editor({
       return n;
     });
     setDirty(true);
+  }
+  function restoreRecovery() {
+    if (!recovery) return;
+    manualSlug.current = true;
+    for (const key of Object.keys(recovery.draft) as (keyof Draft)[]) update(key, recovery.draft[key]);
+    setSourceText(recovery.draft.sources.map(s => `${s.title} | ${s.url}`).join("\n"));
+    setRecovery(null); setRecoveryGeneration(n => n + 1);
+    if (recovery.revision !== initial.revision) {
+      conflicted.current = true;
+      setNotice("Bản trên máy chủ đã thay đổi. Sao chép nội dung phục hồi trước khi tải lại để đối chiếu.");
+    }
   }
   const save = useCallback(
     async (state?: "review" | "archived") => {
@@ -145,7 +178,10 @@ export function Editor({
           state: saved.state,
         }));
         savedGeneration.current = start;
-        if (start === generation.current) setDirty(false);
+        if (start === generation.current) {
+          setDirty(false);
+          try { localStorage.removeItem(recoveryKey(viewerUid, initial.id)); } catch { /* Optional local backup. */ }
+        }
         setNotice("Đã lưu.");
         return saved;
       } catch (e) {
@@ -160,7 +196,7 @@ export function Editor({
         setBusy(false);
       }
     },
-    [initial.id],
+    [initial.id, viewerUid],
   );
   useEffect(() => {
     if (!dirty) return;
@@ -354,6 +390,11 @@ export function Editor({
         </header>
         {notice && <BlogToast key={taxonomyToastRevision} text={notice} onClose={dismissNotice} />}
         {scheduledAt && <div className="notice">Đăng lúc {new Date(scheduledAt).toLocaleString("vi")} <button type="button" disabled={busy} onClick={async () => { setBusy(true); try { await request(`/api/admin/blog/posts/${post.id}/schedule`, "DELETE"); setScheduledAt(null); setNotice("Đã hủy lịch đăng."); } catch(e) { setNotice(message(e)); } finally { setBusy(false); } }}>Hủy lịch</button></div>}
+        {recovery && <div className="notice" role="status">
+          Có nội dung chưa lưu trên thiết bị này.{recovery.revision !== initial.revision ? " Bản trên máy chủ đã thay đổi; kiểm tra kỹ trước khi lưu." : ""}
+          <button type="button" disabled={dirty || busy} onClick={restoreRecovery}>Phục hồi</button>
+          <button type="button" onClick={() => { try { localStorage.removeItem(recoveryKey(viewerUid, initial.id)); } catch {} setRecovery(null); }}>Bỏ bản tạm</button>
+        </div>}
         <div className="editor-layout">
           <section className="editor-canvas">
             <div className="editor-page">
@@ -423,7 +464,8 @@ export function Editor({
                 </span>
               </div>
               <RichEditor
-                body={initial.body}
+                key={recoveryGeneration}
+                body={post.body}
                 onChange={(b) => update("body", b)}
                 onImage={() =>
                   new Promise((resolve) => {
