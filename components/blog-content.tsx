@@ -121,6 +121,7 @@ export function BlogContent({
             <Avatar
               name={post.author}
               mediaId={post.authorAvatarId}
+              photo={post.authorGoogleAvatar}
               className="dark big"
             />
             <span>
@@ -197,6 +198,7 @@ export function BlogContent({
             <Avatar
               name={post.author}
               mediaId={post.authorAvatarId}
+              photo={post.authorGoogleAvatar}
               className="big dark"
             />
             <div>

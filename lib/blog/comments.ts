@@ -1,4 +1,6 @@
 import "server-only";
+import { googleAvatar } from "./profile";
+import { legacyGooglePhotos } from "./google-profile";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { FieldPath } from "firebase-admin/firestore";
@@ -27,6 +29,7 @@ type Comment = {
   parentId: string;
   uid: string;
   name: string;
+  avatar?: string;
   text: string;
   status: string;
   revision: number;
@@ -38,12 +41,13 @@ type Comment = {
   reputationCredit?: boolean;
   reputationRestriction?: boolean;
 };
-function project(c: Comment) {
+export function publicComment(c: Comment) {
   return {
     id: c.id,
     postId: c.postId,
     parentId: c.parentId,
     name: c.status === "deleted" ? "" : c.name,
+    avatar: c.status === "deleted" ? "" : googleAvatar(c.avatar) ?? "",
     text: c.status === "deleted" ? "" : c.text,
     status: c.status,
     revision: c.revision,
@@ -86,8 +90,10 @@ export async function listComments(postId: string, parentId = "", cursor = "") {
   }
   const result = await q.limit(21).get();
   const page = result.docs.slice(0, 20);
+  const comments = page.map(d => d.data() as Comment);
+  const photos = await legacyGooglePhotos(comments.filter(c => c.status !== "deleted" && !googleAvatar(c.avatar)).map(c => c.uid));
   return {
-    items: page.map((d) => project(d.data() as Comment)),
+    items: comments.map(c => publicComment({ ...c, avatar: googleAvatar(c.avatar) ?? photos.get(c.uid) })),
     commentsEnabled: p.get("commentsEnabled") === true,
     count: Number(p.get("commentCount") ?? 0),
     next:
@@ -113,7 +119,7 @@ export async function ownComments(postId: string, actor: Actor) {
       .orderBy("createdAt", "desc")
       .limit(50)
       .get()
-  ).docs.map((d) => project(d.data() as Comment));
+  ).docs.map((d) => publicComment({ ...(d.data() as Comment), avatar: googleAvatar(actor.avatar) ?? (d.data() as Comment).avatar }));
 }
 export async function createComment(actor: Actor, input: unknown) {
   if (!actor.verified) throw new BlogError(403, "VERIFY_EMAIL");
@@ -161,6 +167,7 @@ export async function createComment(actor: Actor, input: unknown) {
       parentId: c.parentId,
       uid: actor.uid,
       name: actor.name,
+      avatar: googleAvatar(actor.avatar) ?? "",
       text: c.text,
       status: decision.status,
       moderationReasons: decision.reasons,
@@ -268,9 +275,9 @@ export async function changeComment(
       reputationRestriction: restriction,
       ...(decision ? { moderationReasons: decision.reasons, moderationVersion } : {}),
       ...(action === "edit"
-        ? { text: nextText }
+        ? { text: nextText, avatar: googleAvatar(actor.avatar) ?? "" }
         : {}),
-      ...(action === "delete" ? { text: "", name: "", badge: "" } : {}),
+      ...(action === "delete" ? { text: "", name: "", badge: "", avatar: "" } : {}),
     });
     tx.create(db.collection("blogAudit").doc(), {
       action: `comment_${action}`,
@@ -327,7 +334,7 @@ export async function moderationQueue(actor: Actor, status = "pending") {
       .get()
   ).docs.map((d) => {
     const c = d.data() as Comment;
-    return { ...project(c), moderationReasons: (c.moderationReasons ?? []).filter((r) => Object.hasOwn(moderationReasons, r)).map((r) => moderationReasons[r]) };
+    return { ...publicComment(c), moderationReasons: (c.moderationReasons ?? []).filter((r) => Object.hasOwn(moderationReasons, r)).map((r) => moderationReasons[r]) };
   });
 }
 
@@ -356,7 +363,7 @@ export async function publicThread(postId: string, commentId: string) {
       !["approved", "deleted"].includes(parent.get("status"))
     )
       throw new BlogError(404, "NOT_FOUND");
-    return { parent: project(parent.data() as Comment), reply: project(c) };
+    return { parent: publicComment(parent.data() as Comment), reply: publicComment(c) };
   }
-  return { parent: project(c), reply: null };
+  return { parent: publicComment(c), reply: null };
 }

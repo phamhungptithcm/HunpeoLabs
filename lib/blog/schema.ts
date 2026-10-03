@@ -201,6 +201,7 @@ export type WorkspacePost = Post & { schedule?: { dueAt: string; revision: numbe
 export type PublishedPost = Draft & {
   authorBio?: string;
   authorAvatarId?: string;
+  authorGoogleAvatar?: string;
   id: string;
   author: string;
   publishedAt: string;

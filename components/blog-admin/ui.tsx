@@ -62,35 +62,7 @@ export function BlogBrand({ studio = false }: { studio?: boolean }) {
     <BrandMark href="/resources/blog" />
   );
 }
-export function Avatar({
-  name,
-  className = "",
-  mediaId,
-}: {
-  name: string;
-  className?: string;
-  mediaId?: string;
-}) {
-  if (mediaId)
-    return (
-      <img
-        className={`avatar ${className}`}
-        src={`/api/blog/media/${mediaId}`}
-        alt=""
-      />
-    );
-  return (
-    <span className={`avatar ${className}`} aria-hidden="true">
-      {name
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((x) => x[0])
-        .join("")
-        .toUpperCase() || "•"}
-    </span>
-  );
-}
+export { BlogAvatar as Avatar } from "@/components/blog-avatar";
 export function BlogArt({ language = "vi" }: { language?: "vi" | "en" }) {
   return (
     <svg

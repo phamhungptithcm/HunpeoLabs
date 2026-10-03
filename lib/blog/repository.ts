@@ -1,4 +1,6 @@
 import "server-only";
+import { googleAvatar } from "./profile";
+import { authorGoogleProfile } from "./google-profile";
 import { matchesPublicPost, queryWords, scanPublicSearch } from "./discovery";
 import { categoryAliases, categoryLabel } from "./categories";
 import { listAccess, changeAccess, assignableAccess } from "./access";
@@ -33,6 +35,7 @@ export function publicPost(data: Record<string, unknown>): PublishedPost {
     author: String(data.author),
     authorAvatarId:
       typeof data.authorAvatarId === "string" ? data.authorAvatarId : "",
+    authorGoogleAvatar: googleAvatar(data.authorGoogleAvatar) ?? "",
     authorBio:
       typeof data.authorBio === "string" ? data.authorBio.slice(0, 500) : "",
     publishedAt: String(data.publishedAt),
@@ -102,7 +105,15 @@ export async function getPublished(slug: string) {
     .where("slug", "==", slug)
     .limit(1)
     .get();
-  return result.empty ? null : publicPost(result.docs[0].data());
+  if (result.empty) return null;
+  const post = publicPost(result.docs[0].data());
+  if (!post.authorGoogleAvatar && !post.authorAvatarId) {
+    try {
+      const author = await blogDb().collection("blogAuthors").doc(idSchema.parse(post.authorId)).get();
+      post.authorGoogleAvatar = googleAvatar(author.get("googleAvatar")) ?? "";
+    } catch { /* Keep the published snapshot readable when the author catalog is unavailable. */ }
+  }
+  return post;
 }
 export async function getDraft(id: string, actor: Actor) {
   const d = await posts().doc(idSchema.parse(id)).get();
@@ -282,6 +293,7 @@ export async function publish(
       id,
       author: author.get("name"),
       authorAvatarId: avatarId,
+      authorGoogleAvatar: googleAvatar(author.get("googleAvatar")) ?? "",
       authorBio: String(author.get("bio") ?? "").slice(0, 500),
       publishedAt: p.publishedAt ?? now,
       updatedAt: now,
@@ -447,12 +459,13 @@ export async function updateCatalog(
     throw new BlogError(400, "INVALID_BIO");
   if (!input.name?.trim() || input.name.length > 80)
     throw new BlogError(400, "NAME_REQUIRED");
+  const googleProfile = kind === "authors" && input.email ? await authorGoogleProfile(input.email) : {};
   await blogDb()
     .collection(col)
     .doc(id)
     .set(
       kind === "authors"
-        ? { name: input.name!.trim(), bio: input.bio?.trim() ?? "" }
+        ? { name: input.name!.trim(), bio: input.bio?.trim() ?? "", ...googleProfile }
         : { name: input.name!.trim() },
       { merge: true },
     );

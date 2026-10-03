@@ -14,6 +14,8 @@ type Entry = {
   role?: string;
   bio?: string;
   avatarId?: string;
+  googleAvatar?: string;
+  googleEmail?: string;
   email?: string;
   connected?: boolean;
 };
@@ -45,8 +47,7 @@ export function Settings({
     () => true,
     () => false,
   );
-  const [failedPhoto, setFailedPhoto] = useState("");
-  const googlePhoto = googleAvatar(viewerAvatar);
+  const [googleEmail, setGoogleEmail] = useState(authors[0]?.googleEmail ?? viewerEmail ?? "");
   const photo = useRef<HTMLInputElement>(null);
   const { notice, noticeKind, setNotice } = useToastNotice();
   const
@@ -54,6 +55,8 @@ export function Settings({
     [selected, setSelected] = useState(authors[0]?.id ?? ""),
     [name, setName] = useState(authors[0]?.name ?? ""),
     [bio, setBio] = useState(authors[0]?.bio ?? "");
+  const chosenAuthor = authorList.find(author => author.id === selected);
+  const googlePhoto = googleAvatar(chosenAuthor?.googleAvatar) ?? (googleEmail === viewerEmail ? googleAvatar(viewerAvatar) : undefined);
   const [dialog, setDialog] = useState<"taxonomy" | "members" | null>(null),
     [editing, setEditing] = useState<Entry | null>(null);
   const [removing, setRemoving] = useState<Entry | null>(null);
@@ -66,6 +69,7 @@ export function Settings({
         id: authorId,
         name,
         bio,
+        ...(googleEmail.trim() ? { email: googleEmail.trim() } : {}),
       });
       setSelected(authorId);
       const updated = await request<Entry[]>("/api/admin/blog/authors");
@@ -74,6 +78,7 @@ export function Settings({
       const saved = updated.find((a) => a.id === authorId);
       setName(saved?.name ?? name.trim());
       setBio(saved?.bio ?? bio.trim());
+      setGoogleEmail(saved?.googleEmail ?? googleEmail);
       setNotice("Đã lưu hồ sơ tác giả.", "success");
       router.refresh();
     } catch (e) {
@@ -106,14 +111,7 @@ export function Settings({
           <label className="settings-author-label" htmlFor="settings-author">Chọn tác giả</label>
           <div className="settings-author-picker">
           <div className="settings-avatar-control">
-            {googlePhoto && googlePhoto !== failedPhoto && !authorList.find((a) => a.id === selected)?.avatarId ? (
-              // eslint-disable-next-line @next/next/no-img-element -- Sanitized Google profile image with initials fallback.
-              <img src={googlePhoto} alt="Ảnh tài khoản Google" referrerPolicy="no-referrer" onError={() => setFailedPhoto(googlePhoto)} />
-            ) : <Avatar
-              name={name}
-              mediaId={authorList.find((a) => a.id === selected)?.avatarId}
-              className="dark big"
-            />}
+            <Avatar name={name} mediaId={chosenAuthor?.avatarId} photo={googlePhoto} className="dark big" />
             <button
               className="settings-avatar-camera"
               aria-label="Đổi ảnh đại diện"
@@ -173,6 +171,7 @@ export function Settings({
                   const a = authorList.find((a) => a.id === e.target.value);
                   setName(a?.name ?? "");
                   setBio(a?.bio ?? "");
+                  setGoogleEmail(a?.googleEmail ?? viewerEmail ?? "");
                 }}
               >
                 <option value="">+ Tạo tác giả mới</option>
@@ -184,6 +183,12 @@ export function Settings({
               </select>
 
           </div>
+          </div>
+          <div className="field">
+            <label>Tài khoản Google
+              <input type="email" value={googleEmail} onChange={(event) => setGoogleEmail(event.target.value)} placeholder="Email đã đăng nhập vào Hunpeo Labs" />
+            </label>
+            <p className="small muted">Ảnh Google được dùng khi chưa chọn ảnh riêng.</p>
           </div>
           <div className="field">
             <label>

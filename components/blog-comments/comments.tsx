@@ -12,6 +12,7 @@ type Comment = {
   revision: number;
   createdAt: string;
   badge: string;
+  avatar?: string;
 };
 type Page = {
   count?: number;
@@ -365,7 +366,7 @@ function CommentItem({
       className={`comment ${nested ? "reply" : ""}`}
       id={`comment-${c.id}`}
     >
-      <Avatar name={c.name || "•"} className={c.badge ? "dark" : "blue"} />
+      <Avatar photo={c.avatar} name={c.name || "•"} className={c.badge ? "dark" : "blue"} />
       <div className="comment-content">
         <div className="comment-top">
           <strong>{c.name || "Deleted comment"}</strong>
