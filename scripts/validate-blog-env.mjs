@@ -1,4 +1,5 @@
-if (process.env.NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED === "true") {
+const oneTapEnabled = process.env.NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED !== "false";
+if (oneTapEnabled && (process.env.BLOG_ENABLED === "true" || process.env.NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED === "true")) {
   if (process.env.BLOG_ENABLED !== "true")
     throw new Error("One Tap requires blog authentication");
   if (

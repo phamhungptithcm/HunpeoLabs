@@ -31,7 +31,7 @@ export function GoogleOneTap() {
   const router = useRouter();
   const clientId = process.env.NEXT_PUBLIC_BLOG_GOOGLE_CLIENT_ID || "";
   const eligible =
-    process.env.NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED === "true" &&
+    process.env.NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED !== "false" &&
     /^\d+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/.test(clientId) &&
     !path.startsWith("/admin/") &&
     path !== "/blog-account";

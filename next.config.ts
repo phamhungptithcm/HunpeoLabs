@@ -8,7 +8,7 @@ const blogAuthEmulatorOrigin =
   )
     ? process.env.NEXT_PUBLIC_BLOG_AUTH_EMULATOR_URL
     : "";
-const oneTapEnabled = process.env.NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED === "true";
+const oneTapEnabled = process.env.NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED !== "false";
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${oneTapEnabled ? " https://accounts.google.com/gsi/client" : ""}${isProduction ? "" : " 'unsafe-eval'"}`,

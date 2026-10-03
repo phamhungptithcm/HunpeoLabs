@@ -79,7 +79,7 @@ env:
     value: 91549992622-llbeq0jidte2j539j7qiasi8b8jj79ad.apps.googleusercontent.com
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_BLOG_ONE_TAP_ENABLED
-    value: "false"
+    value: "true"
     availability: [BUILD, RUNTIME]
 # identity-global does not depend on client IP headers.
 
