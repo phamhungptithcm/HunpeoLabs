@@ -19,5 +19,13 @@ export function BlogReaderTools({ slug }: { slug: string }) {
   },[key]);
   function toggle() { const next = {...current.current,saved:!current.current.saved,updatedAt:Date.now()}; try { localStorage.setItem(key,JSON.stringify(next)); current.current=next;setState(next);setNotice(next.saved ? 'Saved on this device.' : 'Removed from saved articles.'); } catch { setNotice('Could not save on this device.'); } }
   function resume() { const article=document.querySelector('.article-prose');if(!article || !state)return; const top=scrollY+article.getBoundingClientRect().top+state.progress*Math.max(1,article.getBoundingClientRect().height-innerHeight);window.scrollTo({top,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'}); }
-  return <div className={styles.tools}><button className="button small" onClick={toggle} aria-pressed={Boolean(state?.saved)}>{state?.saved ? 'Saved' : 'Save article'}</button>{state && state.progress > .05 && state.progress < .95 && <button className="button small" onClick={resume}>Continue reading · {Math.round(state.progress*100)}%</button>}<span className="small" role="status">{notice || 'Saved articles and reading position stay on this device.'}</span></div>;
+  const saved = Boolean(state?.saved);
+  const label = saved ? 'Remove saved article' : 'Save article';
+  return <div className={styles.tools}>
+    <button className={styles.bookmark} onClick={toggle} aria-label={label} title={label} aria-pressed={saved}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5Z" /></svg>
+    </button>
+    {state && state.progress > .05 && state.progress < .95 && <button className="button small" onClick={resume}>Continue reading · {Math.round(state.progress*100)}%</button>}
+    <span className={styles.status} role="status">{notice}</span>
+  </div>;
 }

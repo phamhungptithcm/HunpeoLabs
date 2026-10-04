@@ -1,4 +1,8 @@
-.tools { display:flex; align-items:center; flex-wrap:wrap; gap:12px; padding:18px 0; margin-bottom:20px; border-top:1px solid #e4e7ef; border-bottom:1px solid #e4e7ef; }
-.tools button { cursor:pointer; }
-.tools button:focus-visible { outline:2px solid #163cff; outline-offset:3px; }
-.tools span { flex:1 1 240px; }
+.tools { display:inline-flex; align-items:center; flex-wrap:wrap; gap:8px; position:relative; }
+.bookmark { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; padding:0; border:1px solid #dedfdb; border-radius:8px; background:transparent; color:#283238; cursor:pointer; transition:background-color 160ms ease,color 160ms ease,border-color 160ms ease; }
+.bookmark:hover { background:#eef0ed; }
+.bookmark[aria-pressed="true"] { color:#163cff; background:#eef1ff; border-color:#c8d1ff; }
+.bookmark[aria-pressed="true"]:hover { background:#e1e7ff; }
+.bookmark:focus-visible { outline:2px solid #163cff; outline-offset:3px; }
+.status { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+@media (prefers-reduced-motion:reduce) { .bookmark { transition:none; } }

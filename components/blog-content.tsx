@@ -152,11 +152,11 @@ export function BlogContent({
                 {copy("Bình luận", "Comments")}
               </a>
               <BlogShare postId={preview ? undefined : post.id} url={url} title={post.title} />
+              <BlogReaderTools slug={post.slug} />
             </div>
           )}
         </div>
       </header>
-      {!preview && <BlogReaderTools slug={post.slug} />}
       {!preview && series}
       <div className="reading-cover">
         <Cover language={preview ? "vi" : "en"} id={post.coverId} title={post.title} loading="eager" />
