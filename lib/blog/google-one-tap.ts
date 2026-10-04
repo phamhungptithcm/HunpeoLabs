@@ -4,7 +4,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { getBlogClientAuth } from "./firebase-client";
-import { request } from "@/components/blog-admin/client";
+import { createVerifiedGoogleSession } from "./google-login";
 
 /** Google credentials must be exchanged and verified by Firebase; never trust decoded email. */
 export async function createOneTapSession(credential: string) {
@@ -16,9 +16,7 @@ export async function createOneTapSession(credential: string) {
       auth,
       GoogleAuthProvider.credential(credential),
     );
-    return await request<{ role: string | null }>("/api/blog/session", "POST", {
-      idToken: await result.user.getIdToken(),
-    });
+    return await createVerifiedGoogleSession(result.user);
   } finally {
     await signOut(auth).catch(() => {});
   }

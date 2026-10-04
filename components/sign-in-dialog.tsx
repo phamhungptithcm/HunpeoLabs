@@ -15,6 +15,12 @@ export function openSignIn() { window.dispatchEvent(new Event("hl:open-sign-in")
 export function SignInDialog() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [externalBusy, setExternalBusy] = useState(false);
+  useEffect(() => {
+    const update = (event: Event) => setExternalBusy(Boolean((event as CustomEvent<boolean>).detail));
+    window.addEventListener("hl:google-login-busy", update);
+    return () => window.removeEventListener("hl:google-login-busy", update);
+  }, []);
   const { actor } = useBlogSession();
   const router = useRouter();
   const params = useSearchParams();
@@ -52,15 +58,15 @@ export function SignInDialog() {
   }, [open, actor]);
   if (!open) return null;
   if (actor) return <AccountDialog actor={actor} onClose={() => setOpen(false)} />;
-  const close = () => { if (!busy) setOpen(false); };
+  const close = () => { if (!busy && !externalBusy) setOpen(false); };
   return createPortal(
     <dialog ref={ref} className={`${styles.dialog} blog-surface`} aria-label="Sign in"
       onCancel={event => { event.preventDefault(); close(); }}
       onClick={event => { if (event.currentTarget === event.target) close(); }}>
-      <button type="button" className={styles.close} onClick={close} disabled={busy} aria-label="Close" title="Close" autoFocus>
+      <button type="button" className={styles.close} onClick={close} disabled={busy || externalBusy} aria-label="Close" title="Close" autoFocus>
         <BlogIcon name="close" size={18} />
       </button>
-      <Login embedded compact headingId={titleId} onBusyChange={setBusy} onSuccess={session => {
+      <Login embedded compact blocked={externalBusy} headingId={titleId} onBusyChange={setBusy} onSuccess={session => {
         setOpen(false); setBusy(false);
         if (studio.current && session.role) router.push("/admin/blog");
         router.refresh();

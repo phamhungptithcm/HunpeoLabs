@@ -8,7 +8,8 @@ import {
   signOut,
   type Auth,
 } from "firebase/auth";
-import { request, message } from "./client";
+import { beginGoogleLogin, createVerifiedGoogleSession } from "@/lib/blog/google-login";
+import { message } from "./client";
 import { BlogBrand, BlogIcon } from "./ui";
 import { needsLoginDocumentReload } from "@/lib/blog/login-document";
 import { beginProgress } from "@/lib/ui/action-progress";
@@ -21,6 +22,7 @@ export function Login({
   compact = false,
   headingId,
   onBusyChange,
+  blocked = false,
 }: {
   admin?: boolean;
   embedded?: boolean;
@@ -29,6 +31,7 @@ export function Login({
   compact?: boolean;
   headingId?: string;
   onBusyChange?: (busy: boolean) => void;
+  blocked?: boolean;
 }) {
   const copy = (vi: string, en: string) => embedded ? en : vi;
   const auth = useRef<Auth | null>(null);
@@ -61,7 +64,9 @@ export function Login({
     };
   }, [attempt, embedded, compact]);
   async function login() {
-    if (!auth.current || busy) return;
+    if (!auth.current || busy || blocked) return;
+    const release = beginGoogleLogin();
+    if (!release) return;
     setBusy(true);
     setNotice("");
     const provider = new GoogleAuthProvider();
@@ -70,11 +75,7 @@ export function Login({
     try {
       // Keep the popup call in the click gesture; Firebase was initialized before enabling the button.
       const credential = await signInWithPopup(auth.current, provider);
-      const session = await request<{ role: string | null }>(
-        "/api/blog/session",
-        "POST",
-        { idToken: await credential.user.getIdToken() },
-      );
+      const session = await createVerifiedGoogleSession(credential.user);
       await signOut(auth.current);
       try {
         sessionStorage.removeItem("hl-one-tap-signed-out");
@@ -94,12 +95,13 @@ export function Login({
       setBusy(false);
     } finally {
       finish();
+      release();
     }
   }
   return (
     <div className={`auth-wrap google-auth-wrap${embedded ? " auth-embedded" : ""}${compact ? " auth-popup" : ""}`}>
       {!embedded && <BlogBrand />}
-      <section className="auth-panel google-auth-panel" aria-busy={busy}>
+      <section className="auth-panel google-auth-panel" aria-busy={busy || blocked}>
         {!embedded && <div className="google-auth-symbol">
           <BlogIcon name={admin ? "file" : "comment"} size={25} />
         </div>}
@@ -115,7 +117,7 @@ export function Login({
         <button
           type="button"
           className="google-signin"
-          disabled={!ready || busy}
+          disabled={!ready || busy || blocked}
           onClick={() => void login()}
         >
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -136,7 +138,7 @@ export function Login({
               d="M12 5.95c1.47 0 2.79.51 3.83 1.5l2.87-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.96 5.48l3.35 2.59A5.92 5.92 0 0 1 12 5.95Z"
             />
           </svg>
-          {busy
+          {busy || blocked
             ? copy("Đang đăng nhập…", "Signing in\u2026")
             : ready
               ? copy("Tiếp tục với Google", "Continue with Google")

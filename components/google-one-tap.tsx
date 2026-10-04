@@ -1,28 +1,22 @@
 "use client";
 
 import { openSignIn } from "./sign-in-dialog";
+import styles from "./google-one-tap.module.css";
 import Script from "next/script";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { beginProgress } from "@/lib/ui/action-progress";
 import { useBlogSession } from "./use-blog-session";
 
-type GoogleIdentity = {
-  initialize: (options: {
-    client_id: string;
-    auto_select: boolean;
-    use_fedcm_for_prompt: boolean;
-    cancel_on_tap_outside: boolean;
-    context: string;
-    callback: (response: { credential: string }) => void;
-  }) => void;
-  prompt: () => void;
-  cancel: () => void;
-};
+import { createOneTapController, type GoogleOneTapIdentity } from "@/lib/blog/one-tap-controller";
+import { blogSessionStore } from "@/lib/blog/session-store";
+import { beginGoogleLogin } from "@/lib/blog/google-login";
+import { message } from "./blog-admin/client";
+
 const identity = () =>
   (
     window as Window & {
-      google?: { accounts?: { id?: GoogleIdentity } };
+      google?: { accounts?: { id?: GoogleOneTapIdentity } };
     }
   ).google?.accounts?.id;
 
@@ -35,76 +29,70 @@ export function GoogleOneTap() {
     /^\d+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/.test(clientId) &&
     !path.startsWith("/admin/") &&
     path !== "/blog-account";
-  const { status, refreshing } = useBlogSession(eligible);
+  const { status } = useBlogSession(eligible);
   const [manualOpen, setManualOpen] = useState(false);
   useEffect(() => {
     const update = (event: Event) => setManualOpen(Boolean((event as CustomEvent<boolean>).detail));
     window.addEventListener("hl:sign-in-visible", update);
     return () => window.removeEventListener("hl:sign-in-visible", update);
   }, []);
-  const load = !manualOpen && eligible && status === "anonymous" && !refreshing && !signedOut();
+  const load = !manualOpen && eligible && status === "anonymous" && !signedOut();
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
-  const busy = useRef(false);
-  const attempted = useRef(false);
+  const [failed, setFailed] = useState(false);
+  const controller = useRef<ReturnType<typeof createOneTapController> | null>(null);
 
   useEffect(() => {
     const google = identity();
-    if (!eligible || !load || !ready || !google || attempted.current) return;
-    let active = true;
-    google.initialize({
-      client_id: clientId,
-      auto_select: false,
-      use_fedcm_for_prompt: true,
-      cancel_on_tap_outside: true,
-      context: "signin",
-      callback: async ({ credential }) => {
-        if (!active || busy.current) return;
-        busy.current = true;
+    if (!ready || !google) return;
+    const current = createOneTapController(google, clientId, {
+      start: () => {
+        const release = beginGoogleLogin();
+        if (!release) return null;
+        setFailed(false); setNotice("Signing in…");
         const finish = beginProgress();
-        setNotice("Signing in…");
-        try {
-          const { createOneTapSession } =
-            await import("@/lib/blog/google-one-tap");
-          if (!active) return;
-          await createOneTapSession(credential);
-          if (!active) return;
-          google.cancel();
-          window.dispatchEvent(new Event("hl:session-changed"));
-          setNotice("Signed in.");
-          router.refresh();
-        } catch {
-          if (active) setNotice("Could not sign in. Please try again.");
-        } finally {
-          finish();
-          busy.current = false;
-        }
+        return () => { finish(); release(); };
       },
+      exchange: async credential => {
+        const { createOneTapSession } = await import("@/lib/blog/google-one-tap");
+        await createOneTapSession(credential);
+      },
+      success: () => {
+        try { sessionStorage.removeItem("hl-one-tap-signed-out"); } catch {}
+        setNotice("");
+        window.dispatchEvent(new Event("hl:session-changed"));
+        router.refresh();
+      },
+      error: error => { setFailed(true); setNotice(message(error, "en")); },
     });
-    attempted.current = true;
-    google.prompt();
-    return () => {
-      active = false;
-      google.cancel();
-    };
-  }, [eligible, load, ready, clientId, router]);
+    controller.current = current;
+    return () => { current.dispose(); controller.current = null; };
+  }, [ready, clientId, router]);
+
+  useEffect(() => { controller.current?.update(load); }, [load, ready, clientId]);
 
   if (!eligible) return null;
   return (
     <>
-      {load && (
+      {eligible && (load || ready) && (
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"
           onReady={() => setReady(true)}
+          onError={() => { setFailed(true); setNotice("Could not connect to Google. Please try again."); }}
         />
       )}
       {notice && (
-        <div className="one-tap-notice" role="status">
+        <div className={styles.notice} data-error={failed} role={failed ? "alert" : "status"} aria-busy={!failed}>
+          <span className={styles.indicator} aria-hidden="true" />
+          <div className={styles.content}>
           {notice}{" "}
-          {notice.startsWith("Could not") && (
-            <button type="button" onClick={openSignIn}>Sign in</button>
-          )}
+          {failed && <div className={styles.actions}>
+            <button type="button" onClick={() => { if (!controller.current) { window.location.reload(); return; } setNotice(""); controller.current.retry(); blogSessionStore.refresh(); }}>Try again</button>
+            <button type="button" onClick={() => { setNotice(""); openSignIn(); }}>Other options</button>
+          </div>}
+          </div>
+          {failed && <button type="button" className={styles.close} aria-label="Dismiss" title="Dismiss" onClick={() => setNotice("")}>×</button>}
         </div>
       )}
     </>

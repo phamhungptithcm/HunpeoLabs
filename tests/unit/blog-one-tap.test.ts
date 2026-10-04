@@ -22,13 +22,13 @@ beforeEach(() => {
   mocks.getAuth.mockResolvedValue(mocks.auth);
   mocks.credential.mockReturnValue("google-credential");
   mocks.signIn.mockResolvedValue({
-    user: { getIdToken: async () => "firebase-verified-token" },
+    user: { uid: "fixture-reader", getIdToken: async () => "firebase-verified-token" },
   });
   mocks.signOut.mockResolvedValue(undefined);
 });
 describe("One Tap Firebase session exchange", () => {
   it("sends the Firebase token to the existing session endpoint, not the Google token", async () => {
-    mocks.request.mockResolvedValue({ role: "admin" });
+    mocks.request.mockResolvedValueOnce({ role: "admin" }).mockResolvedValueOnce({ uid: "fixture-reader", verified: true });
     await expect(createOneTapSession("google-id-token")).resolves.toEqual({
       role: "admin",
     });
@@ -51,7 +51,7 @@ describe("One Tap Firebase session exchange", () => {
     expect(mocks.signOut).toHaveBeenCalled();
   });
   it("does not elevate a reader", async () => {
-    mocks.request.mockResolvedValue({ role: null });
+    mocks.request.mockResolvedValueOnce({ role: null }).mockResolvedValueOnce({ uid: "fixture-reader", verified: true });
     await expect(createOneTapSession("google-token")).resolves.toEqual({
       role: null,
     });
