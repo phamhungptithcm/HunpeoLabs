@@ -4,6 +4,7 @@ const subscribe = () => () => {};
 import { countShare, type ShareChannel } from "@/lib/blog/share-count";
 import { shareLinks } from "@/lib/blog/share";
 import { BlogIcon } from "./blog-admin/ui";
+import { BlogToast, useToastNotice } from "./blog-admin/toast";
 import { BlogDialog } from "./blog-admin/dialog";
 const networks = {
   facebook: {
@@ -36,8 +37,8 @@ export function BlogShare({
     () => true,
     () => false,
   );
-  const [open, setOpen] = useState(false),
-    [notice, setNotice] = useState("");
+  const [open, setOpen] = useState(false);
+  const { notice, noticeKind, setNotice } = useToastNotice();
   const links = shareLinks(url, title);
   const urlId = useId();
   function record(channel: ShareChannel) {
@@ -46,10 +47,10 @@ export function BlogShare({
   async function copy() {
     try {
       await navigator.clipboard.writeText(links.canonical);
-      setNotice("Link copied.");
+      setNotice("Link copied.", "success");
       record("copy");
     } catch {
-      setNotice("Select and copy the link directly from the field.");
+      setNotice("Select and copy the link directly from the field.", "warning");
       setOpen(true);
     }
   }
@@ -94,11 +95,7 @@ export function BlogShare({
           Share
         </button>
       )}
-      {notice && !open && (
-        <span className="share-notice" role="status">
-          {notice}
-        </span>
-      )}
+      {notice && <BlogToast text={notice} kind={noticeKind} language="en" onClose={() => setNotice("")} />}
       {open && (
         <BlogDialog closeLabel="Close"
           title="Share post"
@@ -149,7 +146,7 @@ export function BlogShare({
                 } catch (e) {
                   if (!(e instanceof DOMException && e.name === "AbortError"))
                     setNotice(
-                      "Sharing could not open. Try copying the link.",
+                      "Sharing could not open. Try copying the link.", "error",
                     );
                 }
               }}
@@ -182,9 +179,7 @@ export function BlogShare({
               </button>
             </div>
           </div>
-          <p className="share-feedback" role="status">
-            {notice}
-          </p>
+
         </BlogDialog>
       )}
     </div>

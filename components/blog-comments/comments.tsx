@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { openSignIn } from "@/components/sign-in-dialog";
 import { request, message } from "@/components/blog-admin/client";
 import { Avatar, BlogIcon, StatusBadge } from "@/components/blog-admin/ui";
+import { BlogToast, useToastNotice } from "@/components/blog-admin/toast";
 import { BlogDialog } from "@/components/blog-admin/dialog";
 type Comment = {
   id: string;
@@ -21,6 +22,8 @@ type Page = {
   commentsEnabled: boolean;
 };
 export function Comments({ postId }: { postId: string }) {
+  const { notice, noticeKind, setNotice } = useToastNotice();
+  const [loadError, setLoadError] = useState(false);
   const [sessionVersion, setSessionVersion] = useState(0);
   useEffect(() => {
     const update = () => setSessionVersion(value => value + 1);
@@ -32,7 +35,6 @@ export function Comments({ postId }: { postId: string }) {
     [signed, setSigned] = useState(false),
     [text, setText] = useState(""),
     [parent, setParent] = useState(""),
-    [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [nonce, setNonce] = useState("");
   const [focused, setFocused] = useState<{
@@ -44,6 +46,7 @@ export function Comments({ postId }: { postId: string }) {
     [deleting, setDeleting] = useState<Comment | null>(null);
   const load = useCallback(async () => {
     setPage(await request<Page>(`/api/blog/comments?postId=${postId}`));
+    setLoadError(false);
   }, [postId]);
   const loadOwn = useCallback(
     async () =>
@@ -56,10 +59,10 @@ export function Comments({ postId }: { postId: string }) {
     let live = true;
     void request<Page>(`/api/blog/comments?postId=${postId}`)
       .then((p) => {
-        if (live) setPage(p);
+        if (live) { setPage(p); setLoadError(false); }
       })
       .catch((e) => {
-        if (live) setNotice(message(e, "en"));
+        if (live) { setLoadError(true); setNotice(message(e, "en"), "error"); }
       });
     void request<Comment[]>(`/api/blog/comments?postId=${postId}&mine=1`)
       .then((c) => {
@@ -81,7 +84,7 @@ export function Comments({ postId }: { postId: string }) {
     return () => {
       live = false;
     };
-  }, [postId, sessionVersion]);
+  }, [postId, sessionVersion, setNotice]);
   async function send(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -98,10 +101,10 @@ export function Comments({ postId }: { postId: string }) {
       setText("");
       setParent("");
       setNonce("");
-      setNotice(result.status === "approved" ? "Your comment is published." : "Your comment was held for review by our spam checks.");
+      setNotice(result.status === "approved" ? "Your comment is published." : "Your comment was held for review by our spam checks.", result.status === "approved" ? "success" : "info");
       await Promise.all([loadOwn(), load()]);
     } catch (e) {
-      setNotice(message(e, "en"));
+      setNotice(message(e, "en"), "error");
     } finally {
       setBusy(false);
     }
@@ -123,21 +126,17 @@ export function Comments({ postId }: { postId: string }) {
           Newest first <BlogIcon name="down" size={12} />
         </span>
       </div>
-      {notice && (
-        <p className="notice" role="status">
-          {notice}
-        </p>
-      )}
-      {!page && !notice && (
+      {notice && <BlogToast text={notice} kind={noticeKind} language="en" onClose={() => setNotice("")} />}
+      {!page && !loadError && (
         <div role="status">
           <div className="skeleton" />
           <p className="private-note">Loading comments…</p>
         </div>
       )}
-      {!page && notice && (
+      {!page && loadError && (
         <button
           className="button small"
-          onClick={() => void load().catch((e) => setNotice(message(e, "en")))}
+          onClick={() => void load().catch((e) => { setLoadError(true); setNotice(message(e, "en"), "error"); })}
         >
           Try again
         </button>
@@ -269,7 +268,7 @@ export function Comments({ postId }: { postId: string }) {
               );
               setPage({ ...next, items: [...page.items, ...next.items] });
             } catch (e) {
-              setNotice(message(e, "en"));
+              setNotice(message(e, "en"), "error");
             }
           }}
         >
@@ -290,9 +289,9 @@ export function Comments({ postId }: { postId: string }) {
                 });
                 setEditing(null);
                 await Promise.all([loadOwn(), load()]);
-                setNotice(result.status === "approved" ? "Your edit is published." : "Your edit was held for review by our spam checks.");
+                setNotice(result.status === "approved" ? "Your edit is published." : "Your edit was held for review by our spam checks.", result.status === "approved" ? "success" : "info");
               } catch (e) {
-                setNotice(message(e, "en"));
+                setNotice(message(e, "en"), "error");
                 setEditing(null);
               } finally {
                 setBusy(false);
@@ -333,9 +332,9 @@ export function Comments({ postId }: { postId: string }) {
                 });
                 setDeleting(null);
                 await Promise.all([loadOwn(), load()]);
-                setNotice("Comment deleted.");
+                setNotice("Comment deleted.", "success");
               } catch (e) {
-                setNotice(message(e, "en"));
+                setNotice(message(e, "en"), "error");
                 setDeleting(null);
               } finally {
                 setBusy(false);
@@ -362,8 +361,8 @@ function CommentItem({
   reply: (id: string) => void;
   nested?: boolean;
 }) {
+  const { notice, noticeKind, setNotice } = useToastNotice();
   const [replies, setReplies] = useState<Page | null>(null),
-    [notice, setNotice] = useState(""),
     [report, setReport] = useState(false),
     [reason, setReason] = useState(""),
     [busy, setBusy] = useState(false);
@@ -413,7 +412,7 @@ function CommentItem({
                     ],
                   });
                 } catch (e) {
-                  setNotice(message(e, "en"));
+                  setNotice(message(e, "en"), "error");
                 }
               }}
             >
@@ -421,11 +420,7 @@ function CommentItem({
             </button>
           )}
         </div>
-        {notice && (
-          <p className="private-note" role="status">
-            {notice}
-          </p>
-        )}
+        {notice && <BlogToast text={notice} kind={noticeKind} language="en" onClose={() => setNotice("")} />}
         {replies && (
           <div>
             {replies.items.map((r) => (
@@ -456,9 +451,9 @@ function CommentItem({
                   reason,
                 });
                 setReport(false);
-                setNotice("Report submitted. Thank you.");
+                setNotice("Report submitted. Thank you.", "success");
               } catch (e) {
-                setNotice(message(e, "en"));
+                setNotice(message(e, "en"), "error");
                 setReport(false);
               } finally {
                 setBusy(false);

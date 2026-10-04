@@ -1,7 +1,7 @@
 "use client";
 
 import { openSignIn } from "./sign-in-dialog";
-import styles from "./google-one-tap.module.css";
+import { BlogToast } from "./blog-admin/toast";
 import Script from "next/script";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -82,19 +82,12 @@ export function GoogleOneTap() {
           onError={() => { setFailed(true); setNotice("Could not connect to Google. Please try again."); }}
         />
       )}
-      {notice && (
-        <div className={styles.notice} data-error={failed} role={failed ? "alert" : "status"} aria-busy={!failed}>
-          <span className={styles.indicator} aria-hidden="true" />
-          <div className={styles.content}>
-          {notice}{" "}
-          {failed && <div className={styles.actions}>
-            <button type="button" onClick={() => { if (!controller.current) { window.location.reload(); return; } setNotice(""); controller.current.retry(); blogSessionStore.refresh(); }}>Try again</button>
-            <button type="button" onClick={() => { setNotice(""); openSignIn(); }}>Other options</button>
-          </div>}
-          </div>
-          {failed && <button type="button" className={styles.close} aria-label="Dismiss" title="Dismiss" onClick={() => setNotice("")}>×</button>}
-        </div>
-      )}
+      {notice && <BlogToast text={notice} language="en" kind={failed ? "error" : "info"}
+        pending={!failed} onClose={() => setNotice("")} actions={failed ? <>
+          <button type="button" onClick={() => { if (!controller.current) { window.location.reload(); return; } setNotice(""); controller.current.retry(); blogSessionStore.refresh(); }}>Try again</button>
+          <button type="button" onClick={() => { setNotice(""); openSignIn(); }}>Other options</button>
+        </> : undefined} />}
+
     </>
   );
 }

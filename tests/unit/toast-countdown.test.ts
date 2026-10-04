@@ -64,3 +64,18 @@ describe("toast countdown", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 });
+
+it("keeps pending operations visible beyond the timeout and resumes after every hold ends", () => {
+  const { timer, expire } = setup();
+  timer.hold("pending", true);
+  vi.advanceTimersByTime(15000);
+  timer.hold("hover", true);
+  timer.hold("pending", false);
+  vi.advanceTimersByTime(10000);
+  expect(expire).not.toHaveBeenCalled();
+  timer.hold("hover", false);
+  vi.advanceTimersByTime(4999);
+  expect(expire).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(1);
+  expect(expire).toHaveBeenCalledOnce();
+});

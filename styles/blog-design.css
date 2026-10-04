@@ -3650,3 +3650,8 @@
 .blog-surface .auth-popup .google-signin { margin-top: 24px; }
 .blog-surface .auth-popup .google-auth-footer { display: none; }
 .sign-in-trigger { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+
+.blog-toast-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
+.blog-toast .blog-toast-actions button { padding:0; border:0; background:transparent; color:var(--toast-accent); font:inherit; font-weight:600; cursor:pointer; }
+.blog-toast .blog-toast-actions button:hover { text-decoration:underline; }
+.blog-toast .blog-toast-actions button:focus-visible { outline:2px solid #163cff; outline-offset:3px; border-radius:2px; }

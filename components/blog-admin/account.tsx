@@ -1,5 +1,6 @@
 "use client";
 import { request, message } from "./client";
+import { BlogToast } from "./toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
@@ -54,7 +55,7 @@ export function Account({ name, avatar, staff = false, embedded = false, compact
           }}>{busy ? copy("Đang đăng xuất…", "Signing out…") : copy("Đăng xuất", "Sign out")}</button>
         </div>
       </div>
-      {notice && <p role="alert" className={styles.notice}>{notice}</p>}
+      {notice && <BlogToast text={notice} kind="error" language={embedded ? "vi" : "en"} onClose={() => setNotice("")} />}
     </section>
   );
 }

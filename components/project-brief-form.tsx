@@ -1,4 +1,5 @@
 "use client";
+import { BlogToast } from "./blog-admin/toast";
 import { progressFetch } from "@/lib/ui/action-progress";
 
 import { FormEvent, useState, useSyncExternalStore } from "react";
@@ -26,6 +27,7 @@ const serverSnapshot = () => false;
 
 export function ProjectBriefForm({ deliveryAvailable, contactEmail }: ProjectBriefFormProps) {
   const interactive = useSyncExternalStore(subscribeToHydration, clientSnapshot, serverSnapshot);
+  const [toastDismissed, setToastDismissed] = useState(false);
   const [manualBrief, setManualBrief] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle",
@@ -38,6 +40,7 @@ export function ProjectBriefForm({ deliveryAvailable, contactEmail }: ProjectBri
     event.preventDefault();
     if (submitState.status === "submitting") return;
 
+    setToastDismissed(false);
     const form = event.currentTarget;
     const formData = new FormData(form);
     const brief: ContactEmailBrief = {
@@ -155,13 +158,11 @@ export function ProjectBriefForm({ deliveryAvailable, contactEmail }: ProjectBri
       {manualBrief && (
         <label><span>Prepared brief</span><textarea readOnly rows={8} value={manualBrief} onFocus={(event) => event.currentTarget.select()} /></label>
       )}
-      <p
-        aria-live="polite"
-        className="project-brief__status"
-        data-status={submitState.status}
-      >
-        {submitState.message}
-      </p>
+      {submitState.status === "idle" ? <p className="project-brief__status">{submitState.message}</p> :
+        !toastDismissed && <BlogToast text={submitState.message} language="en"
+          kind={submitState.status === "error" ? "error" : submitState.status === "success" ? "success" : "info"}
+          pending={submitState.status === "submitting"} onClose={() => setToastDismissed(true)} />}
+
     </form>
   );
 }

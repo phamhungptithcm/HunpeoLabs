@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, useSyncExternalStore } from "react";
+import { BlogToast, useToastNotice } from "./blog-admin/toast";
 import { BlogDialog } from "./blog-admin/dialog";
 import { BlogIcon } from "./blog-admin/ui";
 
@@ -9,20 +10,21 @@ const subscribe = () => () => {};
 export function BlogRss({ url }: { url: string }) {
   const ready = useSyncExternalStore(subscribe, () => true, () => false);
   const [open, setOpen] = useState(false);
-  const [notice, setNotice] = useState("");
+  const { notice, noticeKind, setNotice } = useToastNotice();
   const inputId = useId();
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
-      setNotice("RSS link copied.");
+      setNotice("RSS link copied.", "success");
     } catch {
-      setNotice("Select the link in the field and copy it.");
+      setNotice("Select the link in the field and copy it.", "warning");
     }
   }
 
   return (
     <>
+      {notice && <BlogToast text={notice} kind={noticeKind} language="en" onClose={() => setNotice("")} />}
       <a
         className="button"
         href={url}
@@ -72,7 +74,7 @@ export function BlogRss({ url }: { url: string }) {
               </button>
             </div>
           </div>
-          <p className="share-feedback" role="status">{notice}</p>
+
           <a className="small" href={url}>Open RSS feed (XML)</a>
         </BlogDialog>
       )}

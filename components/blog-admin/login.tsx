@@ -10,6 +10,7 @@ import {
 } from "firebase/auth";
 import { beginGoogleLogin, createVerifiedGoogleSession } from "@/lib/blog/google-login";
 import { message } from "./client";
+import { BlogToast } from "./toast";
 import { BlogBrand, BlogIcon } from "./ui";
 import { needsLoginDocumentReload } from "@/lib/blog/login-document";
 import { beginProgress } from "@/lib/ui/action-progress";
@@ -39,6 +40,7 @@ export function Login({
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState("");
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
+  const [connectionFailed, setConnectionFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const documentUrl = performance.getEntriesByType("navigation")[0]?.name;
@@ -53,10 +55,11 @@ export function Login({
         auth.current = a;
         if (mounted) {
           setReady(true);
+          setConnectionFailed(false);
           setNotice("");
         }
       } catch (e) {
-        if (mounted) setNotice(message(e, embedded ? "en" : "vi"));
+        if (mounted) { setConnectionFailed(true); setNotice(message(e, embedded ? "en" : "vi")); }
       }
     })();
     return () => {
@@ -149,10 +152,8 @@ export function Login({
             ? copy("Chỉ dành cho thành viên được cấp quyền.", "For authorized team members only.")
             : copy("Email của bạn không hiển thị trong bình luận.", "Your email is never shown in comments.")}
         </p>}
-        <p role="status" className="auth-status">
-          {notice}
-        </p>
-        {!ready && notice && (
+        {notice && <BlogToast text={notice} kind="error" language={embedded ? "en" : "vi"} onClose={() => setNotice("")} />}
+        {!ready && connectionFailed && (
           <button
             className="button small"
             onClick={() => setAttempt((x) => x + 1)}
