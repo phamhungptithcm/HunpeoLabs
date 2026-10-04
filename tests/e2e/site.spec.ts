@@ -10,7 +10,7 @@ test("homepage communicates the offer without becoming an all-in-one page", asyn
       name: "We design and build web, mobile, and AI products.",
     }),
   ).toBeVisible();
-  await expect(page.getByText("Start with the change")).toBeVisible();
+  await expect(page.getByText("More ways we can help")).toBeVisible();
   await expect(
     page.getByText("Launch or rebuild a digital product"),
   ).toBeVisible();
@@ -25,7 +25,7 @@ test("homepage communicates the offer without becoming an all-in-one page", asyn
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "Bring us the system that needs to change.",
+      name: "Tell us about your business.",
     }),
   ).toBeVisible();
 });
@@ -35,7 +35,7 @@ test("primary index content lives on separate routes", async ({ page }) => {
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "Your next product. Built and delivered.",
+      name: "A better place for your business online.",
     }),
   ).toBeVisible();
   await expect(
@@ -60,14 +60,7 @@ test("primary index content lives on separate routes", async ({ page }) => {
   }
   await expect(page.locator("main article")).toHaveCount(4);
 
-  await page.goto("/resources");
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Ideas, systems, and work in the open.",
-    }),
-  ).toBeVisible();
-  await expect(page.getByText("In preparation")).toHaveCount(2);
+  expect((await page.goto("/resources"))?.status()).toBe(404);
 });
 
 test("wide desktop layouts keep primary visuals inside the viewport", async ({
@@ -157,7 +150,7 @@ test("mobile navigation exposes the approved information architecture", async ({
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "Your next product. Built and delivered.",
+      name: "A better place for your business online.",
     }),
   ).toBeVisible();
 });
@@ -342,57 +335,10 @@ test("reduced motion keeps all content visible and disables orchestration", asyn
   await expect(page.locator(".home-services")).toHaveClass(/is-visible/);
 });
 
-test("dynamic product and work routes render maturity without invented metrics", async ({
-  page,
-}) => {
-  await page.goto("/products/incov");
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Turn every incident into better judgment.",
-    }),
-  ).toBeVisible();
-  await expect(page.getByText("Applied AI / Under validation")).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "AI recommends. People decide." }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Under validation. Built to be reviewed."),
-  ).toBeVisible();
-
-  await page.goto("/work/gig");
-  await expect(page).toHaveURL(/\/products\/gig$/);
-  await expect(page.getByText("Open-source engineering project")).toBeVisible();
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Know what changed. Know what shipped.",
-    }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", {
-      name: "See the whole trail. Then inspect any step.",
-    }),
-  ).toBeVisible();
-});
-
-test("overlapping product work URLs consolidate into the canonical product profile", async ({
-  page,
-}) => {
-  await page.goto("/work/ai-agent-kit");
-  await expect(page).toHaveURL(/\/products\/ai-agent-kit$/);
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Give AI agents room to work. Keep control.",
-    }),
-  ).toBeVisible();
-
-  await page.goto("/work/incov");
-  await expect(page).toHaveURL(/\/products\/incov$/);
-
-  await page.goto("/work/gig");
-  await expect(page).toHaveURL(/\/products\/gig$/);
+test("retired product and work routes return actual not-found responses", async ({ request }) => {
+  for (const path of ["/products/incov", "/products/gig", "/work", "/work/ai-agent-kit", "/work/incov", "/work/gig"]) {
+    expect((await request.get(path)).status(), path).toBe(404);
+  }
 });
 
 test("each product profile includes its own real demo and reviewable boundary", async ({
@@ -404,18 +350,6 @@ test("each product profile includes its own real demo and reviewable boundary", 
       heading: "Give AI agents room to work. Keep control.",
       video: "/media/products/ai-agent-kit/bootstrap-demo.mp4",
       boundary: "Open source. Inspectable by design.",
-    },
-    {
-      route: "/products/incov",
-      heading: "Turn every incident into better judgment.",
-      video: "/media/products/incov/architecture-walkthrough.mp4",
-      boundary: "Under validation. Built to be reviewed.",
-    },
-    {
-      route: "/products/gig",
-      heading: "Know what changed. Know what shipped.",
-      video: "/media/products/gig/release-showcase.mp4",
-      boundary: "Open source. Evidence first.",
     },
   ];
 
@@ -597,8 +531,7 @@ test("about introduces the founder and keeps its existing layout", async ({
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await profiles.getByRole("link", { name: "LinkedIn" }).focus();
   await expect(profiles.getByRole("link", { name: "LinkedIn" })).toBeFocused();
-  await page.goto("/company/about");
-  await expect(page).toHaveURL(/\/about$/);
+  expect((await page.goto("/company/about"))?.status()).toBe(404);
   await expect(page.getByRole("heading", { name: "Hung Pham — Founder" })).toBeVisible();
 });
 
@@ -711,8 +644,7 @@ test("careers and contact stay honest and independently addressable", async ({ p
     code: "DELIVERY_UNAVAILABLE",
   });
 
-  await page.goto("/company/about");
-  await expect(page).toHaveURL(/\/about$/);
+  expect((await page.goto("/company/about"))?.status()).toBe(404);
 });
 
 test("principles own the detailed operating method instead of repeating the work page", async ({
@@ -722,17 +654,7 @@ test("principles own the detailed operating method instead of repeating the work
   await expect(page.getByText("Do", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Avoid", { exact: true }).first()).toBeVisible();
 
-  await page.goto("/work");
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Engineering work with its status made explicit.",
-    }),
-  ).toBeVisible();
-  await expect(page.getByText("How to read this work")).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Observe the real system" }),
-  ).toHaveCount(0);
+  expect((await page.goto("/work"))?.status()).toBe(404);
 });
 
 
@@ -747,20 +669,20 @@ test("contact email handoff retains inputs and supports clipboard failure", asyn
   const name = page.getByLabel("Name", { exact: true });
   await page.getByRole("button", { name: "Copy brief", exact: true }).click();
   await expect(name).toHaveValue("");
-  await expect(page.getByRole("status").filter({ hasText: "Brief copied" })).toHaveCount(0);
+  await expect(page.locator(".project-brief__status").last()).not.toContainText("Brief copied");
   await name.fill("Test person");
-  await page.getByLabel("Work email").fill("test@example.com");
+  await page.getByLabel("Email").fill("test@example.com");
   await page.getByLabel("Project type").selectOption("AI system");
   await page.getByLabel("What needs to change?", { exact: true }).fill("Build a useful research tool with clear next steps.");
   await page.getByRole("button", { name: "Copy brief", exact: true }).click();
-  await expect(page.getByRole("status").filter({ hasText: /Brief copied|copy it manually|Send it to support/ })).toContainText("Brief copied");
+  await expect(page.locator(".project-brief__status").last()).toContainText("Brief copied");
   expect(await page.evaluate(() => (window as unknown as { copiedBrief: string }).copiedBrief)).toContain("Reply email: test@example.com");
   await page.evaluate(() => { Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new Error("Denied"); } } }); });
   await page.getByRole("button", { name: "Copy brief", exact: true }).click();
   await expect(page.getByLabel("Prepared brief")).toHaveValue(/Build a useful research tool/);
-  await expect(page.getByRole("alert").filter({ hasText: "copy it manually" })).toContainText("copy it manually");
+  await expect(page.locator(".project-brief__status").last()).toContainText("copy it manually");
   await page.getByRole("button", { name: "Continue in email", exact: true }).click();
-  await expect(page.getByRole("status").filter({ hasText: /Brief copied|copy it manually|Send it to support/ })).toContainText("Send it to support@hunpeolabs.com");
+  await expect(page.locator(".project-brief__status").last()).toContainText("Send it to support@hunpeolabs.com");
   await expect(name).toHaveValue("Test person");
   await expect(page.getByLabel("What needs to change?", { exact: true })).toHaveValue("Build a useful research tool with clear next steps.");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -770,7 +692,7 @@ test("contact configured webhook preserves delivery and offers email on failure"
   test.skip(!process.env.CONTACT_WEBHOOK_URL, "Requires isolated configured server");
   await page.goto("/contact");
   await page.getByLabel("Name", { exact: true }).fill("Test person");
-  await page.getByLabel("Work email").fill("test@example.com");
+  await page.getByLabel("Email").fill("test@example.com");
   await page.getByLabel("Project type").selectOption("Web product");
   await page.getByLabel("What needs to change?", { exact: true }).fill("A project brief used for local validation only.");
   await page.route("**/api/contact", route => route.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify({ message: "Delivery failed. Try email." }) }));

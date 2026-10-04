@@ -79,8 +79,8 @@ export default function AboutPage() {
           Start a project
           <ArrowIcon />
         </Link>
-        <Link className="button button--secondary" href="/work">
-          Explore our work
+        <Link className="button button--secondary" href="/products">
+          Explore our products
           <ArrowIcon />
         </Link>
       </section>

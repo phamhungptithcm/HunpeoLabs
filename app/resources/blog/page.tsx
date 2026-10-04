@@ -208,8 +208,8 @@ export default async function BlogPage({
                 View all posts
               </Link>
             ) : (
-              <Link className="button" href="/work">
-                Explore our work{" "}
+              <Link className="button" href="/products">
+                Explore our products{" "}
                 <BlogIcon name="arrow" size={14} />
               </Link>
             )}

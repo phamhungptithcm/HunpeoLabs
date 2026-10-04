@@ -1,8 +1,7 @@
+import { getPublishedCatalog, getCatalogDestination } from "@/content/product-catalog";
 import { z } from "zod";
 
-// Zod's JIT capability probe itself violates production CSP in Firefox.
-// Capture interpreter mode only for these bounded Ask schemas, then restore
-// the shared configuration synchronously for other application consumers.
+// Capture interpreter mode for Ask schemas without weakening production CSP.
 function withoutJit<T>(build: () => T): T {
   const previous = z.config().jitless;
   z.config({ jitless: true });
@@ -10,7 +9,7 @@ function withoutJit<T>(build: () => T): T {
 }
 
 export const MAX_ASK_BYTES = 12_000;
-export const askTopics = ["company", "founder", "services", "pricing", "process", "handover", "timeline", "work", "ai-agent-kit", "incov", "gig", "contact", "outside"] as const;
+export const askTopics = ["company", "founder", "services", "pricing", "process", "handover", "timeline", "work", "ai-agent-kit", "satsunic-seo", "satsunic-mec", "befam", "contact", "outside"] as const;
 export const serviceSlugs = ["web-development", "mobile-app-development", "ai-agent-development", "ai-product-engineering", "platform-modernization", "architecture-governance"] as const;
 export const selectionSchema = withoutJit(() => z.object({
   topic: z.enum(askTopics),
@@ -28,7 +27,7 @@ export const askRequestSchema = withoutJit(() => z.object({
 }).strict());
 export type AskRequest = z.infer<typeof askRequestSchema>;
 
-export const sourceIds = ["about", "services", "contact", "work", "ai-agent-kit", "incov", "gig", ...serviceSlugs] as const;
+export const sourceIds = ["about", "services", "contact", "work", "ai-agent-kit", "satsunic-seo", "satsunic-mec", "befam", ...serviceSlugs] as const;
 export const askAnswerSchema = withoutJit(() => z.object({
   title: z.string().max(160),
   paragraphs: z.array(z.string().max(1500)).max(5),
@@ -51,8 +50,9 @@ export type AskEvent = z.infer<typeof askEventSchema>;
 export function sourceLink(id: typeof sourceIds[number]) {
   if (id === "about") return { label: "About HunpeoLabs", href: "/about" };
   if (id === "services") return { label: "Services", href: "/services" };
-  if (id === "work") return { label: "Selected work", href: "/work" };
-  if (id === "ai-agent-kit" || id === "incov" || id === "gig") return { label: id === "ai-agent-kit" ? "AI Agent Kit" : id === "incov" ? "IncOv" : "Gig", href: `/products/${id}` };
+  if (id === "work") return { label: "Products", href: "/products" };
+  const product = getPublishedCatalog().find(product => product.id === id);
+  if (product) return { label: product.name, href: getCatalogDestination(product) };
   if (id === "contact") return { label: "Contact", href: "/contact" };
   return { label: id.split("-").map(word => word[0].toUpperCase() + word.slice(1)).join(" "), href: `/services/${id}` };
 }

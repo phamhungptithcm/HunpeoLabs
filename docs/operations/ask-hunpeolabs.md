@@ -1,6 +1,6 @@
 # Ask HunpeoLabs operations
 
-Approved scope: HUNPEOLABS-ASK-001. Public pages outside admin/Studio have a floating composer and viewport-bounded conversation panel matching the capsule width, with a transparent 4px-blurred page backdrop. Published company, founder, services, pricing conditions, and delivery answers run without a model. Founder answers show the owner-supplied Hung Pham photograph and verified public profile links. JPEG private metadata was removed; encoded image scans and orientation are preserved. No invented prices, availability, qualifications, or experience are included.
+Approved scope: HUNPEOLABS-ASK-001. The public homepage and service pages have a floating composer and viewport-bounded conversation panel matching the capsule width, with a transparent 4px-blurred page backdrop. Published company, founder, services, pricing conditions, and delivery answers run without a model. Founder answers show the owner-supplied Hung Pham photograph and verified public profile links. JPEG private metadata was removed; encoded image scans and orientation are preserved. No invented prices, availability, qualifications, or experience are included.
 
 ## Cost controls
 
@@ -52,8 +52,4 @@ Timeline, public work and general handover are deterministic published topics in
 
 ## Public routing and catalog source
 
-Ask has one root-layout mount on public UI pages. The client pathname gate excludes /admin and /studio segments; blog index/detail starts as a circular launcher with no full-input spacer. Navigating to a different pathname resets the page-scoped conversation and aborts pending work/cleans native dialog and timers. Studio/auth implementation is unchanged. Public profiles come only from the products already published in content/site.ts; named product answers and selected-work summaries use the same catalog. No external repo version or capability is inferred. Owner resumed production publication for v3.3.0; ASK_AI_ENABLED is explicitly false. The route gate waits for the browser URL to avoid inert Ask on private global 404 pages.
-
-## v3.3.0 release boundary
-
-Production release contains published answers only. Genkit/OpenTelemetry audit reports three high and one moderate transitive advisories, retained without suppression. No exporter/preload is configured and the provider stays behind the disabled configuration/authorization path. Compatible dependency remediation and live provider acceptance are required before activation. Release checks and deployed revision are recorded in the task completion report; authenticated CMS, OAuth and paid model acceptance are not implied by public smoke checks.
+Ask has one root-layout mount on public UI pages. The client pathname gate excludes /admin and /studio segments; blog index/detail starts as a circular launcher with no full-input spacer. Navigating to a different pathname resets the page-scoped conversation and aborts pending work/cleans native dialog and timers. Studio/auth implementation is unchanged. Public profiles come only from the products already published in content/site.ts; named product answers and selected-work summaries use the same catalog. No external repo version or capability is inferred. Public release publication was paused by the owner while these refinements are implemented.

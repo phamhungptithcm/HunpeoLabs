@@ -1,4 +1,4 @@
-import { askWork, askProducts, viWork, eligibleAskSources, localizedService } from "@/content/ask-knowledge";
+import { askProducts, viProducts, eligibleAskSources, localizedService } from "@/content/ask-knowledge";
 import { askAnswerSchema, type AskAnswer, type AskLanguage, type AskRequest, type AskSelection } from "./contracts";
 
 export function normalizeQuestion(value: string) {
@@ -22,7 +22,8 @@ export function retrieveSelection(request: AskRequest): AskSelection {
   else if (/\b(mobile|ios|android|dien thoai|ung dung di dong)\b/.test(serviceText)) service = "mobile-app-development";
   else if (/\b(moderniz\w*|legacy|migration|hien dai hoa|he thong cu)\b/.test(serviceText)) service = "platform-modernization";
   else if (/\b(architecture|governance|kien truc|quan tri)\b/.test(serviceText)) service = "architecture-governance";
-  else if (/\b(web|website|portal|trang web)\b/.test(serviceText)) service = "web-development";
+  else if (/\b(web|website|portal|trang web|e-commerce|ecommerce|e commerce|online store|ban hang|thuong mai dien tu)\b/.test(serviceText)) service = "web-development";
+  else if (/\b(shop|store|small business|photograph\w*|portfolio|creator|social|cua hang|dien may|nhiep anh|chup (anh|hinh)|kinh doanh|quan ly cong viec)\b/.test(serviceText)) service = "web-development";
 
   const detail = /\b(deliverables|receive|hand.?over|ban giao|nhan duoc|source code)\b/.test(q) ? "deliverables" : /\b(included|include|hosting|support|maintenance|bao gom|bao tri|ho tro)\b/.test(q) ? "boundary" : /\b(process|quy trinh|steps|buoc)\b/.test(q) ? "process" : "overview";
   const founder = /\b(founder|fouder|founded|hung pham|pham hung|nguoi sang lap|ai sang lap)\b/.test(q) || (/\b(his|ong ay|anh ay|profile|linkedin|github)\b/.test(q) && /\b(founder|fouder|founded|hung pham|sang lap)\b/.test(previous));
@@ -31,7 +32,7 @@ export function retrieveSelection(request: AskRequest): AskSelection {
   const portfolio = /\b(portfolio|case stud\w*|projects|products|product catalog|san pham cong khai|san pham cua|cac san pham|co san pham|selected work|past work|experience|du an|nang luc|kinh nghiem|san pham da lam|ai agent kit|incov|gig)\b/.test(q);
   const handover = detail === "deliverables" || /\b(ownership|hosting|maintenance|support|bao tri|ho tro sau|quyen so huu|tai lieu)\b/.test(q);
   const contact = /\b(contact|email|lien he|start a project|bat dau du an)\b/.test(q);
-  const product = /\bai[ -]agent[ -]kit\b/.test(q) ? "ai-agent-kit" : /\bincov\b/.test(q) ? "incov" : /\bgig\b/.test(q) ? "gig" : null;
+  const product = /\bai[ -]agent[ -]kit\b/.test(q) ? "ai-agent-kit" : /\bsatsunic\s*(seo|search)\b/.test(q) ? "satsunic-seo" : /\bsatsunic\s*mec\b/.test(q) ? "satsunic-mec" : /\bbe\s*fam\b/.test(q) ? "befam" : null;
   const topic: AskSelection["topic"] = pricing ? "pricing" : founder ? "founder" : product ? product : contact ? "contact" : timing ? "timeline" : portfolio ? "work" : handover && !service ? "handover" : detail === "process" && !service ? "process" : service || /\b(service|services|dich vu|build|xay dung|lam app)\b/.test(q) ? "services" : /hunpeo|studio|company|cong ty/.test(q) ? "company" : "outside";
   return { topic, service, detail };
 }
@@ -72,12 +73,12 @@ export function buildAnswer(selection: AskSelection, language: AskLanguage, mode
         else if (selection.detail === "process") answer.paragraphs.push(vi ? "Thống nhất phạm vi → thiết kế → xây dựng → kiểm tra → bàn giao. Chi tiết quy trình được xác định theo dịch vụ và dự án." : service.process.join(" → "));
         else answer.paragraphs.push(service.boundary);
         answer.sourceIds = [service.slug as NonNullable<AskSelection["service"]>]; answer.action = service.slug as NonNullable<AskSelection["service"]>;
-        answer.followUp = selection.detail === "overview" ? (vi ? "Bạn muốn xem đầu ra bàn giao hay trao đổi phạm vi dự án?" : "Would you like to explore deliverables or discuss your project scope?") : null;
+        answer.followUp = selection.detail === "overview" ? (vi ? "Bạn đang kinh doanh gì và muốn khách làm gì khi vào website hoặc dùng công cụ này?" : "What does your business do, and what would you like customers to do on your website or with this tool?") : null;
       } else {
         answer.title = vi ? "Chọn dịch vụ phù hợp" : "Find the right service";
         answer.paragraphs = [vi ? "HunpeoLabs hỗ trợ xây dựng sản phẩm web/mobile, hệ thống AI và cải thiện nền tảng hiện có. Có thể bắt đầu từ ý tưởng hoặc một sản phẩm cần thay đổi." : "HunpeoLabs builds web/mobile products and AI systems, and improves existing platforms. You can start with an idea or an existing product that needs to change."];
         answer.bullets = ["Web Development", "Mobile App Development", "AI Agent Development", "AI Product Engineering", "Platform Modernization", "Architecture & Governance"];
-        answer.followUp = vi ? "Bạn đang xây dựng sản phẩm mới hay cải thiện hệ thống hiện có?" : "Are you building a new product or improving an existing system?";
+        answer.followUp = vi ? "Bạn đang kinh doanh gì và muốn khách làm gì khi vào website?" : "What does your business do, and what would you like customers to do on your website?";
         answer.sourceIds = ["services"]; answer.action = "services";
       } break;
     case "timeline":
@@ -87,22 +88,24 @@ export function buildAnswer(selection: AskSelection, language: AskLanguage, mode
       answer.followUp = vi ? "Bạn cần bản đầu tiên vào thời điểm nào và những chức năng nào phải có?" : "When do you need the first release, and which features must it include?";
       answer.sourceIds = ["services"]; break;
     case "ai-agent-kit":
-    case "incov":
-    case "gig": {
-      const product = askProducts.find(item => item.slug === selection.topic)!;
+    case "satsunic-seo":
+    case "satsunic-mec":
+    case "befam": {
+      const product = askProducts.find(item => item.id === selection.topic)!;
       answer.title = product.name;
-      answer.paragraphs = [vi ? viWork[product.slug].summary : product.summary, vi ? `Trạng thái: ${viWork[product.slug].status}. Hồ sơ mô tả chức năng và giới hạn hiện tại, chưa phải bằng chứng kết quả cho khách hàng hoặc xác nhận production.` : `${product.maturity}. ${product.boundary}`];
-      if (!vi) answer.bullets = product.capabilities.slice(0, 6);
+      answer.paragraphs = [vi ? viProducts[product.id] ?? product.summary : product.summary];
+      if (product.badge) answer.bullets = [product.badge];
+      answer.paragraphs.push(vi ? "Thông tin đã công khai không có nghĩa mọi kênh phân phối đã sẵn sàng. Xem trang Products để biết các liên kết hiện có." : "Publication does not mean every distribution channel is available. See Products for current links.");
       answer.sourceIds = [selection.topic];
-      answer.followUp = vi ? "Bạn muốn tìm hiểu cách sản phẩm hỗ trợ nhu cầu nào của bạn?" : "Which part of your workflow would you like this product to support?";
       break;
     }
     case "work":
-      answer.title = vi ? "Các sản phẩm và dự án công khai" : "Public products and selected work";
-      answer.paragraphs = [vi ? "Bạn có thể xem các hồ sơ sản phẩm và open-source bên dưới để hiểu hướng kỹ thuật của HunpeoLabs. Đây chưa phải case study chứng minh kết quả cho khách hàng; vai trò trong dự án khách hàng cần được xác nhận riêng." : "Explore these product and open-source profiles to understand HunpeoLabs’ engineering focus. They are not verified client outcome case studies; roles in client projects require separate confirmation."];
-      answer.bullets = askWork.map(item => `${item.name}: ${vi ? viWork[item.slug].summary : item.summary} (${vi ? viWork[item.slug].status : item.status})`);
-      answer.sourceIds = ["work", "ai-agent-kit", "incov", "gig"];
-      answer.followUp = vi ? "Bạn muốn xem công việc liên quan đến AI, web/mobile hay nền tảng hiện có?" : "Would you like to explore work related to AI, web/mobile or an existing platform?"; break;
+      answer.title = vi ? "Các sản phẩm công khai" : "Public products";
+      answer.paragraphs = [vi ? "Đây là danh mục sản phẩm đang công khai của HunpeoLabs; không phải case study chứng minh kết quả khách hàng." : "This is HunpeoLabs’ published product collection, not verified client outcome case studies."];
+      answer.bullets = askProducts.map(item => `${item.name}: ${vi ? viProducts[item.id] ?? item.summary : item.summary}`);
+      answer.sourceIds = ["work"];
+      answer.followUp = vi ? "Bạn muốn tìm hiểu sản phẩm nào?" : "Which product would you like to explore?";
+      break;
     case "handover":
       answer.title = vi ? "Bàn giao và hỗ trợ" : "Handover and support";
       answer.paragraphs = [vi ? "Đầu ra bàn giao được thống nhất theo từng dịch vụ. Source code, hướng dẫn build/phát hành và tài liệu cần được ghi rõ trong phạm vi dự án." : "Handover deliverables are agreed for each service. Source code, build/release instructions and documentation should be stated in the project scope.", vi ? "Hosting, bảo trì, thời hạn hỗ trợ và quyền sở hữu cần được thỏa thuận rõ trước khi bắt đầu; không mặc định là đã bao gồm." : "Hosting, maintenance, support duration and ownership terms need explicit agreement before work starts; they are not assumed to be included."];

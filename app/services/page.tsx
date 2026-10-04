@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { createPageMetadata } from "@/app/seo";
 import { ServicesCta, ServicesDelivery } from "@/components/services-content";
+import { ProductCatalogVisual } from "@/components/product-catalog-visual";
+import { getPublishedCatalog, getCatalogDestination } from "@/content/product-catalog";
 import { services } from "@/content/site";
+import { CustomerAudiences } from "@/components/customer-audiences";
 
 export const metadata = createPageMetadata({
-  title: "Software Development & AI Services",
-  description: "Explore web development, mobile apps, AI agents, AI product engineering, platform modernization, and architecture services from Hunpeo Labs.",
+  title: "Websites & Digital Tools for Small Businesses",
+  description: "Explore shop websites, photographer portfolios, and digital tools for small businesses, alongside HunpeoLabs web, mobile, and AI development services.",
   path: "/services",
 });
 
@@ -23,11 +26,6 @@ const groups = [
     { slug: "architecture-governance", symbol: "⌘", summary: "Technical direction your team can turn into a delivery plan." },
   ] },
 ];
-const projects = [
-  { name: "AI Agent Kit", slug: "ai-agent-kit", status: "Open-source engineering platform", summary: "Repository-aware agent workflows with explicit controls and reviewable evidence.", steps: ["Context", "Agent", "Review"] },
-  { name: "Gig", slug: "gig", status: "Open-source engineering project", summary: "Connect source changes, release paths, and the evidence behind a delivery.", steps: ["Source", "Release", "Evidence"] },
-  { name: "IncOv", slug: "incov", status: "Under validation", summary: "Explore incident decision support with trusted knowledge and human review.", steps: ["Incident", "Knowledge", "Decision"] },
-];
 const questions = [
   ["Can we start with an idea?", "Yes. Start with the problem, the intended users, and the outcome you want. Discovery defines the first scope and the decisions needed before development."],
   ["What will we receive at handover?", "The agreed deliverables, relevant source code and documentation, test results, and any accepted limitations. The exact handover is defined before work begins."],
@@ -42,11 +40,11 @@ export default function ServicesPage() {
         <section className="hero">
           <div>
             <span className="eyebrow">SOFTWARE SERVICES / HUNPEO LABS</span>
-            <h1>Your next product.<br /><em>Built and delivered.</em></h1>
-            <p>We design and build websites, mobile apps, and AI systems, and improve the platforms behind them. From a clear scope to a practical handover.</p>
+            <h1>A better place<br /><em>for your business online.</em></h1>
+            <p>A website for your shop. A portfolio for your creative work. A simpler way to handle customer requests. We agree on what you need, build it, and show you how to use it.</p>
             <div className="actions">
               <Link className="btn primary" href="/contact">Tell us what you want to build <span aria-hidden="true">↗</span></Link>
-              <a className="btn" href="#work">Explore our work ↓</a>
+              <Link className="btn" href="/products">Explore our products <span aria-hidden="true">↗</span></Link>
             </div>
           </div>
           <div className="abstract" role="img" aria-label="Concept illustration: an idea becomes a delivered product">
@@ -82,21 +80,21 @@ export default function ServicesPage() {
           ))}
         </section>
       </div>
+      <CustomerAudiences examples />
       <div><ServicesDelivery /></div>
       <div className="wrap">
         <section className="section" id="work">
           <div className="section-head">
-            <div><span className="eyebrow">OUR OWN ENGINEERING PROJECTS</span><h2>Explore how we build.</h2></div>
-            <p>A look at our engineering approaches and the problems we explore. These are our own projects, each at its stated stage.</p>
+            <div><span className="eyebrow">OUR OWN PRODUCTS</span><h2>Products from our lab.</h2></div>
+            <p>Explore the same products in our public collection, each at its stated stage. See what we build and the problems we focus on.</p>
           </div>
           <div className="projects">
-            {projects.map((project) => (
-              <article className="project" key={project.slug}>
-                <div className="project-art" aria-hidden="true">
-                  {project.steps.map((step, index) => <div className="project-node" key={step}>{index > 0 && <i>→</i>}<span>{step}</span></div>)}
-                </div>
-                <span className="status">{project.status}</span><h3>{project.name}</h3><p>{project.summary}</p>
-                <Link className="text-link" href={`/products/${project.slug}`}>Explore project ↗</Link>
+            {getPublishedCatalog().map((product) => (
+              <article className="project" key={product.id}>
+                <div className="catalog-art"><ProductCatalogVisual product={product} /></div>
+                <span className="status">{product.category}</span><h3>{product.name}</h3><p>{product.summary}</p>
+                {product.badge && <p className="product-badge">{product.badge}</p>}
+                <Link className="text-link" href={getCatalogDestination(product)}>Explore {product.name} ↗</Link>
               </article>
             ))}
           </div>

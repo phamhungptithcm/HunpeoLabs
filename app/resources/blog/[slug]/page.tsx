@@ -10,6 +10,8 @@ import { Suspense } from "react";
 import { RelatedPostsLoading } from "@/components/blog-loading";
 import { listPublished } from "@/lib/blog/repository";
 import { getPublishedForRender } from "@/lib/blog/public-read";
+import { articleServiceIds } from "@/content/service-discovery";
+import { services } from "@/content/site";
 export const dynamic = "force-dynamic";
 
 type BlogArticlePageProps = {
@@ -122,6 +124,13 @@ export default async function BlogArticlePage({
   return (
     <>
       <BlogContent post={post} url={articleUrl} />
+      {articleServiceIds[post.slug]?.length > 0 && <section className="container related-stories" aria-label="Related services">
+        <h2>Build an AI workflow with HunpeoLabs</h2>
+        <p>Explore the scope, deliverables, and review process for related services.</p>
+        <ul>{services.filter(service => articleServiceIds[post.slug].includes(service.slug)).map(service =>
+          <li key={service.slug}><Link href={`/services/${service.slug}`}>{service.name}</Link></li>
+        )}</ul>
+      </section>}
       <Suspense fallback={<RelatedPostsLoading />}>
         <RelatedPosts current={post} />
       </Suspense>

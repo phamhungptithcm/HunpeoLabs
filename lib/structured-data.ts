@@ -1,5 +1,7 @@
 import { getSiteUrl, SITE_NAME } from "@/app/seo";
-import type { Product, Service, WorkItem } from "@/content/site";
+import { getProduct, type Product, type Service, type WorkItem } from "@/content/site";
+
+import { getPublishedCatalog, getCatalogDestination, type CatalogProduct } from "@/content/product-catalog";
 
 type BreadcrumbItem = {
   name: string;
@@ -122,5 +124,28 @@ export function createWorkStructuredData(item: WorkItem) {
         { name: item.name, path },
       ]),
     ],
+  };
+}
+
+/** Only the catalog's public facts; no invented offers, ratings or availability. */
+export function createCatalogProductStructuredData(product: CatalogProduct) {
+  const path = getCatalogDestination(product);
+  const url = absoluteUrl(path);
+  const verifiedSource = getProduct(product.id);
+  if (product.action.kind === "internal" && verifiedSource?.repositoryUrl) {
+    return createProductStructuredData({ ...verifiedSource, name: product.name, summary: product.summary });
+  }
+  return { "@context": "https://schema.org", "@graph": [
+    { "@type": "CreativeWork", "@id": `${url}#product`, name: product.name,
+      description: product.summary, url, creator: organizationReference() },
+    createBreadcrumbList([{ name: SITE_NAME, path: "/" }, { name: "Products", path: "/products" }, { name: product.name, path }]),
+  ] };
+}
+export function createCatalogStructuredData() {
+  return { "@context": "https://schema.org", "@type": "CollectionPage", "@id": absoluteUrl("/products#collection"),
+    name: "HunpeoLabs Products", url: absoluteUrl("/products"), publisher: organizationReference(),
+    mainEntity: { "@type": "ItemList", itemListElement: getPublishedCatalog().map((product, index) => ({
+      "@type": "ListItem", position: index + 1, name: product.name, url: absoluteUrl(getCatalogDestination(product)),
+    })) },
   };
 }

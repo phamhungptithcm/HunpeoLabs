@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowIcon } from "@/components/arrow-icon";
 import { EngineeringSignal } from "@/components/engineering-signal";
+import { CustomerAudiences } from "@/components/customer-audiences";
 import { LineIcon } from "@/components/line-icon";
 
 const servicePreview = [
@@ -39,16 +40,17 @@ export default function HomePage() {
             We design and build web, mobile, and <em>AI products.</em>
           </h1>
           <p>
-            Hunpeo Labs combines product taste, engineering depth, and responsible AI
-            to turn complex ideas into software built for real-world use.
+            HunpeoLabs builds websites and digital tools for local shops, independent
+            creators, and small businesses. Help customers understand what you offer,
+            explore your work, and get in touch.
           </p>
           <div className="hero__actions">
             <Link className="button button--primary" href="/contact">
               Start a project
               <ArrowIcon />
             </Link>
-            <Link className="button button--secondary" href="/work">
-              Explore our work
+            <Link className="button button--secondary" href="/products">
+              Explore our products
               <ArrowIcon />
             </Link>
           </div>
@@ -56,17 +58,16 @@ export default function HomePage() {
         <EngineeringSignal />
       </section>
 
+      <CustomerAudiences />
       <section className="home-services">
         <div className="home-services__heading">
-          <p className="mono">Start with the change</p>
-          <h2>Choose the problem that best describes where your system is now.</h2>
+          <p className="mono">More ways we can help</p>
+          <h2>Already have a product or a system to improve?</h2>
         </div>
         <div className="home-services__list">
           {servicePreview.map((service) => (
             <Link href={service.href} key={service.name}>
-              <span className="home-services__symbol" aria-hidden="true">
-                <LineIcon name={service.icon} />
-              </span>
+              <span className="home-services__symbol" aria-hidden="true"><LineIcon name={service.icon} /></span>
               <strong>{service.name}</strong>
               <p>{service.body}</p>
               <ArrowIcon />

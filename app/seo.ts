@@ -5,9 +5,9 @@ const LOCAL_SITE_URL = "http://localhost:3000";
 export const SITE_NAME = "Hunpeo Labs";
 export const SITE_CONTACT_EMAIL = "support@hunpeolabs.com";
 export const SITE_DESCRIPTION =
-  "Hunpeo Labs designs and builds web, mobile, and AI products with product taste, engineering depth, and responsible AI.";
+  "HunpeoLabs builds websites and digital tools for local shops, creators, and small businesses, alongside web, mobile, and AI product development.";
 export const DEFAULT_TITLE =
-  "Hunpeo Labs — Digital products, AI systems, enterprise engineering";
+  "Hunpeo Labs — Websites & Digital Tools for Small Businesses";
 
 function normalizePath(path: string): string {
   if (!path.startsWith("/")) {

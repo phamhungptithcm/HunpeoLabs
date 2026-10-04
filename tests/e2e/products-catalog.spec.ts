@@ -47,7 +47,7 @@ test("catalog shows distribution controls and disables missing destinations", as
       'main article a[href*="apps.apple.com"], main article a[href*="play.google.com"], main article a[href="#"]',
     ),
   ).toHaveCount(0);
-  await page
+  await page.locator("#ai-agent-kit")
     .getByRole("link", { name: "Product overview", exact: true })
     .click();
   await expect(page).toHaveURL(/\/products\/ai-agent-kit$/);
@@ -86,7 +86,7 @@ test("catalog remains usable at mobile, tablet and desktop widths", async ({
   await expect(page).toHaveURL(/#more-products$/);
 });
 
-test("catalog metadata and discovery use the current names without losing legacy profiles", async ({
+test("catalog metadata and discovery use current names while retired profiles are removed", async ({
   page,
   request,
 }) => {
@@ -102,6 +102,48 @@ test("catalog metadata and discovery use the current names without losing legacy
   const discovery = await (await request.get("/llms.txt")).text();
   for (const name of names) expect(discovery).toContain(name);
   for (const slug of ["incov", "gig"]) {
-    expect((await request.get(`/products/${slug}`)).status()).toBe(200);
+    expect((await request.get(`/products/${slug}`)).status()).toBe(404);
+  }
+});
+
+test("public portfolio CTAs and service examples use the published collection", async ({ page }) => {
+  for (const path of ["/", "/about", "/resources/blog", "/services"]) {
+    await page.goto(path);
+    await expect(page.getByRole("link", { name: "Explore our products", exact: false })).toHaveAttribute("href", "/products");
+  }
+  const section = page.locator("#work");
+  await expect(section.locator("article")).toHaveCount(names.length);
+  for (const name of names) await expect(section.getByRole("heading", { name, exact: true })).toBeVisible();
+  await expect(section.getByRole("heading", { name: /^(Gig|IncOv)$/ })).toHaveCount(0);
+  await expect(section.getByRole("link", { name: "Explore AI-Agent-Kit" })).toHaveAttribute("href", "/products/ai-agent-kit");
+  for (const [name, id] of [["SatsunicSEO", "satsunic-seo"], ["SatsunicMec", "satsunic-mec"], ["BeFam", "befam"]]) {
+    await expect(section.getByRole("link", { name: `Explore ${name}` })).toHaveAttribute("href", `/products/${id}`);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await section.getByRole("link", { name: "Explore BeFam" }).click();
+  await expect(page).toHaveURL(/\/products\/befam$/);
+  await expect(page.getByRole("heading", { name: "BeFam", exact: true })).toBeVisible();
+});
+
+
+test("retired public routes are absent while runtime routes remain", async ({ request }) => {
+  for (const path of ["/work", "/work/ai-agent-kit", "/work/gig", "/work/incov", "/products/gig", "/products/incov", "/resources", "/resources/open-source", "/resources/research", "/resources/talks", "/company/about"]) {
+    expect((await request.get(path)).status(), path).toBe(404);
+  }
+  for (const path of ["/products/ai-agent-kit", "/company/principles", "/resources/blog", "/blog-account", "/admin/blog/login"]) {
+    expect((await request.get(path)).status(), path).toBe(200);
+  }
+});
+
+test("every published product has a readable canonical overview", async ({ page }) => {
+  for (const [id, name] of [["ai-agent-kit", "AI-Agent-Kit"], ["satsunic-seo", "SatsunicSEO"], ["satsunic-mec", "SatsunicMec"], ["befam", "BeFam"]]) {
+    const response = await page.goto(`/products/${id}`);
+    expect(response?.status()).toBe(200);
+    await expect(page.locator("main h1")).toBeVisible();
+    await expect(page).toHaveTitle(new RegExp(name));
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`/products/${id}$`));
+    const graphs = await page.locator('script[type="application/ld+json"]').allTextContents();
+    expect(graphs.join(" ")).toContain(name);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
 });

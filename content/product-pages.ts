@@ -63,7 +63,7 @@ export type ProductPageConfig = {
 export const productPages: Record<ProductPageSlug, ProductPageConfig> = {
   "ai-agent-kit": {
     slug: "ai-agent-kit",
-    label: "AI Agent Kit / Control plane",
+    label: "AI-Agent-Kit / Control plane",
     status: "Open-source engineering platform",
     headline: "Give AI agents room to work. Keep control.",
     summary: "Repository context, explicit approval, and evidence in one workflow.",
@@ -79,7 +79,7 @@ export const productPages: Record<ProductPageSlug, ProductPageConfig> = {
       poster: "/media/products/ai-agent-kit/bootstrap-demo-poster.jpg",
       label: "Governed bootstrap",
       duration: "00:15",
-      caption: "A real local bootstrap flow from the public AI Agent Kit repository.",
+      caption: "A real local bootstrap flow from the public AI-Agent-Kit repository.",
     },
     command: "npx --yes @hunpeolabs/ai-agent-kit@latest bootstrap",
     problem: {

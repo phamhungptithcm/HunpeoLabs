@@ -44,10 +44,10 @@ export const services: Service[] = [
     "slug": "web-development",
     "name": "Web Development",
     "headline": "A website that explains your business. A web app that gets work done.",
-    "summary": "We design and build marketing websites, customer portals, and web application interfaces that make your offer clear and your users' next step easy.",
+    "summary": "We design and build marketing websites, e-commerce websites, customer portals, and web application interfaces that make your offer clear and your users' next step easy.",
     "problem": "You are launching a business, replacing an outdated website, or turning a product idea into a usable web experience.",
     "bestFor": "You are launching a business, replacing an outdated website, or turning a product idea into a usable web experience.",
-    "boundary": "Backend services, payments, CMS integrations, hosting setup, and ongoing content support are agreed separately when needed.",
+    "boundary": "Backend services, carts and checkout, payments, shipping, inventory and CMS integrations, hosting setup, and ongoing content support are agreed separately when needed.",
     "outcome": "A working website or web interface, reviewed against the agreed scope, with the materials your team needs to maintain it.",
     "deliverables": [
       "Page structure and content organized around your audience and offer.",

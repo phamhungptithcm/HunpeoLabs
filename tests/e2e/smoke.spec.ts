@@ -9,12 +9,9 @@ test("critical marketing routes render across supported browser engines", async 
   const homepage = await page.request.get("/");
   expect(homepage.ok()).toBe(true);
   expect(homepage.headers()["content-security-policy"]).toContain("default-src 'self'");
-  const scriptSources = homepage.headers()["content-security-policy"]
-    .split(";").map(directive => directive.trim())
-    .find(directive => directive.startsWith("script-src "))?.split(/\s+/).slice(1);
-  expect(scriptSources).toEqual(expect.arrayContaining([
-    "'self'", "'unsafe-inline'", "https://www.googletagmanager.com",
-  ]));
+  expect(homepage.headers()["content-security-policy"]).toContain(
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+  );
   expect(homepage.headers()["content-security-policy"]).toContain(
     "https://firebaseinstallations.googleapis.com",
   );
@@ -48,7 +45,7 @@ test("critical marketing routes render across supported browser engines", async 
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "Bring us the system that needs to change.",
+      name: "Tell us about your business.",
     }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Continue in email" })).toBeEnabled();

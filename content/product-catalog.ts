@@ -161,7 +161,7 @@ export function getCatalogGroups(entries: readonly CatalogProduct[] = productCat
 }
 
 export function getCatalogDestination(product: CatalogProduct) {
-  return product.action.kind === "summary" ? `/products#${product.id}` : product.action.href;
+  return `/products/${product.id}`;
 }
 
 /** Pending channels never become placeholder links or availability claims. */

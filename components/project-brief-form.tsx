@@ -9,6 +9,8 @@ import { ArrowIcon } from "@/components/arrow-icon";
 type ProjectBriefFormProps = {
   deliveryAvailable: boolean;
   contactEmail: string;
+  initialProjectType?: string;
+  initialBrief?: string;
 };
 
 type SubmitState =
@@ -25,7 +27,7 @@ const subscribeToHydration = () => () => {};
 const clientSnapshot = () => true;
 const serverSnapshot = () => false;
 
-export function ProjectBriefForm({ deliveryAvailable, contactEmail }: ProjectBriefFormProps) {
+export function ProjectBriefForm({ deliveryAvailable, contactEmail, initialProjectType = "", initialBrief = "" }: ProjectBriefFormProps) {
   const interactive = useSyncExternalStore(subscribeToHydration, clientSnapshot, serverSnapshot);
   const [toastDismissed, setToastDismissed] = useState(false);
   const [manualBrief, setManualBrief] = useState("");
@@ -114,7 +116,7 @@ export function ProjectBriefForm({ deliveryAvailable, contactEmail }: ProjectBri
         <input autoComplete="name" minLength={2} maxLength={120} name="name" required />
       </label>
       <label>
-        <span>Work email</span>
+        <span>Email</span>
         <input autoComplete="email" maxLength={254} name="email" required type="email" />
       </label>
       <label>
@@ -123,7 +125,7 @@ export function ProjectBriefForm({ deliveryAvailable, contactEmail }: ProjectBri
       </label>
       <label>
         <span>Project type</span>
-        <select defaultValue="" name="projectType" required>
+        <select defaultValue={initialProjectType} name="projectType" required>
           <option disabled value="">
             Select project type
           </option>
@@ -136,7 +138,7 @@ export function ProjectBriefForm({ deliveryAvailable, contactEmail }: ProjectBri
       </label>
       <label>
         <span>What needs to change?</span>
-        <textarea maxLength={5000} minLength={20} name="brief" required rows={5} />
+        <textarea defaultValue={initialBrief} placeholder="What do you do, who are your customers, and what would you like to make easier?" maxLength={5000} minLength={20} name="brief" required rows={5} />
       </label>
       <label className="project-brief__honeypot" aria-hidden="true">
         <span>Website</span>

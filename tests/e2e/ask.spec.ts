@@ -11,7 +11,7 @@ test("home question opens a sourced founder profile and preserves conversation o
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("article", { name: "Hung Pham profile" })).toBeVisible();
   await expect(dialog.getByRole("img", { name: "Hung Pham", exact: true })).toBeVisible();
-  await expect.poll(() => dialog.getByRole("img", { name: "Hung Pham", exact: true }).evaluate((image: HTMLImageElement) => image.naturalWidth), { timeout: 15_000 }).toBeGreaterThan(0);
+  await expect.poll(() => dialog.getByRole("img", { name: "Hung Pham", exact: true }).evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
   await expect(dialog.getByRole("link", { name: "LinkedIn" })).toHaveAttribute("href", "https://www.linkedin.com/in/hunpham/");
   await expect(dialog.getByRole("link", { name: "GitHub" })).toHaveAttribute("href", "https://github.com/phamhungptithcm");
   await expect(dialog.getByRole("link", { name: "Facebook" })).toHaveAttribute("href", "https://www.facebook.com/hawaihouu");
@@ -45,7 +45,9 @@ test("failed and truncated streams preserve the question and allow retry", async
   await page.route("**/api/ask", route => {
     attempts++;
     if (attempts === 1) return route.fulfill({ status: 200, contentType: "application/x-ndjson", body: '{"type":"status","phase":"retrieving"}\n' });
-    return route.fetch({ headers: { ...route.request().headers(), origin: process.env.NEXT_PUBLIC_SITE_URL || new URL(route.request().url()).origin }, postData: JSON.stringify({ ...route.request().postDataJSON(), question: "Who is the founder?" }) }).then(response => route.fulfill({ response }));
+    // This retry test exercises transport recovery. A production-mode local
+    // server enforces its configured origin; match it on this test request.
+    return route.fetch({ headers: { ...route.request().headers(), origin: process.env.NEXT_PUBLIC_SITE_URL ?? new URL(route.request().url()).origin }, postData: JSON.stringify({ ...route.request().postDataJSON(), question: "Who is the founder?" }) }).then(response => route.fulfill({ response }));
   });
   await page.goto("/", { waitUntil: "domcontentloaded" });
   const idle = page.getByRole("complementary", { name: "Ask HunpeoLabs" });
@@ -84,7 +86,7 @@ test("stop cancels a pending request and hide can reopen the composer", async ({
 
 test("public Ask appears once across public page families", async ({ context }) => {
   test.setTimeout(120_000); // Eight independently loaded route families, including cold dev compilation.
-  for (const path of ["/about", "/contact", "/products", "/products/gig", "/work", "/resources", "/privacy", "/careers"]) {
+  for (const path of ["/about", "/contact", "/products", "/products/ai-agent-kit", "/services", "/company/principles", "/privacy", "/careers"]) {
     const page = await context.newPage();
     await page.goto(path, { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("complementary", { name: "Ask HunpeoLabs" })).toHaveCount(1);
@@ -220,7 +222,7 @@ test("approved content answers timing work and general handover without the API"
   await expect(dialog.getByRole("heading", { name: "Thời gian triển khai" })).toBeVisible();
   await dialog.getByRole("textbox").fill("HunpeoLabs có dự án nào?");
   await dialog.getByRole("button", { name: "Send question" }).click();
-  await expect(dialog.getByRole("link", { name: "IncOv" })).toHaveAttribute("href", "/products/incov");
+  await expect(dialog.getByRole("link", { name: "Products" })).toHaveAttribute("href", "/products");
   await dialog.getByRole("textbox").fill("What are the ownership terms after handover?");
   await dialog.getByRole("button", { name: "Send question" }).click();
   await expect(dialog.getByRole("heading", { name: "Handover and support" })).toBeVisible();
@@ -235,9 +237,9 @@ test("blog starts as an icon and private namespaces exclude Ask", async ({ page,
   await expect(launcher).toBeEnabled();
   await launcher.click();
   const idle = page.getByRole("complementary", { name: "Ask HunpeoLabs" });
-  await idle.getByRole("textbox").fill("What is Gig?");
+  await idle.getByRole("textbox").fill("What is BeFam?");
   await idle.getByRole("button", { name: "Send question" }).click();
-  await expect(page.getByRole("dialog").getByRole("heading", { name: "Gig", exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: "BeFam", exact: true })).toBeVisible();
   await page.goto("/resources/blog/unpublished-test-slug", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("button", { name: "Ask HunpeoLabs", exact: true })).toBeVisible();
   await expect(page.getByRole("dialog")).not.toBeVisible();

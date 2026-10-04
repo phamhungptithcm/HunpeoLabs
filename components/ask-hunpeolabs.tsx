@@ -269,7 +269,7 @@ export function AskHunpeoLabs({ aiAvailable = false, startCollapsed = false }: {
   }, [turns, language, aiAvailable]);
 
   const vi = language === "vi";
-  const suggestions = vi ? ["HunpeoLabs là gì?", "Founder là ai?", "Chi phí dịch vụ thế nào?"] : ["What does HunpeoLabs do?", "Who is the founder?", "How does pricing work?"];
+  const suggestions = vi ? ["Tôi cần website cho cửa hàng", "Tôi muốn làm portfolio chụp ảnh", "Chi phí dịch vụ thế nào?"] : ["I need a website for my shop", "I need a photography portfolio", "How does pricing work?"];
   const composer = (expanded: boolean) => <div className={styles.composerArea}>
     {(expanded || focused) && <div className={styles.suggestions}>{suggestions.map(question => <button key={question} type="button" disabled={busy} onClick={() => void ask(question)}>{question}</button>)}</div>}
     <form className={styles.composer} onSubmit={(event: FormEvent) => { event.preventDefault(); if (busy) interrupt(); else void ask(input); }}>

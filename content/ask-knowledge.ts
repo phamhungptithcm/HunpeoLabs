@@ -1,4 +1,5 @@
-import { services, work, products } from "@/content/site";
+import { services } from "@/content/site";
+import { getPublishedCatalog, getCatalogDestination } from "@/content/product-catalog";
 import type { AskLanguage, AskSelection } from "@/lib/ask/contracts";
 
 // Seed content is a faithful translation/selection of the public sources in the approved v1 plan.
@@ -30,8 +31,8 @@ const viServiceFit: Record<string, string> = {
 
 const viServices: Record<string, { summary: string; boundary: string; deliverables: string[] }> = {
   "web-development": {
-    summary: "Thiết kế và xây dựng website giới thiệu, cổng khách hàng và giao diện web app để khách hiểu dịch vụ và thực hiện công việc dễ dàng.",
-    boundary: "Backend, thanh toán, CMS, cấu hình hosting và hỗ trợ nội dung được thống nhất riêng khi cần.",
+    summary: "Thiết kế và xây dựng website giới thiệu, website bán hàng (e-commerce), cổng khách hàng và giao diện web app để khách hiểu dịch vụ và thực hiện công việc dễ dàng.",
+    boundary: "Backend, giỏ hàng và đặt hàng, thanh toán, vận chuyển, tồn kho, CMS, cấu hình hosting và hỗ trợ nội dung được thống nhất riêng khi cần.",
     deliverables: ["Cấu trúc trang và nội dung theo nhu cầu người dùng.", "Giao diện desktop/mobile và các luồng đã thống nhất.", "Nền tảng SEO kỹ thuật, kiểm tra khả năng truy cập và hiệu năng.", "Source code, hướng dẫn cài đặt, kết quả kiểm thử và hướng dẫn phát hành."],
   },
   "mobile-app-development": {
@@ -61,23 +62,20 @@ const viServices: Record<string, { summary: string; boundary: string; deliverabl
   },
 };
 
-export const viWork: Record<string, { summary: string; status: string }> = {
-  "ai-agent-kit": { summary: "Hệ thống kỹ thuật open-source cho AI agent hiểu repository, với quyền hành động, ngữ cảnh nguồn và bằng chứng có thể rà soát.", status: "Sản phẩm open-source" },
-  incov: { summary: "Sản phẩm phân tích sự cố đang được kiểm chứng, kết hợp bằng chứng, kiến thức xử lý có thể tái sử dụng và duyệt của con người.", status: "Sản phẩm đang được kiểm chứng" },
-  gig: { summary: "Dự án kỹ thuật open-source theo dõi release từ ticket, thay đổi source, bằng chứng phát hành đến trạng thái production.", status: "Dự án kỹ thuật open-source" },
+export const askProducts = getPublishedCatalog();
+export const viProducts: Record<string, string> = {
+  "ai-agent-kit": "Xây dựng AI agents hiểu repository, với bước phê duyệt rõ ràng và bằng chứng có thể rà soát.",
+  "satsunic-seo": "Tìm vấn đề website, rà soát bằng chứng và chia sẻ báo cáo SEO từ Chrome.",
+  "satsunic-mec": "Khám phá giải phẫu, sinh lý và kiến thức y khoa qua mô hình tương tác.",
+  "befam": "Kết nối câu chuyện gia đình qua gia phả, sự kiện chung và công cụ cho sinh hoạt dòng họ.",
 };
-export const askWork = work.map(item => {
-  const product = products.find(record => record.slug === item.productSlug);
-  return { slug: item.slug, name: item.name, summary: product?.summary ?? item.summary, status: product?.maturity ?? item.status };
-});
-export const askProducts = products;
 export const productSourceChecks = { checkedAt: "2026-10-04", source: "/products", scope: "Only products and capabilities already published by HunpeoLabs; no external repository claims or inferred versions" } as const;
 
 export const askSources = [
-  ...products.map(product => ({ id: product.slug, topic: product.slug, source: `/products/${product.slug}`, text: `${product.name}. ${product.summary} ${product.maturity}. ${product.capabilities.join("; ")}. ${product.boundary}` })),
+  ...askProducts.map(product => ({ id: product.id, topic: product.id, source: getCatalogDestination(product), text: `${product.name}. ${product.summary}. ${product.category}. ${product.badge ?? ""}` })),
   { id: "timeline", topic: "timeline", source: "/services", text: "No approved delivery duration. Agree scope, integrations, content, feedback milestones and release requirements before confirming a schedule." },
   { id: "handover", topic: "handover", source: "/services", text: "Deliverables depend on the agreed service scope. Source, build/release instructions and documentation vary by service. Hosting, maintenance, support duration and ownership terms need explicit agreement." },
-  { id: "work", topic: "work", source: "/work", text: "Selected work consists of product and open-source profiles, not verified client outcomes. " + askWork.map(item => `${item.name}: ${item.summary} Status: ${item.status}.`).join(" ") },
+  { id: "work", topic: "work", source: "/products", text: "The published product collection is editorial visibility, not a claim of availability or verified client outcomes. " + askProducts.map(item => `${item.name}: ${item.summary}`).join(" ") },
   { id: "company", topic: "company", source: "/about", text: "Hunpeo Labs is an independent product and engineering studio founded by Hung Pham. We build web, mobile and AI products." },
   { id: "founder", topic: "founder", source: "/about", text: "Hung Pham — Founder of Hunpeo Labs. Only the public profile links are approved; no expanded biography or credentials." },
   { id: "pricing", topic: "pricing", source: "/services", text: "No published approved prices. Scope, deliverables and acceptance criteria are agreed before work. Hosting, deployment, ongoing support and third-party charges depend on project scope." },

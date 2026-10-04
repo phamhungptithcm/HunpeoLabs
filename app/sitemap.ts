@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/app/seo";
-import { products, services, work } from "@/content/site";
+import { services } from "@/content/site";
+import { getPublishedCatalog, getCatalogDestination } from "@/content/product-catalog";
 import { listDiscoveryPosts } from "@/lib/blog/repository";
 export const dynamic = "force-dynamic";
 
@@ -11,9 +12,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "",
     "/services",
     "/products",
-    "/work",
-    "/resources",
-    "/resources/open-source",
     ...(blogPosts.length ? ["/resources/blog"] : []),
     "/about",
     "/careers",
@@ -23,16 +21,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
   const dynamicRoutes = [
     ...services.map(({ slug }) => `/services/${slug}`),
-    ...products.map(({ slug }) => `/products/${slug}`),
-    ...work
-      .filter(({ productSlug }) => !productSlug)
-      .map(({ slug }) => `/work/${slug}`),
-    ...blogPosts.map(({ slug }) => `/resources/blog/${slug}`),
+    ...getPublishedCatalog().map(getCatalogDestination),
   ];
 
-  return [...staticRoutes, ...dynamicRoutes].map((route) => ({
+  const pages: MetadataRoute.Sitemap = [...staticRoutes, ...dynamicRoutes].map((route) => ({
     url: new URL(route || "/", siteUrl).toString(),
     changeFrequency: route === "" ? "weekly" : "monthly",
     priority: route === "" ? 1 : 0.7,
   }));
+  return [...pages, ...blogPosts.map(post => {
+    const changedAt = post.updatedAt || post.publishedAt;
+    return { url: new URL(`/resources/blog/${post.slug}`, siteUrl).toString(),
+      ...(changedAt && Number.isFinite(Date.parse(changedAt)) ? { lastModified: changedAt } : {}),
+      changeFrequency: "monthly" as const, priority: 0.7 };
+  })];
 }

@@ -1,6 +1,7 @@
 import { createPageMetadata, SITE_CONTACT_EMAIL } from "@/app/seo";
 import { ProjectBriefForm } from "@/components/project-brief-form";
 import { contactDeliveryIsConfigured } from "@/lib/contact";
+import { getCustomerAudience } from "@/content/customer-audiences";
 
 export const metadata = createPageMetadata({
   title: "Contact",
@@ -9,21 +10,22 @@ export const metadata = createPageMetadata({
 });
 
 const usefulContext = [
-  ["Current system", "How it works today, its boundaries, and pain points."],
-  ["Business outcome", "The impact or decision the work needs to enable."],
-  ["Constraints", "Technical, regulatory, budget, timeline, or team limits."],
-  ["Timing", "Target milestones, deadlines, and decision windows."],
+  ["Your business", "What you sell or do, and who your customers are."],
+  ["Your goal", "What customers should find, understand, or do."],
+  ["What you have", "Your photos, product details, existing website, and budget range."],
+  ["Timing", "When you would like to start and any date we need to discuss."],
 ] as const;
 
 const firstConversation = [
-  ["Review", "Start from the brief and identify the decision or system change at its center."],
-  ["Clarify", "Separate verified context from assumptions, unknowns, and constraints."],
-  ["Confirm fit", "Determine whether the problem matches our services and a credible scope."],
-  ["Define a next decision", "Make the next useful step explicit without implying work that has not been agreed."],
+  ["Review", "Understand your business and the task you want to make easier."],
+  ["Clarify", "Discuss the pages, content, and actions you need."],
+  ["Confirm fit", "Check whether our services fit your needs and budget."],
+  ["Agree on a next step", "Explain what we need before confirming scope, price, and timing."],
 ] as const;
 
-export default function ContactPage() {
+export default async function ContactPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const deliveryAvailable = contactDeliveryIsConfigured();
+  const audience = getCustomerAudience((await searchParams)?.audience);
 
   return (
     <main className="concept-page">
@@ -31,11 +33,11 @@ export default function ContactPage() {
         <div>
           <p className="mono">Contact</p>
           <h1>
-            Bring us the system that needs to change<span>.</span>
+            Tell us about your business<span>.</span>
           </h1>
           <p>
-            Tell us what you are building, where it is stuck, and what a credible next
-            step needs to accomplish.
+            What do you do, who are your customers, and what would you like them to do
+            on your website? Start with a short description; we can discuss the details together.
           </p>
           <div className="contact-direct">
             <p className="mono">Prefer email?</p>
@@ -46,7 +48,7 @@ export default function ContactPage() {
             </p>
           </div>
         </div>
-        <ProjectBriefForm contactEmail={SITE_CONTACT_EMAIL} deliveryAvailable={deliveryAvailable} />
+        <ProjectBriefForm key={audience?.id ?? "general"} contactEmail={SITE_CONTACT_EMAIL} deliveryAvailable={deliveryAvailable} initialProjectType={audience?.projectType} initialBrief={audience?.brief} />
       </section>
       <section className="contact-steps">
         {usefulContext.map(([title, body], index) => (

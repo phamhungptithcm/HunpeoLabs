@@ -4,7 +4,9 @@ import Image from "next/image";
 import { createPageMetadata } from "@/app/seo";
 import { ArrowIcon } from "@/components/arrow-icon";
 import { ProductCatalogVisual } from "@/components/product-catalog-visual";
-import { catalogDescription, getCatalogGroups, type CatalogProduct, type ProductChannel } from "@/content/product-catalog";
+import { catalogDescription, getCatalogDestination, getCatalogGroups, type CatalogProduct, type ProductChannel } from "@/content/product-catalog";
+import { StructuredData } from "@/components/structured-data";
+import { createCatalogStructuredData } from "@/lib/structured-data";
 import styles from "./products.module.css";
 
 export const metadata = createPageMetadata({ title: "Products", description: catalogDescription, path: "/products" });
@@ -15,7 +17,6 @@ function ChannelControl({ channel, className, label, children }: { channel: Prod
 }
 
 function ProductAction({ product }: { product: CatalogProduct }) {
-  const { action } = product;
   const channels = product.channels ?? [];
   const stores = channels.filter(({ kind }) => kind === "app-store" || kind === "google-play")
     .toSorted((a, b) => Number(a.kind === "google-play") - Number(b.kind === "google-play"));
@@ -32,9 +33,7 @@ function ProductAction({ product }: { product: CatalogProduct }) {
     {stores.length > 0 && <div className={styles.storeRow}>{stores.map((channel) => <ChannelControl key={channel.kind} channel={channel} className={styles.storeLink} label={`${product.name} on ${channel.kind === "app-store" ? "the App Store" : "Google Play"}`}>
       <Image unoptimized src={`/images/product-channels/${channel.kind === "app-store" ? "app-store.svg" : "google-play.png"}`} width={channel.kind === "app-store" ? 120 : 153} height={channel.kind === "app-store" ? 40 : 59} alt={channel.kind === "app-store" ? "Download on the App Store" : "Get it on Google Play"} className={channel.kind === "app-store" ? styles.appleBadge : styles.googleBadge} />
     </ChannelControl>)}</div>}
-    {action.kind === "internal" && <Link className={styles.explore} href={action.href}>{channels.length ? "Product overview" : `Explore ${product.name}`}<ArrowIcon /></Link>}
-    {!channels.length && action.kind === "external" && <a className={styles.explore} href={action.href}>Explore {product.name}<ArrowIcon /></a>}
-    {!channels.length && action.kind === "summary" && <details className={styles.productInfo}><summary>Explore {product.name}</summary><p>{action.description}</p></details>}
+    <Link className={styles.explore} href={getCatalogDestination(product)}>{channels.length ? "Product overview" : `Explore ${product.name}`}<ArrowIcon /></Link>
   </div>;
 }
 
@@ -42,6 +41,7 @@ export default function ProductsPage() {
   const { featured, other } = getCatalogGroups();
   return (
     <main className={styles.page}>
+      <StructuredData data={createCatalogStructuredData()} />
       <section className={styles.hero}>
         <div><span className={styles.eyebrow}>The Hunpeo Labs collection</span><h1>Real problems.<br />Purpose-built <em>products.</em></h1></div>
         <div><p>From AI engineering and search visibility to new ideas for everyday life. Explore the Hunpeo Labs collection.</p>

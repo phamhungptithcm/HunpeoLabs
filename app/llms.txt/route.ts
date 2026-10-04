@@ -1,7 +1,7 @@
 import { listDiscoveryPosts } from "@/lib/blog/repository";
 export const dynamic = "force-dynamic";
 import { getSiteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/app/seo";
-import { products, services, work } from "@/content/site";
+import { services } from "@/content/site";
 import {
   getPublishedCatalog,
   getCatalogDestination,
@@ -10,7 +10,6 @@ import {
 export async function GET() {
   const siteUrl = getSiteUrl();
   const catalog = getPublishedCatalog();
-  const catalogDestinations = new Set(catalog.map(getCatalogDestination));
   const posts = await listDiscoveryPosts();
   const lines = [
     `# ${SITE_NAME}`,
@@ -21,8 +20,6 @@ export async function GET() {
     `- Home: ${new URL("/", siteUrl)}`,
     `- Services: ${new URL("/services", siteUrl)}`,
     `- Products: ${new URL("/products", siteUrl)}`,
-    `- Selected work: ${new URL("/work", siteUrl)}`,
-    `- Open source: ${new URL("/resources/open-source", siteUrl)}`,
     `- About: ${new URL("/about", siteUrl)}`,
     "",
     "## Blog",
@@ -41,21 +38,6 @@ export async function GET() {
       (product) =>
         `- ${product.name}: ${new URL(getCatalogDestination(product), siteUrl)} — ${product.summary}`,
     ),
-    "",
-    "## Existing engineering product profiles",
-    ...products
-      .filter(
-        (product) => !catalogDestinations.has(`/products/${product.slug}`),
-      )
-      .map(
-        (product) =>
-          `- ${product.name}: ${new URL(`/products/${product.slug}`, siteUrl)} — ${product.summary}`,
-      ),
-    "",
-    "## Source-verified open work",
-    ...work
-      .filter((item) => item.repositoryUrl)
-      .map((item) => `- ${item.name}: ${item.repositoryUrl} — ${item.summary}`),
     "",
     "This file is a discovery aid. It does not override robots.txt or page-level indexing directives.",
   ];

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { services, type Service } from "@/content/site";
+import { serviceDiscovery } from "@/content/service-discovery";
+import { getPublishedCatalog, getCatalogDestination } from "@/content/product-catalog";
 
 const phases = [
   ["Agree on the work", "Define deliverables, responsibilities, and what completion means."],
@@ -49,6 +51,8 @@ export function ServicesDelivery({ steps }: { steps?: string[] }) {
 export function ServicesDetail({ service }: { service: Service }) {
   const index = services.findIndex(({ slug }) => slug === service.slug);
   const related = services.filter((_, candidate) => candidate !== index && Math.floor(candidate / 2) === Math.floor(index / 2));
+  const discovery = serviceDiscovery[service.slug];
+  const examples = getPublishedCatalog().filter(product => discovery?.productIds.includes(product.id));
   return (
     <main className="services-surface">
       <div className="detail">
@@ -85,6 +89,29 @@ export function ServicesDetail({ service }: { service: Service }) {
         </div>
         <ServicesDelivery steps={service.process} />
         <div className="wrap">
+          {discovery && <section className="section">
+            <div>
+              <span className="eyebrow">BEFORE YOU START</span>
+              <h2>Questions about {service.name}.</h2>
+              <p>Cost and delivery dates are confirmed from your scope, integrations, and release requirements. Third-party charges are discussed separately.</p>
+            </div>
+            <div>
+              {discovery.questions.map(({ question, answer }) => <details key={question}>
+                <summary>{question}</summary><p>{answer}</p>
+              </details>)}
+            </div>
+          </section>}
+          {examples.length > 0 && <section className="section">
+            <div>
+              <span className="eyebrow">OUR OWN PRODUCTS</span>
+              <h2>Explore related product work.</h2>
+              <p>These are HunpeoLabs products, each at its stated stage. They provide context for our work, rather than a promise of your project’s results.</p>
+            </div>
+            <div>{examples.map(product => <div key={product.id}>
+              <h3><Link href={getCatalogDestination(product)}>{product.name} ↗</Link></h3>
+              <p>{product.summary}</p>
+            </div>)}</div>
+          </section>}
           <section className="section">
             <span className="eyebrow">FIND THE RIGHT FIT</span>
             <h2>Explore related services.</h2>

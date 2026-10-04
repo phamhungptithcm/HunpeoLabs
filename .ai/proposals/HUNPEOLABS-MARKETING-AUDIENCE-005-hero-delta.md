@@ -1,0 +1,3 @@
+# Approved hero correction
+Human request: "mình vẫn muốn giữ cái này y chang" with original hero screenshot.
+Plan: restore only Home h1 to original exact markup `We design and build web, mobile, and <em>AI products.</em>`. Preserve current typography/layout/CSS and all other audience marketing changes. Update corresponding Home E2E expected heading in site/smoke. Low-risk text-only change, no data/API/provider changes. Validate scoped lint, original markup diff, browser visible heading/blue emphasis. Intelligence degraded source fallback if indexes stale. Approval is explicit correction instruction.

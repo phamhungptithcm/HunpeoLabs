@@ -14,7 +14,7 @@ describe("public Ask route boundary", () => {
   it.each(["/admin", "/admin/blog", "/admin/blog/new", "/admin/blog/settings", "/admin/blog/account", "/admin/blog/example/preview", "/studio", "/studio/editor", null])("never renders Ask for %s", pathname => {
     expect(askRouteMode(pathname)).toBeNull();
   });
-  it.each(["/", "/about", "/contact", "/products/gig", "/blog-account", "/administrator", "/studio-products"])("keeps public page %s in input mode", pathname => {
+  it.each(["/", "/about", "/contact", "/products/ai-agent-kit", "/blog-account", "/administrator", "/studio-products"])("keeps public page %s in input mode", pathname => {
     expect(askRouteMode(pathname)).toBe("input");
   });
   it.each(["/resources/blog", "/resources/blog/example-post"])("starts blog %s compact", pathname => {

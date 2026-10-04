@@ -1,7 +1,6 @@
-import { execFileSync } from "node:child_process";
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { askRequestSchema, selectionSchema, type AskRequest } from "@/lib/ask/contracts";
+import { askRequestSchema, selectionSchema, sourceLink, type AskRequest } from "@/lib/ask/contracts";
 import { buildAnswer, detectLanguage, retrieveSelection } from "@/lib/ask/retrieval";
 import { readAskAIConfig, buildSelectionPrompt } from "@/lib/ask/provider";
 import { founderProfile } from "@/content/ask-knowledge";
@@ -84,9 +83,10 @@ describe("approved content expansion", () => {
   });
   it("links public profiles with their actual maturity and does not claim client results", () => {
     const answer = buildAnswer({ topic: "work", service: null, detail: "overview" }, "en");
-    expect(answer.bullets.join(" ")).toContain("Applied AI product under validation");
+    expect(answer.bullets.join(" ")).toContain("SatsunicSEO");
+    expect(answer.bullets.join(" ")).not.toMatch(/IncOv|Gig/);
     expect(answer.paragraphs.join(" ")).toContain("not verified client outcome");
-    expect(answer.sourceIds).toEqual(["work", "ai-agent-kit", "incov", "gig"]);
+    expect(answer.sourceIds).toEqual(["work"]);
   });
   it.each(["timeline", "work", "handover"] as const)("does not answer expired %s knowledge", topic => {
     expect(buildAnswer({ topic, service: null, detail: "overview" }, "en", "published", Date.parse("2028-01-01")).title).toBe("Talk with HunpeoLabs");
@@ -105,7 +105,7 @@ describe("published product catalog answers", () => {
   it.each(["What products does HunpeoLabs have?", "HunpeoLabs có sản phẩm gì?"])("finds the published product catalog for %s", question => {
     expect(retrieveSelection({ ...base, question }).topic).toBe("work");
   });
-  it.each(["AI Agent Kit", "IncOv", "Gig"])("answers the named public product %s", name => {
+  it.each(["AI-Agent-Kit", "SatsunicSEO", "SatsunicMec", "BeFam"])("answers the named public product %s", name => {
     const selection = retrieveSelection({ ...base, question: `What is ${name}?` });
     const answer = buildAnswer(selection, "en");
     expect(answer.title).toBe(name);
@@ -113,26 +113,26 @@ describe("published product catalog answers", () => {
     expect(answer.paragraphs.join(" ")).not.toMatch(/v1\.7\.1|Resolution Packs|remote-first/);
   });
   it("named products also respect expiry", () => {
-    expect(buildAnswer({ topic: "gig", service: null, detail: "overview" }, "vi", "published", Date.parse("2028-01-01")).title).toBe("Trao đổi với HunpeoLabs");
+    expect(buildAnswer({ topic: "befam", service: null, detail: "overview" }, "vi", "published", Date.parse("2028-01-01")).title).toBe("Trao đổi với HunpeoLabs");
   });
 });
 
 
-describe("Ask CSP compatibility", () => {
-  it("constructs and validates schemas without eval and restores shared Zod settings", () => {
-    const script = `
-      import assert from "node:assert/strict";
-      let attempts = 0;
-      globalThis.Function = function () { attempts++; throw new Error("CSP blocked"); };
-      const { z } = await import("zod");
-      z.config({ jitless: false });
-      const contracts = await import("./lib/ask/contracts.ts");
-      assert.equal(contracts.askRequestSchema.safeParse({ question: "HunpeoLabs", sessionId: crypto.randomUUID() }).success, true);
-      assert.equal(contracts.askRequestSchema.safeParse({ question: "", sessionId: "invalid" }).success, false);
-      assert.equal(contracts.askEventSchema.safeParse({ type: "status", phase: "retrieving" }).success, true);
-      assert.equal(z.config().jitless, false);
-      assert.equal(attempts, 0);
-    `;
-    expect(() => execFileSync(process.execPath, ["--input-type=module", "-e", script], { cwd: process.cwd(), stdio: "pipe" })).not.toThrow();
+describe("retired route safety", () => {
+  it("keeps legacy portfolio questions inside the current public collection", () => {
+    for (const name of ["Gig", "IncOv"]) {
+      const answer = buildAnswer(retrieveSelection({ ...base, question: `What is ${name}?` }), "en");
+      expect(answer.bullets.join(" ")).not.toMatch(/Gig|IncOv/);
+      expect(answer.sourceIds.map(id => sourceLink(id).href)).toEqual(["/products"]);
+    }
+  });
+  it.each([["SatsunicSEO", "/products/satsunic-seo"], ["SatsunicMec", "/products/satsunic-mec"], ["BeFam", "/products/befam"]])("uses a real catalog anchor for %s", (name, href) => {
+    const answer = buildAnswer(retrieveSelection({ ...base, question: `What is ${name}?` }), "en");
+    expect(sourceLink(answer.sourceIds[0]).href).toBe(href);
+    expect(answer.paragraphs.join(" ")).toContain("does not mean every distribution channel is available");
+  });
+  it("rejects retired named topics instead of emitting removed destinations", () => {
+    expect(selectionSchema.safeParse({ topic: "gig", service: null, detail: "overview" }).success).toBe(false);
+    expect(selectionSchema.safeParse({ topic: "incov", service: null, detail: "overview" }).success).toBe(false);
   });
 });

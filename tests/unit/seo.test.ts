@@ -100,7 +100,7 @@ describe("SEO discovery contract", () => {
 
     const urls = (await sitemap()).map(({ url }) => url);
     expect(urls).toContain("https://example.com/");
-    expect(urls).toContain("https://example.com/resources/open-source");
+    expect(urls).not.toContain("https://example.com/resources/open-source");
     expect(urls).not.toContain("https://example.com/resources/blog");
     expect(urls).not.toContain("https://example.com/resources/research");
     expect(urls).not.toContain("https://example.com/resources/talks");
@@ -108,7 +108,9 @@ describe("SEO discovery contract", () => {
     expect(urls).not.toContain("https://example.com/work/incov");
     expect(urls).not.toContain("https://example.com/work/gig");
     expect(urls).toContain("https://example.com/products/ai-agent-kit");
-    expect(urls).toContain("https://example.com/products/incov");
-    expect(urls).toContain("https://example.com/products/gig");
+    for (const id of ["satsunic-seo", "satsunic-mec", "befam"]) expect(urls).toContain(`https://example.com/products/${id}`);
+    expect(new Set(urls).size).toBe(urls.length);
+    expect(urls).not.toContain("https://example.com/products/incov");
+    expect(urls).not.toContain("https://example.com/products/gig");
   });
 });

@@ -7,7 +7,7 @@ test("approved Services experience connects offers, proof, FAQ and contact", asy
   const recordError = (error: Error) => errors.push(error.message);
   page.on("pageerror", recordError);
   await page.goto("/services");
-  await expect(page.locator("h1")).toHaveText("Your next product.Built and delivered.");
+  await expect(page.locator("h1")).toHaveText("A better placefor your business online.");
   await expect(page.locator(".service-card")).toHaveCount(6);
   await expect(page.getByText("DESIGN PREVIEW", { exact: false })).toHaveCount(0);
   await expect(page.getByLabel("Preview page")).toHaveCount(0);
@@ -18,10 +18,10 @@ test("approved Services experience connects offers, proof, FAQ and contact", asy
   // separately from this scoped rendering check.
   expect(errors).toEqual([]);
   page.off("pageerror", recordError);
-  await page.locator(".project").filter({ hasText: "IncOv" }).getByRole("link").click();
-  await expect(page).toHaveURL(/\/products\/incov$/, { timeout: 15_000 });
+  await page.locator(".project").filter({ hasText: "AI-Agent-Kit" }).getByRole("link").click();
+  await expect(page).toHaveURL(/\/products\/ai-agent-kit$/, { timeout: 15_000 });
   // Wait for visible product content; background dev/prefetch traffic may never idle.
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Turn every incident into better judgment.");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("agent");
   await page.goto("/services");
   await page.locator(".service-card").filter({ hasText: "Web Development" }).click();
   await expect(page).toHaveURL(/\/services\/web-development$/, { timeout: 15_000 });

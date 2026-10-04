@@ -47,15 +47,15 @@ describe("product catalog publication", () => {
     expect(getPublishedCatalog([entry({ action: { kind: "external", href: "https://example.com/product" } })])).toHaveLength(1);
   });
 
-  it("uses actual catalog anchors for summaries without inventing detail routes", async () => {
+  it("uses implemented canonical product pages in discovery", async () => {
     const text = await (await GET()).text();
     for (const product of getPublishedCatalog()) {
       expect(text).toContain(product.name);
       expect(text).toContain(getCatalogDestination(product));
     }
-    expect(text).toContain("/products#satsunic-mec");
-    expect(text).toContain("/products/incov");
-    expect(text).toContain("/products/gig");
+    expect(text).toContain("/products/satsunic-mec");
+    expect(text).not.toContain("/products/incov");
+    expect(text).not.toContain("/products/gig");
 
   });
 });
