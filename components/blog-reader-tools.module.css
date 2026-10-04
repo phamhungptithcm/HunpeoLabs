@@ -1,0 +1,4 @@
+.tools { display:flex; align-items:center; flex-wrap:wrap; gap:12px; padding:18px 0; margin-bottom:20px; border-top:1px solid #e4e7ef; border-bottom:1px solid #e4e7ef; }
+.tools button { cursor:pointer; }
+.tools button:focus-visible { outline:2px solid #163cff; outline-offset:3px; }
+.tools span { flex:1 1 240px; }

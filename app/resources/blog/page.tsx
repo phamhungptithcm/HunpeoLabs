@@ -1,3 +1,4 @@
+import { BlogSavedArticles } from "@/components/blog-saved-articles";
 import { categoryLabel } from "@/lib/blog/categories";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -227,6 +228,7 @@ export default async function BlogPage({
       </BlogFeedTransition>
       <div className="journal-bottom">
         <div>
+          <BlogSavedArticles />
           <h3>Follow new posts via RSS</h3>
           <p className="muted small">Add this blog to your feed reader.</p>
         </div>

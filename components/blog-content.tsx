@@ -1,3 +1,5 @@
+import { BlogReaderTools } from "./blog-reader-tools";
+import { knownAuthor, authorPath } from "@/lib/blog/growth";
 import { imageDimension } from "@/lib/blog/editor-image";
 import { BlogCodeBlock } from "./blog-code-block";
 import { BlogHeading } from "./blog-heading";
@@ -88,10 +90,12 @@ export function BlogContent({
   post,
   url,
   preview = false,
+  series,
 }: {
   post: PublishedPost;
   url: string;
   preview?: boolean;
+  series?: ReactNode;
 }) {
   const copy = (vi: string, en: string) => preview ? vi : en;
   const date = (v: string) =>
@@ -126,7 +130,7 @@ export function BlogContent({
             />
             <span>
               <strong style={{ color: "var(--ink)", fontWeight: 550 }}>
-                {post.author}
+                {knownAuthor(post.author) ? <Link href={authorPath}>{post.author}</Link> : post.author}
               </strong>
               <br />
               <span className="small">
@@ -152,6 +156,8 @@ export function BlogContent({
           )}
         </div>
       </header>
+      {!preview && <BlogReaderTools slug={post.slug} />}
+      {!preview && series}
       <div className="reading-cover">
         <Cover language={preview ? "vi" : "en"} id={post.coverId} title={post.title} loading="eager" />
       </div>
@@ -168,6 +174,7 @@ export function BlogContent({
             </div>
           )}
           <div className="article-prose" lang={post.language}>{render(post.body, "0")}</div>
+          {post.answer && <section className="insight" aria-label="In closing"><h2>{copy("Điều nên nhớ", "In closing")}</h2><p>{post.answer}</p></section>}
           <section id="sources">
             <h2>{copy("Nguồn tham khảo", "Sources")}</h2>
             <ol>
@@ -205,7 +212,7 @@ export function BlogContent({
               <div className="eyebrow muted" style={{ fontSize: 9 }}>
                 {copy("Người viết", "Author")}
               </div>
-              <h3>{post.author}</h3>
+              <h3>{knownAuthor(post.author) ? <Link href={authorPath}>{post.author}</Link> : post.author}</h3>
               <p>
                 {post.authorBio ||
                   copy("Góc nhìn được chia sẻ trên HunpeoLabs Journal.", "Writing from Hunpeo Labs Journal.")}

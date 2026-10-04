@@ -1,0 +1,11 @@
+import { expect,it } from 'vitest';
+import { emptyDraft,type PublishedPost } from '@/lib/blog/schema';
+import { seriesPart,seriesPosts,publicationChecks,knownAuthor,articleOffer } from '@/lib/blog/growth';
+import { parseReadingState } from '@/lib/blog/reading-state';
+const post=(id:string,n:number):PublishedPost=>({...emptyDraft,id,slug:id,author:'Hung Pham',readingMinutes:1,revision:1,publishedAt:'2026-10-04',updatedAt:'2026-10-04',tags:['series-dsa',`part-${n}`]});
+it('orders unique published series candidates and does not invent future parts',()=>{const a=post('a',1),b=post('b',3);expect(seriesPosts(a,[b,a])).toEqual([a,b]);expect(seriesPart({...a,tags:['part-0']})).toBeNull();expect(seriesPart({...a,tags:[],category:'Engineering'})).toBeNull();});
+it('recognizes the existing DSA Part01 prose convention',()=>{expect(seriesPart({...emptyDraft,category:'Data Structures & Algorithms',body:{type:'doc',content:[{type:'text',text:'Data Structures & Algorithms - Part 01'}]}})).toEqual({key:'series-dsa',number:1});});
+it('links only the verified author and explicit buyer topics',()=>{expect(knownAuthor(' Hung Pham ')).toBe(true);expect(knownAuthor('Someone else')).toBe(false);expect(articleOffer({...emptyDraft,tags:['e-commerce']} )?.href).toBe('/contact?audience=local-shops');expect(articleOffer({...emptyDraft,tags:['photography']} )?.href).toBe('/contact?audience=creators');expect(articleOffer(emptyDraft)).toBeNull();});
+it('checks authored summary, alt text, SEO and links without changing publication permissions',()=>{const checks=publicationChecks({...emptyDraft,body:{type:'doc',content:[{type:'image',attrs:{alt:''}},{type:'text',text:'click',marks:[{type:'link',attrs:{href:'javascript:alert(1)'}}]}]}});expect(checks.find(c=>c.label.includes('alt'))?.ok).toBe(false);expect(checks.find(c=>c.label.startsWith('Link'))?.ok).toBe(false);expect(checks.find(c=>c.label.includes('ý chính'))?.ok).toBe(false);});
+it.each([null,'not-json','{}','{"saved":true,"progress":"bad","updatedAt":1}','{"saved":true,"progress":0.5,"updatedAt":null}'])('handles unavailable/corrupt local state %s',raw=>{expect(parseReadingState(raw)).toEqual({saved:false,progress:0,updatedAt:0});});
+it('bounds valid persisted reading progress',()=>{expect(parseReadingState('{"saved":true,"progress":2,"updatedAt":1}').progress).toBe(1);});

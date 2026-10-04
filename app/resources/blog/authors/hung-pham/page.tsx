@@ -1,0 +1,6 @@
+import Link from 'next/link';
+import Image from 'next/image';
+import { createPageMetadata } from '@/app/seo';
+import { getPublishedCatalog,getCatalogDestination } from '@/content/product-catalog';
+export const metadata=createPageMetadata({title:'Hung Pham — Author & Founder',description:'Meet Hung Pham, founder of HunpeoLabs, and explore the studio’s public products and writing.',path:'/resources/blog/authors/hung-pham'});
+export default function AuthorPage(){return <main className="container"><header className="article-heading"><p className="eyebrow">AUTHOR / HUNPEOLABS</p><h1>Hung Pham</h1><p className="article-deck">Founder of HunpeoLabs. Writing about building software, working with AI, and learning how systems work.</p><Image src="/images/founders/hung-pham.jpg" loading="eager" alt="Hung Pham, founder of HunpeoLabs" width={240} height={320} style={{objectFit:'cover',borderRadius:16,maxWidth:'100%',height:'auto'}} /></header><section className="related-stories"><h2>From our lab</h2><p>These are HunpeoLabs products, each at its stated stage.</p><ul>{getPublishedCatalog().map(p=><li key={p.id}><Link href={getCatalogDestination(p)}>{p.name}</Link></li>)}</ul><Link href="/resources/blog">Read the journal ↗</Link><p><Link href="/about">About HunpeoLabs ↗</Link></p></section></main>;}

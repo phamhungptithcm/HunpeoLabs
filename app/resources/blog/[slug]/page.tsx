@@ -1,3 +1,5 @@
+import { BlogSeries, BlogOffer } from "@/components/blog-growth";
+import { knownAuthor, authorPath } from "@/lib/blog/growth";
 import Link from "next/link";
 import { relatedPublicPosts } from "@/lib/blog/discovery";
 import type { PublishedPost } from "@/lib/blog/schema";
@@ -87,6 +89,7 @@ export default async function BlogArticlePage({
         author: {
           "@type": "Person",
           name: post.author,
+          ...(knownAuthor(post.author) ? {url:new URL(authorPath,siteUrl).toString()} : {}),
         },
         publisher: {
           "@id": new URL("/#organization", siteUrl).toString(),
@@ -123,7 +126,8 @@ export default async function BlogArticlePage({
 
   return (
     <>
-      <BlogContent post={post} url={articleUrl} />
+      <BlogContent post={post} url={articleUrl} series={<Suspense fallback={null}><BlogSeries current={post} /></Suspense>} />
+      <BlogOffer post={post} />
       {articleServiceIds[post.slug]?.length > 0 && <section className="container related-stories" aria-label="Related services">
         <h2>Build an AI workflow with HunpeoLabs</h2>
         <p>Explore the scope, deliverables, and review process for related services.</p>

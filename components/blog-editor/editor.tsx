@@ -1,4 +1,5 @@
 "use client";
+import { publicationChecks } from "@/lib/blog/growth";
 import { openSavedPreview } from "@/lib/blog/open-preview";
 import { TaxonomyFields } from "./taxonomy-fields";
 import { parseRecovery, recoveryKey } from "@/lib/blog/draft-recovery";
@@ -692,27 +693,20 @@ export function Editor({
               <strong>Chuẩn bị xuất bản</strong>
               <span className="badge">
                 {
-                  [
-                    Boolean(post.title && post.summary),
-                    Boolean(post.authorId),
-                    post.sources.length > 0,
-                  ].filter(Boolean).length
+                  publicationChecks(post).filter(check => check.ok).length
                 }{" "}
-                / 3
+                / {publicationChecks(post).length}
               </span>
             </div>
             <div className="checklist">
-              {[
-                [Boolean(post.title && post.summary), "Có tiêu đề và tóm tắt"],
-                [Boolean(post.authorId), "Đã chọn tác giả"],
-                [post.sources.length > 0, "Đã thêm nguồn tham khảo"],
-              ].map(([ok, label]) => (
+              {publicationChecks(post).map(({ok,label}) => (
                 <div key={String(label)}>
                   <BlogIcon name={ok ? "check" : "clock"} size={12} />
                   {label}
                 </div>
               ))}
             </div>
+            <p className="small">Đây là nhắc việc biên tập, không thay kiểm tra xuất bản. Hãy xem trước mobile, kiểm tra link có hoạt động và đặt series-dsa + part-1 cho chuỗi bài. Thêm heading Checklist khi bài có bước áp dụng.</p>
             <button
               className="button small editor-seo-preview"
               onClick={() => setModal("seo")}
