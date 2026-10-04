@@ -34,6 +34,11 @@ export default function PrivacyPage() {
         <PrivacySignal />
       </section>
 
+      <section className="privacy-analytics" aria-labelledby="ask-privacy-title">
+        <p className="mono">Ask HunpeoLabs</p>
+        <h2 id="ask-privacy-title">Ask with only the context you need.</h2>
+        <div><p>The assistant uses published HunpeoLabs information. Your conversation is held in this page’s memory, with up to twelve displayed exchanges and six previous questions used for context. It is cleared when you leave or reload; it is not saved to browser storage or a chat database. Questions and conversation text are not sent to traffic analytics or written to application logs.</p><p>When the optional Gemini integration is enabled, questions that need additional matching, recent questions and relevant public source information may be processed by Google Cloud Vertex AI. Firebase App Check with reCAPTCHA Enterprise helps protect that path. The input notice tells you when Google processing is available. Avoid sharing secrets or sensitive personal information. Google processing and retention follow the configured provider service terms; this page does not promise zero provider retention.</p><p>Rate limits use a random in-memory session identifier. Published-content counters are held temporarily in server memory. When AI is enabled, the server stores keyed hashes of rate-limit buckets and counts in Firestore, without question text, account identity or raw network addresses. Expiry fields support the configured cleanup policy. Opening Contact does not send your conversation or submit a project brief; you review and submit the contact form separately.</p></div>
+      </section>
       <section className="privacy-statements" aria-labelledby="privacy-statements-title">
         <h2 className="privacy-visually-hidden" id="privacy-statements-title">
           How we handle what you share

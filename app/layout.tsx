@@ -1,3 +1,5 @@
+import { AskSite } from "@/components/ask-site";
+import { readAskAIConfig } from "@/lib/ask/config";
 import { Suspense } from "react";
 import { SignInDialog } from "@/components/sign-in-dialog";
 import { GoogleOneTap } from "@/components/google-one-tap";
@@ -97,6 +99,7 @@ export default function RootLayout({
         <BlogChrome>
           <SiteFooter analyticsEnabled={firebaseAnalyticsEnabled} />
         </BlogChrome>
+        {process.env.ASK_ENABLED !== "false" && <AskSite aiAvailable={Boolean(readAskAIConfig())} />}
         <StructuredData data={structuredData} />
         <AnalyticsConsent config={firebaseAnalyticsConfig} />
       </body>
