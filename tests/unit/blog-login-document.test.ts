@@ -1,3 +1,4 @@
+import type { NextConfig } from "next";
 import { expect, it } from "vitest";
 import { needsLoginDocumentReload } from "@/lib/blog/login-document";
 const origin = "https://hunpeolabs.com";
@@ -17,7 +18,10 @@ it("ignores non-login routes and unavailable/invalid timing entries", () => {
   expect(needsLoginDocumentReload("invalid", `${origin}/blog-account`)).toBe(false);
 });
 it("allows only configured authentication dependencies for in-page login", async () => {
-  const config = (await import("../../next.config")).default;
+  // App Hosting rewrites the config as a CJS wrapper during its build.
+  // Keep this unit-only runtime import independent of that wrapper export shape.
+  const configModule: unknown = await import("../../next.config");
+  const config = (configModule as { default: NextConfig }).default;
   const rules = await config.headers!();
   const global = rules.find(rule => rule.source === "/:path*")!;
   const login = rules.find(rule => rule.source === "/blog-account")!;
