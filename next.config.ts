@@ -60,7 +60,7 @@ const loginCsp =
     .replace(/; frame-src[^;]*/, "")
     .replace("script-src 'self'", "script-src 'self' https://apis.google.com")
     .replace("connect-src 'self'", `connect-src 'self' ${authOrigin}`) +
-  `; frame-src 'self' ${authOrigin} ${blogAuthEmulatorOrigin}`;
+  `; frame-src 'self' ${authOrigin} ${blogAuthEmulatorOrigin}${oneTapEnabled ? " https://accounts.google.com/gsi/" : ""}`;
 const loginHeaders = securityHeaders.map((h) =>
   h.key === "Content-Security-Policy"
     ? { ...h, value: loginCsp }
@@ -77,7 +77,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:path*",
-        headers: securityHeaders,
+        headers: loginHeaders,
       },
       { source: "/admin/blog/login", headers: loginHeaders },
       { source: "/blog-account", headers: loginHeaders },

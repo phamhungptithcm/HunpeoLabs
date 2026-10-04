@@ -10,24 +10,39 @@ import {
 } from "firebase/auth";
 import { request, message } from "./client";
 import { BlogBrand, BlogIcon } from "./ui";
+import { needsLoginDocumentReload } from "@/lib/blog/login-document";
 import { beginProgress } from "@/lib/ui/action-progress";
 
 export function Login({
   admin = false,
   embedded = false,
   returnTo,
+  onSuccess,
+  compact = false,
+  headingId,
+  onBusyChange,
 }: {
   admin?: boolean;
   embedded?: boolean;
   returnTo?: string;
+  onSuccess?: (session: { role: string | null }) => void;
+  compact?: boolean;
+  headingId?: string;
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const copy = (vi: string, en: string) => embedded ? en : vi;
   const auth = useRef<Auth | null>(null);
   const [ready, setReady] = useState(false),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState("");
+  useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
+    const documentUrl = performance.getEntriesByType("navigation")[0]?.name;
+    if (!compact && needsLoginDocumentReload(documentUrl, window.location.href)) {
+      window.location.reload();
+      return;
+    }
     let mounted = true;
     (async () => {
       try {
@@ -44,7 +59,7 @@ export function Login({
     return () => {
       mounted = false;
     };
-  }, [attempt, embedded]);
+  }, [attempt, embedded, compact]);
   async function login() {
     if (!auth.current || busy) return;
     setBusy(true);
@@ -64,12 +79,14 @@ export function Login({
       try {
         sessionStorage.removeItem("hl-one-tap-signed-out");
       } catch {}
+      window.dispatchEvent(new Event("hl:session-changed"));
+      if (onSuccess) { onSuccess(session); return; }
       const next =
         returnTo?.startsWith("/resources/blog") && !returnTo.startsWith("//")
           ? returnTo
           : session.role
             ? "/admin/blog"
-            : "/blog-account";
+            : "/resources/blog";
       window.location.assign(next);
     } catch (e) {
       if (auth.current) await signOut(auth.current).catch(() => {});
@@ -80,7 +97,7 @@ export function Login({
     }
   }
   return (
-    <div className={`auth-wrap google-auth-wrap${embedded ? " auth-embedded" : ""}`}>
+    <div className={`auth-wrap google-auth-wrap${embedded ? " auth-embedded" : ""}${compact ? " auth-popup" : ""}`}>
       {!embedded && <BlogBrand />}
       <section className="auth-panel google-auth-panel" aria-busy={busy}>
         {!embedded && <div className="google-auth-symbol">
@@ -89,7 +106,7 @@ export function Login({
         {!embedded && <p className="eyebrow muted">
           HUNPEOLABS / {admin ? "STUDIO" : "JOURNAL"}
         </p>}
-        <h1>{admin ? copy("Đăng nhập Studio", "Sign in to Studio") : copy("Đăng nhập", "Sign in")}</h1>
+        <h1 id={headingId}>{admin ? copy("Đăng nhập Studio", "Sign in to Studio") : copy("Đăng nhập", "Sign in")}</h1>
         <p>
           {admin
             ? copy("Viết và quản lý bài đăng.", "Write and manage posts.")
@@ -141,7 +158,7 @@ export function Login({
             {copy("Thử kết nối lại", "Try connecting again")}
           </button>
         )}
-        <div className="google-auth-footer">
+        <div className="google-auth-footer" hidden={compact}>
           <Link href="/resources/blog">{copy("← Trở lại Journal", "\u2190 Back to the blog")}</Link>
           <Link href="/privacy">{copy("Quyền riêng tư", "Privacy")}</Link>
         </div>

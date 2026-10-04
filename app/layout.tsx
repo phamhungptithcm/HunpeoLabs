@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { SignInDialog } from "@/components/sign-in-dialog";
 import { GoogleOneTap } from "@/components/google-one-tap";
 import { ActionProgress } from "@/components/action-progress";
 import type { Metadata } from "next";
@@ -89,6 +91,7 @@ export default function RootLayout({
           <SiteHeader />
         </BlogChrome>
         <GoogleOneTap />
+        <Suspense fallback={null}><SignInDialog /></Suspense>
         <MotionOrchestrator />
         <div id="main-content">{children}</div>
         <BlogChrome>

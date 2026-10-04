@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
+import { openSignIn } from "@/components/sign-in-dialog";
 import { request, message } from "@/components/blog-admin/client";
 import { Avatar, BlogIcon, StatusBadge } from "@/components/blog-admin/ui";
 import { BlogDialog } from "@/components/blog-admin/dialog";
@@ -21,6 +21,12 @@ type Page = {
   commentsEnabled: boolean;
 };
 export function Comments({ postId }: { postId: string }) {
+  const [sessionVersion, setSessionVersion] = useState(0);
+  useEffect(() => {
+    const update = () => setSessionVersion(value => value + 1);
+    window.addEventListener("hl:session-changed", update);
+    return () => window.removeEventListener("hl:session-changed", update);
+  }, []);
   const [page, setPage] = useState<Page | null>(null),
     [own, setOwn] = useState<Comment[]>([]),
     [signed, setSigned] = useState(false),
@@ -62,7 +68,7 @@ export function Comments({ postId }: { postId: string }) {
           setSigned(true);
         }
       })
-      .catch(() => {});
+      .catch(() => { if (live) { setSigned(false); setOwn([]); } });
     const match = window.location.hash.match(/^#comment-([a-zA-Z0-9_-]+)$/);
     if (match)
       void request<{ parent: Comment; reply: Comment | null }>(
@@ -75,7 +81,7 @@ export function Comments({ postId }: { postId: string }) {
     return () => {
       live = false;
     };
-  }, [postId]);
+  }, [postId, sessionVersion]);
   async function send(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -169,12 +175,12 @@ export function Comments({ postId }: { postId: string }) {
                   <BlogIcon name="arrow" size={13} />
                 </button>
               ) : (
-                <Link
-                  className="button primary"
-                  href={`/blog-account?returnTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + "#comments" : "/resources/blog")}`}
+                <button type="button"
+                  className="button primary" aria-haspopup="dialog"
+                  onClick={openSignIn}
                 >
                   Sign in to comment <BlogIcon name="arrow" size={13} />
-                </Link>
+                </button>
               )}
             </div>
           </form>

@@ -11,7 +11,10 @@ import { StudioNavLink } from "@/components/studio-nav-link";
 import { BlogAccountLink } from "@/components/blog-account-link";
 beforeEach(() => { session.actor = null; session.checked = true; });
 it("shows login only to signed-out readers", () => {
-  expect(renderToStaticMarkup(createElement(BlogAccountLink))).toContain("Sign in");
+  const entry = renderToStaticMarkup(createElement(BlogAccountLink));
+  expect(entry).toContain("Sign in");
+  expect(entry).toContain('aria-haspopup="dialog"');
+  expect(entry).not.toContain("href=");
   expect(renderToStaticMarkup(createElement(StudioNavLink))).toBe("");
 });
 it("shows a reader's name/avatar and hides the intro login without granting Studio", () => {
@@ -33,6 +36,7 @@ it("shows Studio only for editorial roles and falls back for unsafe avatar URLs"
 it("places the signed-in account after the project CTA outside navigation", () => {
   session.actor = { uid: "reader", verified: true, name: "Test Reader" };
   const header = renderToStaticMarkup(createElement(SiteHeader));
-  expect(header.indexOf('href="/blog-account"')).toBeGreaterThan(header.indexOf("Start a project"));
-  expect(header.indexOf('href="/blog-account"')).toBeGreaterThan(header.indexOf("</nav>"));
+  expect(header.indexOf('aria-haspopup="dialog"')).toBeGreaterThan(header.indexOf("Start a project"));
+  expect(header.indexOf('aria-haspopup="dialog"')).toBeGreaterThan(header.indexOf("</nav>"));
+  expect(header).not.toContain('href="/blog-account"');
 });

@@ -2,12 +2,15 @@
 import { request, message } from "./client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { googleAvatar } from "@/lib/blog/profile";
 import styles from "./account.module.css";
-export function Account({ name, avatar, staff = false, embedded = false }: {
-  name: string; avatar?: string; staff?: boolean; embedded?: boolean;
+export function Account({ name, avatar, staff = false, embedded = false, compact = false, onSignedOut, onNavigate, headingId }: {
+  name: string; avatar?: string; staff?: boolean; embedded?: boolean; compact?: boolean;
+  onSignedOut?: () => void; onNavigate?: () => void; headingId?: string;
 }) {
+  const generatedHeadingId = useId();
+  const titleId = headingId ?? generatedHeadingId;
   const router = useRouter();
   const copy = (vi: string, en: string) => embedded ? vi : en;
   const [notice, setNotice] = useState("");
@@ -15,9 +18,9 @@ export function Account({ name, avatar, staff = false, embedded = false }: {
   const [failedAvatar, setFailedAvatar] = useState("");
   const image = googleAvatar(avatar);
   return (
-    <section className={`${styles.account}${embedded ? ` ${styles.embedded}` : ""}`} aria-labelledby="account-heading" aria-busy={busy}>
+    <section className={`${styles.account}${embedded ? ` ${styles.embedded}` : ""}${compact ? ` ${styles.compact}` : ""}`} aria-labelledby={titleId} aria-busy={busy}>
       <header className={styles.heading}>
-        <h1 id="account-heading">{copy("Tài khoản", "Account")}</h1>
+        <h1 id={titleId}>{copy("Tài khoản", "Account")}</h1>
         <p>{copy("Thông tin đăng nhập của bạn.", "Your sign-in details.")}</p>
       </header>
       <div className={styles.panel}>
@@ -30,8 +33,8 @@ export function Account({ name, avatar, staff = false, embedded = false }: {
         </div>
         <div className={styles.actions}>
           <div className={styles.links}>
-            {staff && <Link className={styles.primary} href="/admin/blog">{copy("Mở Studio", "Open Studio")} <span aria-hidden="true">↗</span></Link>}
-            <Link className={styles.link} href="/resources/blog">{copy("Đọc blog", "Read the blog")} <span aria-hidden="true">→</span></Link>
+            {staff && <Link className={styles.primary} href="/admin/blog" onClick={onNavigate}>{copy("Mở Studio", "Open Studio")} <span aria-hidden="true">↗</span></Link>}
+            <Link className={styles.link} href="/resources/blog" onClick={onNavigate}>{copy("Đọc blog", "Read the blog")} <span aria-hidden="true">→</span></Link>
           </div>
           <button className={styles.logout} disabled={busy} onClick={async () => {
             if (busy) return;
@@ -40,7 +43,12 @@ export function Account({ name, avatar, staff = false, embedded = false }: {
               await request("/api/blog/session", "DELETE");
               try { sessionStorage.setItem("hl-one-tap-signed-out", "1"); } catch {}
               window.dispatchEvent(new Event("hl:session-changed"));
-              router.replace("/blog-account");
+              if (onSignedOut) {
+                onSignedOut();
+                router.refresh();
+                return;
+              }
+              router.replace("/resources/blog");
               router.refresh();
             } catch (e) { setNotice(message(e, embedded ? "vi" : "en")); setBusy(false); }
           }}>{busy ? copy("Đang đăng xuất…", "Signing out…") : copy("Đăng xuất", "Sign out")}</button>

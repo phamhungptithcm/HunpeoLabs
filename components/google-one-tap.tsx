@@ -1,7 +1,7 @@
 "use client";
 
+import { openSignIn } from "./sign-in-dialog";
 import Script from "next/script";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { beginProgress } from "@/lib/ui/action-progress";
@@ -36,7 +36,13 @@ export function GoogleOneTap() {
     !path.startsWith("/admin/") &&
     path !== "/blog-account";
   const { status, refreshing } = useBlogSession(eligible);
-  const load = eligible && status === "anonymous" && !refreshing && !signedOut();
+  const [manualOpen, setManualOpen] = useState(false);
+  useEffect(() => {
+    const update = (event: Event) => setManualOpen(Boolean((event as CustomEvent<boolean>).detail));
+    window.addEventListener("hl:sign-in-visible", update);
+    return () => window.removeEventListener("hl:sign-in-visible", update);
+  }, []);
+  const load = !manualOpen && eligible && status === "anonymous" && !refreshing && !signedOut();
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
   const busy = useRef(false);
@@ -97,7 +103,7 @@ export function GoogleOneTap() {
         <div className="one-tap-notice" role="status">
           {notice}{" "}
           {notice.startsWith("Could not") && (
-            <Link href="/blog-account">Sign in</Link>
+            <button type="button" onClick={openSignIn}>Sign in</button>
           )}
         </div>
       )}
