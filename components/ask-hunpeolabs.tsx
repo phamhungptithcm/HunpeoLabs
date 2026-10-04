@@ -102,13 +102,38 @@ export function AskHunpeoLabs({ aiAvailable = false, startCollapsed = false }: {
     if (!open || !pane || newestTurnId === undefined) return;
     // Read from the submitted question onward. Answer/status updates never
     // yank a visitor away from the passage they are reading.
-    const frame = requestAnimationFrame(() => {
+    let frame = 0;
+    let cancelled = false;
+    const cancel = () => { cancelled = true; cancelAnimationFrame(frame); };
+    pane.addEventListener("wheel", cancel, { passive: true });
+    pane.addEventListener("touchstart", cancel, { passive: true });
+    pane.addEventListener("pointerdown", cancel, { passive: true });
+    frame = requestAnimationFrame(started => {
       const latest = pane.lastElementChild;
-      if (!latest) return;
-      const top = pane.scrollTop + latest.getBoundingClientRect().top - pane.getBoundingClientRect().top - 28;
-      pane.scrollTo({ top: Math.max(0, top), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+      if (!latest || cancelled) return;
+      const from = pane.scrollTop;
+      const top = from + latest.getBoundingClientRect().top - pane.getBoundingClientRect().top - 28;
+      const target = Math.min(Math.max(0, top), pane.scrollHeight - pane.clientHeight);
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        pane.scrollTo({ top: target, behavior: "instant" });
+        return;
+      }
+      // Native smooth scrolling has browser-dependent duration. A bounded
+      // transition finishes before reading resumes and yields to user input.
+      const tick = (now: number) => {
+        if (cancelled) return;
+        const progress = Math.min(1, (now - started) / 300);
+        pane.scrollTo({ top: from + (target - from) * (1 - (1 - progress) ** 3), behavior: "instant" });
+        if (progress < 1) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
     });
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancel();
+      pane.removeEventListener("wheel", cancel);
+      pane.removeEventListener("touchstart", cancel);
+      pane.removeEventListener("pointerdown", cancel);
+    };
   }, [newestTurnId, open]);
 
   useEffect(() => () => {

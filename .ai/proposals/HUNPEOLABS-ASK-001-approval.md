@@ -8,6 +8,7 @@ Constraints: No deployment, push, paid model call, billing enablement, secret ac
 Approved paths:
 - `apphosting.yaml`
 - `tests/e2e/site.spec.ts`
+- `tests/e2e/smoke.spec.ts`
 - `docs/releases/v3.3.0.md`
 - `app/layout.tsx`
 - `components/ask-site.tsx`
@@ -45,3 +46,5 @@ Approved content follow-up: human "đồng ý" then "apporved" authorize seven-c
 Direct human delta approval 2026-10-04: "hold on" release; public products updated to latest source, Ask on all public pages except Studio, blog starts circular icon. Scope plan HUNPEOLABS-ASK-001-sitewide-plan.md. Additional approved paths: `app/layout.tsx`, `components/ask-site.tsx`, `content/site.ts`. No deployment while publication is paused.
 
 Release authorization resumed 2026-10-04 by Human user: "release lên production, commit and push vào main". Supersedes prior no-deploy/no-push pause only for current approved candidate and existing App Hosting production backend. Approved release plan: HUNPEOLABS-ASK-001-release-plan.md; version3.3.0 metadata, isolated Contact toast test correction, explicit ASK_AI_ENABLED=false. No billing/model enablement, secret contents, auth/data/rules changes or force push.
+
+Within resumed release validation: tests/e2e/smoke.spec.ts checks the existing script-src required tokens independent of order. Existing Google auth CSP adds apis.google.com; preserve CSP, blocked ad domains and resource/auth assertions. Test-only correction of obsolete contiguous-string assumption, no security policy or runtime change.

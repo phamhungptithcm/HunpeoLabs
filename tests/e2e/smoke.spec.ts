@@ -9,9 +9,12 @@ test("critical marketing routes render across supported browser engines", async 
   const homepage = await page.request.get("/");
   expect(homepage.ok()).toBe(true);
   expect(homepage.headers()["content-security-policy"]).toContain("default-src 'self'");
-  expect(homepage.headers()["content-security-policy"]).toContain(
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
-  );
+  const scriptSources = homepage.headers()["content-security-policy"]
+    .split(";").map(directive => directive.trim())
+    .find(directive => directive.startsWith("script-src "))?.split(/\s+/).slice(1);
+  expect(scriptSources).toEqual(expect.arrayContaining([
+    "'self'", "'unsafe-inline'", "https://www.googletagmanager.com",
+  ]));
   expect(homepage.headers()["content-security-policy"]).toContain(
     "https://firebaseinstallations.googleapis.com",
   );

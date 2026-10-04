@@ -26,7 +26,7 @@
 .header > span:first-child { font-size: 21px; font-weight: 700; letter-spacing: -.6px; }
 .header > span:first-child span { color: #163cff; }
 .header > span:last-child { color: #68748b; font-size: 13px; }
-.conversation { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 28px 32px; scroll-padding-bottom: 24px; }
+.conversation { flex: 1; min-height: 0; overflow: auto; overflow-anchor: none; overscroll-behavior: contain; padding: 28px 32px; scroll-padding-bottom: 24px; }
 .turn { margin-bottom: 52px; }
 .turn:last-child { margin-bottom: 24px; }
 .question { display: flex; justify-content: flex-end; margin-bottom: 38px; }

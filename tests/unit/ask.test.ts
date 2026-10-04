@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 import { askRequestSchema, selectionSchema, type AskRequest } from "@/lib/ask/contracts";
@@ -113,5 +114,25 @@ describe("published product catalog answers", () => {
   });
   it("named products also respect expiry", () => {
     expect(buildAnswer({ topic: "gig", service: null, detail: "overview" }, "vi", "published", Date.parse("2028-01-01")).title).toBe("Trao đổi với HunpeoLabs");
+  });
+});
+
+
+describe("Ask CSP compatibility", () => {
+  it("constructs and validates schemas without eval and restores shared Zod settings", () => {
+    const script = `
+      import assert from "node:assert/strict";
+      let attempts = 0;
+      globalThis.Function = function () { attempts++; throw new Error("CSP blocked"); };
+      const { z } = await import("zod");
+      z.config({ jitless: false });
+      const contracts = await import("./lib/ask/contracts.ts");
+      assert.equal(contracts.askRequestSchema.safeParse({ question: "HunpeoLabs", sessionId: crypto.randomUUID() }).success, true);
+      assert.equal(contracts.askRequestSchema.safeParse({ question: "", sessionId: "invalid" }).success, false);
+      assert.equal(contracts.askEventSchema.safeParse({ type: "status", phase: "retrieving" }).success, true);
+      assert.equal(z.config().jitless, false);
+      assert.equal(attempts, 0);
+    `;
+    expect(() => execFileSync(process.execPath, ["--input-type=module", "-e", script], { cwd: process.cwd(), stdio: "pipe" })).not.toThrow();
   });
 });
