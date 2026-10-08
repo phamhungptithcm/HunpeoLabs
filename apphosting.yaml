@@ -93,3 +93,11 @@ env:
   - variable: BLOG_SCHEDULER_AUDIENCE
     value: https://hunpeolabs.com/api/internal/blog/scheduled
     availability: [RUNTIME]
+
+  # First-party consent analytics; GA remains disabled above.
+  - variable: NEXT_PUBLIC_TRAFFIC_ENABLED
+    value: "true"
+    availability: [BUILD, RUNTIME]
+  - variable: TRAFFIC_RATE_LIMIT_MODE
+    value: "global"
+    availability: [RUNTIME]
