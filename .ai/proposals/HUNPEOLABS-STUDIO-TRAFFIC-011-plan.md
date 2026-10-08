@@ -57,3 +57,5 @@ User explicitly approves commit/push main, production deployment and missing con
 
 ### Approved release-gate fixes under user authorization
 CI identified one real Services no-JavaScript regression: static content streamed inside a hidden Suspense container. Remove the unnecessary Services loading boundary; existing global action progress handles client transitions. Preserve all six service links/content. Correct three stale E2E selectors: select the canonical scope paragraph for advisory boundaries, assert real 404 heading on removed company/about route, and check live toast outcomes for contact clipboard/email. No auth/database/config changes. Validate fresh build and rerun full CI; deploy patch only after source verification.
+
+Cross-browser CI found an additional stale CSP assertion: token ordering changed when Firebase Google sign-in allowed apis.google.com. Parse script-src and require each previously expected source plus Google's auth source, preserving no-ads and security header assertions. No application CSP change, skip, threshold reduction or new permission.
