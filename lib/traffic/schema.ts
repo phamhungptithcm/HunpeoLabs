@@ -17,7 +17,4 @@ export function validCount(v: unknown) {
   if (typeof v !== "number" || !Number.isSafeInteger(v) || v < 0) throw new BlogError(503, "COUNTER_INVALID");
   return v;
 }
-export function isPublicPath(path: string) {
-  return ["/", "/about", "/contact", "/careers", "/privacy", "/products", "/services", "/company/principles", "/resources/blog"].includes(path) ||
-    /^\/(products|services)\/[a-z0-9-]+$/.test(path) || /^\/resources\/blog\/(?:authors\/)?[a-z0-9-]+$/.test(path);
-}
+export { isPublicPath } from "./paths";

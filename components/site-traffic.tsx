@@ -3,7 +3,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { readAnalyticsConsent, clearAnalyticsConsentOverride, ANALYTICS_CONSENT_STORAGE_KEY } from "@/lib/firebase-analytics";
 import { trafficSession } from "@/lib/traffic/session";
-import { isPublicPath } from "@/lib/traffic/schema";
+import { isPublicPath } from "@/lib/traffic/paths";
 const event = "hunpeolabs:analytics-consent-changed";
 export const subscribeTrafficConsent = (fn: () => void) => { window.addEventListener(event, fn); const storage = (change: StorageEvent) => { if (change.key !== null && change.key !== ANALYTICS_CONSENT_STORAGE_KEY) return; try { if (change.storageArea !== window.localStorage) return; } catch { return; } clearAnalyticsConsentOverride(); fn(); }; window.addEventListener("storage", storage); return () => { window.removeEventListener(event, fn); window.removeEventListener("storage", storage); }; };
 export function SiteTraffic({ postId }: { postId?: string }) {
