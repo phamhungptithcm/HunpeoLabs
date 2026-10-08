@@ -1,3 +1,4 @@
+import { postStats } from "@/lib/traffic/repository";
 import { redirect } from "next/navigation";
 import { requireStaff } from "@/lib/blog/auth";
 import { BlogError } from "@/lib/blog/schema";
@@ -17,6 +18,7 @@ export default async function Page({
   let result;
   let summary;
   let authors;
+  let metrics: Record<string, { views: number | null; reads: number | null }> | null = null;
   try {
     const actor = await requireStaff();
     [result, summary, authors] = await Promise.all([
@@ -24,6 +26,7 @@ export default async function Page({
       workspaceSummary(actor),
       catalog("authors", actor),
     ]);
+    try { metrics = await postStats(result.items.map(p => p.id)); } catch { /* Stats failure must not block editing. */ }
   } catch (e) {
     if (e instanceof BlogError && e.status === 401)
       redirect("/admin/blog/login");
@@ -43,6 +46,7 @@ export default async function Page({
   return (
     <Dashboard
       posts={result.items}
+      metrics={metrics}
       next={result.next}
       query={options}
       summary={summary}

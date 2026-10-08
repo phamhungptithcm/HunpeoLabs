@@ -3655,3 +3655,10 @@
 .blog-toast .blog-toast-actions button { padding:0; border:0; background:transparent; color:var(--toast-accent); font:inherit; font-weight:600; cursor:pointer; }
 .blog-toast .blog-toast-actions button:hover { text-decoration:underline; }
 .blog-toast .blog-toast-actions button:focus-visible { outline:2px solid #163cff; outline-offset:3px; border-radius:2px; }
+
+/* Studio traffic metrics remain labeled in the mobile article cards. */
+@media (max-width: 780px) {
+  .blog-surface .post-table td.post-metric { display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px; grid-column:1/-1; }
+  .blog-surface .post-table td.post-metric::before { content:attr(data-label); color:var(--muted); }
+  .blog-surface .post-table td:nth-child(6) { grid-column:1/-1; font-size:11px; color:var(--muted); }
+}

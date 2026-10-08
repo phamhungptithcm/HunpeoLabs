@@ -43,7 +43,7 @@ export async function recordView(request: Request, input: unknown) {
     const expiry = previous.get("expiresAt");
     if (previous.exists && expiry instanceof Timestamp && expiry.toMillis() > Date.now()) return { views };
     if (views === Number.MAX_SAFE_INTEGER) throw new BlogError(503, "COUNTER_LIMIT");
-    tx.set(stats, { views: views + 1 });
+    tx.set(stats, { views: views + 1 }, { merge: true });
     tx.set(receipt, { expiresAt: Timestamp.fromMillis(Date.now() + retentionMs) });
     return { views: views + 1 };
   });

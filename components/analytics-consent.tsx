@@ -23,12 +23,13 @@ export function AnalyticsConsent({ config: configInput }: AnalyticsConsentProps)
     () => parseFirebaseAnalyticsConfig({ apiKey, appId, enabled, measurementId, projectId }),
     [apiKey, appId, enabled, measurementId, projectId],
   );
+  const enabledForTraffic = process.env.NEXT_PUBLIC_TRAFFIC_ENABLED === "true";
   const [hydrated, setHydrated] = useState(false);
   const [open, setOpen] = useState(false);
   const [preference, setPreference] = useState<AnalyticsConsentValue | null>(null);
 
   useEffect(() => {
-    if (configResult.status !== "ready") return;
+    if (configResult.status !== "ready" && !enabledForTraffic) return;
 
     const frame = window.requestAnimationFrame(() => {
       const storedPreference = readAnalyticsConsent();
@@ -36,16 +37,16 @@ export function AnalyticsConsent({ config: configInput }: AnalyticsConsentProps)
       setOpen(storedPreference === null);
       setHydrated(true);
 
-      if (storedPreference === "granted") {
+      if (storedPreference === "granted" && configResult.status === "ready") {
         void enableFirebaseAnalytics(configResult.config);
       }
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [configResult]);
+  }, [configResult, enabledForTraffic]);
 
   useEffect(() => {
-    if (configResult.status !== "ready") return;
+    if (configResult.status !== "ready" && !enabledForTraffic) return;
 
     function openPreferences() {
       setOpen(true);
@@ -54,16 +55,16 @@ export function AnalyticsConsent({ config: configInput }: AnalyticsConsentProps)
     window.addEventListener(OPEN_ANALYTICS_PREFERENCES_EVENT, openPreferences);
     return () =>
       window.removeEventListener(OPEN_ANALYTICS_PREFERENCES_EVENT, openPreferences);
-  }, [configResult.status]);
+  }, [configResult.status, enabledForTraffic]);
 
-  if (configResult.status !== "ready" || !hydrated || !open) return null;
+  if ((!enabledForTraffic && configResult.status !== "ready") || !hydrated || !open) return null;
 
   function allowAnalytics() {
-    if (configResult.status !== "ready") return;
+    if (configResult.status !== "ready" && !enabledForTraffic) return;
     writeAnalyticsConsent("granted");
     setPreference("granted");
     setOpen(false);
-    void enableFirebaseAnalytics(configResult.config);
+    if (configResult.status === "ready") void enableFirebaseAnalytics(configResult.config);
   }
 
   function denyAnalytics() {
@@ -85,7 +86,7 @@ export function AnalyticsConsent({ config: configInput }: AnalyticsConsentProps)
           {preference === null ? "Help us understand site traffic?" : "Analytics preferences"}
         </h2>
         <p>
-          With your permission, Firebase Analytics measures aggregate visits and pages.
+          With your permission, HunpeoLabs measures aggregate visits, pages, and engaged article reads. Firebase Analytics may also be enabled.
           We do not send project brief fields or enable advertising personalization. {" "}
           <Link href="/privacy#traffic-analytics">Privacy details</Link>.
         </p>

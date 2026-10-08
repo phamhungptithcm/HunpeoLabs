@@ -37,6 +37,9 @@ export type FirebaseAnalyticsConfigResult =
     }
   | { status: "ready"; config: FirebaseAnalyticsConfig };
 
+let consentOverride: AnalyticsConsent | null = null;
+export function clearAnalyticsConsentOverride() { consentOverride = null; }
+
 type AnalyticsModule = typeof import("firebase/analytics");
 type StorageReader = Pick<Storage, "getItem">;
 type StorageWriter = Pick<Storage, "setItem">;
@@ -93,8 +96,10 @@ function getBrowserStorage(): Storage | null {
 }
 
 export function readAnalyticsConsent(
-  storage: StorageReader | null = getBrowserStorage(),
+  storage?: StorageReader | null,
 ): AnalyticsConsent | null {
+  if (storage === undefined && consentOverride !== null) return consentOverride;
+  storage = storage === undefined ? getBrowserStorage() : storage;
   if (!storage) return null;
   try {
     const value = storage.getItem(ANALYTICS_CONSENT_STORAGE_KEY);
@@ -108,6 +113,7 @@ export function writeAnalyticsConsent(
   consent: AnalyticsConsent,
   storage: StorageWriter | null = getBrowserStorage(),
 ): boolean {
+  if (typeof window !== "undefined") { consentOverride = consent; window.dispatchEvent(new Event("hunpeolabs:analytics-consent-changed")); }
   if (!storage) return false;
   try {
     storage.setItem(ANALYTICS_CONSENT_STORAGE_KEY, consent);

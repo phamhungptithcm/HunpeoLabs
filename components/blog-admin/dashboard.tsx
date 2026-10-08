@@ -15,12 +15,14 @@ export function Dashboard({
   query,
   summary,
   authors,
+  metrics,
 }: {
   posts: WorkspacePost[];
   next: string | null;
   query: { q?: string; state?: string; category?: string };
   summary: Record<string, number | null>;
   authors: Record<string, string>;
+  metrics?: Record<string, { views: number | null; reads: number | null }> | null;
 }) {
   const router = useRouter();
   const { notice, noticeKind, setNotice } = useToastNotice();
@@ -160,6 +162,8 @@ export function Dashboard({
               <th>Bài viết</th>
               <th>Trạng thái</th>
               <th className="optional">Người viết</th>
+              <th style={{textAlign:"right"}}>Lượt xem</th>
+              <th style={{textAlign:"right"}}>Đã đọc</th>
               <th>Cập nhật</th>
               <th />
             </tr>
@@ -188,6 +192,8 @@ export function Dashboard({
                 <td className="optional">
                   <Avatar name={authors[p.authorId] ?? "?"} />
                 </td>
+                <td className="post-metric" data-label="Lượt xem" style={{textAlign:"right",fontVariantNumeric:"tabular-nums"}}>{metrics?.[p.id]?.views == null ? "—" : new Intl.NumberFormat("vi").format(metrics[p.id].views!)}</td>
+                <td className="post-metric" data-label="Đã đọc" style={{textAlign:"right",fontVariantNumeric:"tabular-nums"}}>{metrics?.[p.id]?.reads == null ? "—" : new Intl.NumberFormat("vi").format(metrics[p.id].reads!)}</td>
                 <td>
                   {new Date(p.updatedAt).toLocaleString("vi", {
                     day: "2-digit",

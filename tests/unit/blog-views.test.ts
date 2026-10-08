@@ -9,7 +9,7 @@ vi.mock("@/lib/firebase-admin", () => {
     runTransaction: async (action: (tx: unknown) => unknown) => {
       if (fake.fail) throw new Error("unavailable");
       const writes = new Map<string, Record<string, unknown>>();
-      const result = await action({ get: async (ref: { path: string }) => snapshot(ref.path), set: (ref: { path: string }, data: Record<string, unknown>) => writes.set(ref.path, data) });
+      const result = await action({ get: async (ref: { path: string }) => snapshot(ref.path), set: (ref: { path: string }, data: Record<string, unknown>, options?: { merge: boolean }) => writes.set(ref.path, options?.merge ? { ...fake.docs.get(ref.path), ...data } : data) });
       for (const [path, data] of writes) fake.docs.set(path, data);
       return result;
     },
@@ -27,9 +27,11 @@ beforeEach(() => {
 });
 describe("article view statistics", () => {
   it("starts at zero and deduplicates retries in the same session", async () => {
+    fake.docs.set("blogPostStats/post", { engagedReads: 3, shares: 2 });
     expect(await getViews("post")).toEqual({ views: 0 });
     expect(await recordView(request, { postId: "post", session })).toEqual({ views: 1 });
     expect(await recordView(request, { postId: "post", session })).toEqual({ views: 1 });
+    expect(fake.docs.get("blogPostStats/post")).toMatchObject({ engagedReads: 3, shares: 2 });
     expect([...fake.docs.keys()].filter(k => k.startsWith("blogViewSessions/"))).toHaveLength(1);
     expect(JSON.stringify([...fake.docs])).not.toContain(session);
   });

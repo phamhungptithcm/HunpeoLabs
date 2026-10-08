@@ -1,3 +1,4 @@
+import { SiteTraffic } from "@/components/site-traffic";
 import { AskSite } from "@/components/ask-site";
 import { readAskAIConfig } from "@/lib/ask/config";
 import { Suspense } from "react";
@@ -97,10 +98,11 @@ export default function RootLayout({
         <MotionOrchestrator />
         <div id="main-content">{children}</div>
         <BlogChrome>
-          <SiteFooter analyticsEnabled={firebaseAnalyticsEnabled} />
+          <SiteFooter analyticsEnabled={firebaseAnalyticsEnabled || process.env.NEXT_PUBLIC_TRAFFIC_ENABLED === "true"} />
         </BlogChrome>
         {process.env.ASK_ENABLED !== "false" && <AskSite aiAvailable={Boolean(readAskAIConfig())} />}
         <StructuredData data={structuredData} />
+        <Suspense fallback={null}><SiteTraffic /></Suspense>
         <AnalyticsConsent config={firebaseAnalyticsConfig} />
       </body>
     </html>

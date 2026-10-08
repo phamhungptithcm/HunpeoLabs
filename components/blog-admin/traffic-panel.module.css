@@ -1,0 +1,35 @@
+.panel { margin: 20px 0; padding: 20px; border: 1px solid var(--line, #e5e7eb); border-radius: 12px; background: var(--surface, #fff); }
+.heading { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+.heading h2 { margin:0; font-size:18px; }
+.heading p,.panel p { color:var(--muted, #64748b); font-size:12px; }
+.heading select { margin-left:8px; padding:8px; border:1px solid #dce1e8; border-radius:6px; background:transparent; }
+.cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:18px 0; }
+.cards div { padding:12px; border-radius:8px; background:#f7f8fb; }
+.cards span { display:block; font-size:12px; color:#58667a; }
+.cards strong { display:block; margin-top:8px; font-size:25px; font-variant-numeric:tabular-nums; color:#163cff; }
+.chart { display:flex; align-items:end; gap:3px; list-style:none; padding:0; margin:12px 0; }
+.chart li { flex:1; min-width:0; text-align:center; }
+.bar { display:block; background:#163cff; opacity:.75; border-radius:3px 3px 0 0; }
+.chart small { font-size:9px; }
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.panel summary { cursor:pointer; font-size:12px; }
+.panel button { padding:6px 10px; cursor:pointer; }
+@media(max-width:600px) { .panel { padding:12px; } .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.cards div { border:1px solid #e6eaf1; border-top:3px solid; background:#fff; padding:16px; }
+.spark { display:block; width:100%; height:44px; margin-top:16px; }
+.chartBox { border:1px solid #e6eaf1; border-radius:10px; padding:16px; margin:16px 0; }
+.chartBox h3 { margin:0 0 14px; font-size:15px; }
+.chartBox svg { width:100%; display:block; margin:12px 0; }
+.legend { display:flex; flex-wrap:wrap; gap:12px 20px; padding:0; list-style:none; font-size:12px; }
+.legend li { display:flex; align-items:center; gap:6px; }
+.legend i { width:14px; height:3px; border-radius:2px; }
+.dayPicker { display:flex; gap:10px; align-items:center; font-size:12px; }
+.dayPicker select { padding:6px; border:1px solid #dce1e8; border-radius:6px; background:transparent; }
+.dayValues { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:16px 0; font-size:12px; color:#617084; }
+.dayValues b { display:block; color:#16233a; margin-top:5px; font-size:16px; }
+.tableScroll { overflow:auto; }
+.tableScroll table { min-width:560px; width:100%; border-collapse:collapse; font-size:12px; }
+.tableScroll th,.tableScroll td { padding:8px; text-align:right; border-bottom:1px solid #e6eaf1; }
+.panel select:focus-visible,.panel summary:focus-visible,.panel button:focus-visible { outline:2px solid #163cff; outline-offset:3px; }
+@media(max-width:600px) { .dayValues { grid-template-columns:repeat(2,minmax(0,1fr)); } .cards div { padding:12px; } .chartBox { padding:10px; } }
+@media(max-width:600px) { .chartBox svg text { font-size:20px; } }

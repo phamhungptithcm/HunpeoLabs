@@ -1,3 +1,4 @@
+import { SiteTraffic } from "@/components/site-traffic";
 import { BlogReaderTools } from "./blog-reader-tools";
 import { knownAuthor, authorPath } from "@/lib/blog/growth";
 import { imageDimension } from "@/lib/blog/editor-image";
@@ -135,6 +136,7 @@ export function BlogContent({
               <br />
               <span className="small">
                 {date(post.publishedAt)} · {post.readingMinutes} {copy("phút đọc", "min read")}
+                {!preview && <SiteTraffic postId={post.id} />}
                 {!preview && <BlogViews postId={post.id} />}
                 {!preview && <BlogShares postId={post.id} />}
               </span>

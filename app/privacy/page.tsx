@@ -106,6 +106,7 @@ export default function PrivacyPage() {
             {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
           </article>
         ))}
+        <p>With analytics permission, HunpeoLabs records aggregated public-page visits and engaged article reads. Anonymous session identifiers expire after 30 minutes of inactivity; hashed deduplication receipts expire after 24 hours. Counts exclude identified staff and bots and are approximate. We do not store raw IP addresses, email, or full query strings in traffic records.</p>
         <p>For privacy questions or deletion requests, email <a href={`mailto:${SITE_CONTACT_EMAIL}`}>{SITE_CONTACT_EMAIL}</a>.</p>
         </div>
       </section>

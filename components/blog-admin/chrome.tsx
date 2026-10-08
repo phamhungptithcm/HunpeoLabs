@@ -18,18 +18,19 @@ function NavigationHint() {
   }, [pending]);
   return <span className={`studio-navigation-hint${pending ? " is-pending" : ""}`} aria-hidden="true" />;
 }
-function StudioLinks({ path, role }: { path: string; role?: string }) {
+function StudioLinks({ path, role, onNavigate }: { path: string; role?: string; onNavigate?: () => void }) {
   return (
     <nav className="side-nav" aria-label="Studio">
       {[
         ["/admin/blog", "file", "Bài viết"],
+        ["/admin/blog/analytics", "chart", "Phân tích"],
         ["/admin/blog/comments", "comment", "Bình luận"],
         ["/admin/blog/settings", "settings", "Cài đặt"],
         ["/resources/blog", "external", "Xem blog"],
         ["/admin/blog/account", "users", "Tài khoản"],
       ]
         .filter(([href]) =>
-          href === "/admin/blog/settings"
+          (href === "/admin/blog/settings" || href === "/admin/blog/analytics")
             ? role === "admin"
             : href === "/admin/blog/comments"
               ? role === "admin" || role === "publisher"
@@ -40,6 +41,7 @@ function StudioLinks({ path, role }: { path: string; role?: string }) {
             key={href}
             className={path === href ? "active" : ""}
             href={href}
+            onClick={onNavigate}
           >
             <BlogIcon name={icon} size={16} />
             {label}
@@ -61,7 +63,7 @@ export function StudioShell({
   const [failedAvatar, setFailedAvatar] = useState("");
   const avatar = googleAvatar(user?.avatar);
   const editor =
-    /^\/admin\/blog\/(?!comments$|settings$|account$|login$|new$)[^/]+$/.test(path);
+    /^\/admin\/blog\/(?!analytics$|comments$|settings$|account$|login$|new$)[^/]+$/.test(path);
   if (editor || path.endsWith("/preview") || path.endsWith("/login"))
     return (
       <div className="blog-surface" lang="vi">
@@ -118,7 +120,9 @@ export function StudioShell({
               <span>Studio</span>
               <span>/</span>
               <span>
-                {path.endsWith("comments")
+                {path.endsWith("analytics")
+                  ? "Phân tích"
+                  : path.endsWith("comments")
                   ? "Bình luận"
                   : path.endsWith("account")
                     ? "Tài khoản"
@@ -143,7 +147,7 @@ export function StudioShell({
       </div>
       {menu && (
         <BlogDialog title="Studio" onClose={() => setMenu(false)}>
-          <StudioLinks path={path} role={user?.role} />
+          <StudioLinks path={path} role={user?.role} onNavigate={() => setMenu(false)} />
         </BlogDialog>
       )}
     </div>

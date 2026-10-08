@@ -13,6 +13,7 @@ const icons: Record<string, string> = {
   comment: "M21 4H3v13h5v4l5-4h8z",
   file: "M5 2h9l5 5v15H5zM14 2v6h5M8 12h8M8 16h6",
   grid: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7h-7zM14 14h7v7h-7z",
+  chart: "M4 4v16h16M8 15v-4M12 15V7M16 15v-6",
   settings: "M4 7h16M4 17h16M8 4v6M16 14v6",
   users:
     "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8m12 10v-2a4 4 0 0 0-3-4m0-12a4 4 0 0 1 0 8",
