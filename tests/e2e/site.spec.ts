@@ -410,7 +410,7 @@ test("service pages state fit and boundaries that distinguish adjacent engagemen
   await expect(page.getByText(/choose AI Agent Development/)).toBeVisible();
 
   await page.goto("/services/architecture-governance");
-  await expect(page.getByText(/This is an advisory engagement/)).toBeVisible();
+  await expect(page.locator(".scope").getByText(/This is an advisory engagement/)).toBeVisible();
 });
 
 test("public routes expose canonical and page-specific social metadata", async ({
@@ -532,7 +532,7 @@ test("about introduces the founder and keeps its existing layout", async ({
   await profiles.getByRole("link", { name: "LinkedIn" }).focus();
   await expect(profiles.getByRole("link", { name: "LinkedIn" })).toBeFocused();
   expect((await page.goto("/company/about"))?.status()).toBe(404);
-  await expect(page.getByRole("heading", { name: "Hung Pham — Founder" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "This route is outside the system." })).toBeVisible();
 });
 
 test("careers and contact stay honest and independently addressable", async ({ page, isMobile }) => {
@@ -669,20 +669,21 @@ test("contact email handoff retains inputs and supports clipboard failure", asyn
   const name = page.getByLabel("Name", { exact: true });
   await page.getByRole("button", { name: "Copy brief", exact: true }).click();
   await expect(name).toHaveValue("");
-  await expect(page.locator(".project-brief__status").last()).not.toContainText("Brief copied");
+  await expect(page.getByRole("status").filter({ hasText: "Brief copied" })).toHaveCount(0);
+  expect(await page.evaluate(() => (window as unknown as { copiedBrief?: string }).copiedBrief)).toBeUndefined();
   await name.fill("Test person");
   await page.getByLabel("Email").fill("test@example.com");
   await page.getByLabel("Project type").selectOption("AI system");
   await page.getByLabel("What needs to change?", { exact: true }).fill("Build a useful research tool with clear next steps.");
   await page.getByRole("button", { name: "Copy brief", exact: true }).click();
-  await expect(page.locator(".project-brief__status").last()).toContainText("Brief copied");
+  await expect(page.getByRole("status").filter({ hasText: "Brief copied" })).toContainText("Brief copied");
   expect(await page.evaluate(() => (window as unknown as { copiedBrief: string }).copiedBrief)).toContain("Reply email: test@example.com");
   await page.evaluate(() => { Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new Error("Denied"); } } }); });
   await page.getByRole("button", { name: "Copy brief", exact: true }).click();
   await expect(page.getByLabel("Prepared brief")).toHaveValue(/Build a useful research tool/);
-  await expect(page.locator(".project-brief__status").last()).toContainText("copy it manually");
+  await expect(page.getByRole("alert").filter({ hasText: "copy it manually" })).toContainText("copy it manually");
   await page.getByRole("button", { name: "Continue in email", exact: true }).click();
-  await expect(page.locator(".project-brief__status").last()).toContainText("Send it to support@hunpeolabs.com");
+  await expect(page.getByRole("status").filter({ hasText: "Send it to support@hunpeolabs.com" })).toContainText("Send it to support@hunpeolabs.com");
   await expect(name).toHaveValue("Test person");
   await expect(page.getByLabel("What needs to change?", { exact: true })).toHaveValue("Build a useful research tool with clear next steps.");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
